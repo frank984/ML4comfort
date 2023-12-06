@@ -91,6 +91,9 @@ prv_wide3=mean_impute(prv_wide2)
 
 # prv=stfdf_air[,"2022-10-10 00:01:00::2022-10-10 01:00:00"]
 
+
+#### HERE SUMMARIZE (COMPLETE) DATA BASED ON HOURLY RESOLUTION
+
 ### Which stations recorded data for air_temp?
 # indx=intersect(colnames(air_temp),locations$id)
 indx=locations$id%in%colnames(prv_wide3)
