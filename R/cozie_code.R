@@ -10,6 +10,9 @@ library(tidyr)
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
+library(lubridate)
+library(anytime)
+
 
 # Load data ---------------------------------------------------------------
 
@@ -25,6 +28,23 @@ RH=read.csv("weather_relative-humidity.csv")
 wind_dir=read.csv("weather_wind-direction.csv")
 wind_speed=read.csv("weather_wind-speed.csv")
 
+# Brief summary
+summary(cozie_train)
+summary(cozie_test)
+summary(air_temp)
+summary(rainfall)
+summary(RH)
+summary(wind_dir)
+summary(wind_speed)
+
+# Reformat NAs
+for(i in 1:ncol(cozie_train)){
+  cozie_train[which(cozie_train[,i]==""),i]=NA
+}
+for(i in 1:ncol(cozie_test)){
+  cozie_test[which(cozie_test[,i]==""),i]=NA
+}
+
 # Format dates ------------------------------------------------------------
 
 # Round dates to minutes
@@ -35,8 +55,13 @@ formatdates=function(x){
   x$time=as.POSIXct(x$time, format="%Y-%m-%d  %H:%M:%S",tz="Asia/Singapore")
   return(x)
 }
-
 cozie_train=formatdates(cozie_train)
+cozie_test=formatdates(cozie_test)
+air_temp=formatdates(air_temp)
+rainfall=formatdates(rainfall)
+RH=formatdates(RH)
+wind_dir=formatdates(wind_dir)
+wind_speed=formatdates(wind_speed)
 
 # Convert microsurvey columns and id participant to factor
 microsurvey=c("q_alone_group","q_earphones","q_location",
@@ -44,25 +69,22 @@ microsurvey=c("q_alone_group","q_earphones","q_location",
               "q_noise_kind","q_noise_nearby","q_thermal_preference",
               "q_activity_category_alone" ,"q_activity_category_group")
 
-cozie_train[microsurvey] <- lapply(cozie_train[microsurvey], factor)
 
-cozie_test=formatdates(cozie_test)
-cozie_test[microsurvey] <- lapply(cozie_test[microsurvey], factor)
+cozie_train[,microsurvey] <- lapply(cozie_train[,microsurvey], factor)
+cozie_test[,microsurvey] <- lapply(cozie_test[,microsurvey], factor)
+
 
 cozie_train$id_participant=factor(cozie_train$id_participant)
 cozie_test$id_participant=factor(cozie_test$id_participant)
+locations$id=as.factor(locations$id)
 
-
-air_temp=formatdates(air_temp)
-rainfall=formatdates(rainfall)
-RH=formatdates(RH)
-wind_dir=formatdates(wind_dir)
-wind_speed=formatdates(wind_speed)
-
-
-# Check and adjust structure ----------------------------------------------
 
 str(cozie_train)
+summary(cozie_train$q_alone_group)
+
+
+# Check and adjust structure
+
 cozie_train$ws_timestamp_location=strptime(cozie_train$ws_timestamp_location, 
                                            format="%Y-%m-%d  %H:%M:%S",
                                            tz="Asia/Singapore")
@@ -96,11 +118,16 @@ cozie_test$ws_timestamp_start=as.POSIXct(cozie_test$ws_timestamp_start,
                                             format="%Y-%m-%d  %H:%M:%S",
                                             tz="Asia/Singapore")
 str(cozie_test)
+str(cozie_train)
+
+# save.image("cleaned_data.RData")
 
 # Data visualization -------------------------------------------------------------
 
 # Time ranges
 as.Date(range(cozie_train$time))
+as.Date(range(cozie_test$time))
+
 as.Date(range(air_temp$time))
 as.Date(range(RH$time))
 as.Date(range(wind_dir$time))
@@ -113,6 +140,26 @@ as.Date(range(rainfall$time))
 #   setNames(list(...), names)
 # }
 
+# Visualization of target variables
+target_vars=c("q_earphones","q_noise_kind","q_noise_nearby","q_thermal_preference")
+
+plot(cozie_train$time,cozie_train[,target_vars[1]],
+     xlab="Time",ylab=target_vars[1])
+plot(cozie_train$time,cozie_train[,target_vars[2]],
+     xlab="Time",ylab=target_vars[2])
+plot(cozie_train$time,cozie_train[,target_vars[3]],
+     xlab="Time",ylab=target_vars[3])
+plot(cozie_train$time,cozie_train[,target_vars[4]],
+     xlab="Time",ylab=target_vars[4])
+
+
+# THERE IS A BIG TIME WINDOW WITH NO FEEDBACKS
+temp=na.omit(cozie_train[,c("time",target_vars)])
+
+# THE FIRST FINISHES 2023-01-21 15:00:16 indexed 614909
+# THE SECOND BEGINS 2023-03-27 11:55:01 indexed 615204
+last_date_first_wind=cozie_train$time[614909]
+first_date_second_wind=cozie_train$time[615204]
 
 # Function to plot all environmental vars for each site
 plot_onesite=function(x1=air_temp,x2=rainfall,x3=RH,x4=wind_dir,x5=wind_speed,
@@ -193,6 +240,69 @@ ggplot(data=cozie_train,aes(x=time,y=ts_heart_rate))+
 # Hence, you can filter for watch survey responses with df[df.ws_survey_response.notna()], 
 # which will show all rows with watch survey responses.
 
+air_temp1=air_temp[air_temp$time<=last_date_first_wind,]
+dim(air_temp1)
+summary(air_temp1)
+
+rainfall1=rainfall[rainfall$time<=last_date_first_wind,]
+dim(rainfall1)
+summary(rainfall1)
+tail(rainfall1)
+
+RH1=RH[RH$time<=last_date_first_wind,]
+wind_dir1=wind_dir[wind_dir$time<=last_date_first_wind,]
+wind_speed1=wind_speed[wind_speed$time<=last_date_first_wind,]
+
+
+weather_summ=function(x,window="30 minutes"){
+  
+  mean_x=x %>% group_by(time=floor_date(time,window))%>%
+    summarise_if(is.numeric, mean, na.rm = TRUE)
+  sd_x=x %>% group_by(time=floor_date(time,window))%>%
+    summarise_if(is.numeric, sd, na.rm = TRUE)
+  
+  return(list(mean_x=mean_x,sd_x=sd_x))
+  
+}
+
+wdn="30 minutes"
+
+air_temp1_30mins=weather_summ(air_temp1,window=wdn)
+rainfall1_30mins=weather_summ(rainfall1,window=wdn)
+RH1_30mins=weather_summ(RH1,window=wdn)
+wind_dir1_30mins=weather_summ(wind_dir1,window=wdn)
+wind_speed1_30mins=weather_summ(wind_speed1,window=wdn)
+
+
+max(air_temp1_30mins$sd_x[,-1],na.rm = T)
+max(rainfall1_30mins$sd_x[,-1],na.rm = T)
+max(RH1_30mins$sd_x[,-1],na.rm = T)
+max(wind_dir1_30mins$sd_x[,-1],na.rm = T)
+max(wind_speed1_30mins$sd_x[,-1],na.rm = T)
+
+
+par(mfrow=c(2,1))
+P1=ggplot(data=prv,aes(x=time,y=avS24))+
+  geom_line(linewidth=.65,color="#9999CC")+
+  labs(y="30 mins average air temp",x="Time")+
+  theme_bw()+
+  scale_x_datetime(labels = date_format("%y-%m-%d"))
+
+P2=ggplot(data=prv,aes(x=time,y=sdS24))+
+  geom_line(linewidth=.65,color="#9999CC")+
+  labs(y="30 mins SD air temp",x="Time")+
+  theme_bw()+
+  scale_x_datetime(labels = date_format("%y-%m-%d"))
+
+
+
+
+air_temp2=air_temp[air_temp$time<=first_date_second_wind,]
+
+
+
+# OLD ---------------------------------------------------------------------
+
 length(which(cozie_train$q_thermal_preference!=""))
 cozie_train_nosparse=cozie_train[which(cozie_train$q_thermal_preference!=""),]
 
@@ -207,10 +317,6 @@ apply(cozie_train_nosparse[microsurvey],2,function(x)prop.table(table(x)))
 
 ggplot(cozie_train_nosparse, aes(x=q_thermal_preference )) +
   geom_bar(fill=c("blue","green","red")) 
-
-
-
-# OLD ---------------------------------------------------------------------
 
 # extract target variable summary (q_noise_nearby, q_noise_kind, q_earphones, q_thermal_preference)
 target_train=cozie_train[,c("q_noise_nearby", "q_noise_kind",

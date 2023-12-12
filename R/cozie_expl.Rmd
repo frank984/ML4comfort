@@ -50,6 +50,21 @@ of Cities and Dashboard for Comprehensive Urban Analyses. Sci Data 10, 667 (2023
 Urbanity is a network-based Python package to automate the construction of feature rich (contextual and semantic) urban networks at any geographical scale. Through an accessible and simple to use interface, users can request heterogeneous urban information such as street view imagery, building morphology, population (including sub-group), and points of interest for target areas of interest.
 
 
+## Workflow
+
+For our purposes, we need to construct a dataset containing a first column (some initial columns) with observation for the target feature(s) and, subsequently, all features we believe relevant for prediction (we call these explanatory features).
+
+Regarding the cozie dataset, the target features are sparse, so we need to drop all NAs. Then, we need to parse the remaining observations with the "temporally closest" value of summary statistics of the explanatory variables computed based on most "recent" values. 
+
+Considering the varying levels of sparsity across datasets, we follow these steps:
+
+1) Conduct spatio-temporal interpolation of weather variables to populate each spatial cell for each time-step.
+2) Synthesize this data by computing averages to align with the micro-survey datasets' dimensions. (Hint: we might average environmental observations (through EMAs) between two micro-survey observations).
+3) Temporally match these new features with target variables, result: a complete dataset.
+4) Train a machine learning algorithm and subsequently conduct accuracy tests.
+
+## Packages loading
+
 ```{r}
 # Load packages
 library(scales)
@@ -59,193 +74,147 @@ library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 library(lubridate)
-```
 
-
-# Feature engineering
-
-The features have different last dates
-
-```{r}
 load("cleaned_data.Rdata")
 
-# Time ranges
-as.Date(range(cozie_train$time))
-as.Date(range(air_temp$time))
-as.Date(range(RH$time))
-as.Date(range(wind_dir$time))
-as.Date(range(wind_speed$time))
-as.Date(range(rainfall$time))
 ```
 
-
-Let us have a look at the feature sparsity per the microsurvey variables
-```{r}
-df1=cozie_train[1:1000,]
-df1$time=strptime(df1$time, 
-                   format="%Y-%m-%d  %H:%M",
-                   tz="Asia/Singapore")
-df2=air_temp[1:1000,]
-df2$time=strptime(df2$time, 
-                   format="%Y-%m-%d  %H:%M",
-                   tz="Asia/Singapore")
-#df1=cozie_train[1:1000,]%>%format(time,format='%y-%m-%d %H:%M',tz='UTC')
-#df2=air_temp[1:1000,]%>%format(time,format='%y-%m-%d %H:%M',tz="Asia/Singapore")
-
-df_merge=merge(df1,df2,by="time",all=T)
-
-head(df_merge[c("q_thermal_preference","S43")],500)
-
-```
-
-We compare it with environmental variables
-```{r}
-#merge()
-```
-
+## Target features
 
 ```{r}
-# How many available obs?
-length(which(cozie_train$q_thermal_preference!=""))
+target_vars=c("q_earphones","q_noise_kind","q_noise_nearby","q_thermal_preference")
+target_features_long=cozie_train[,c("time",target_vars)] %>%
+  pivot_longer(!time, names_to = "target", values_to = "feedback")
 
-# Create  no-sparse version
-cozie_train_nosparse=cozie_train[which(cozie_train$q_thermal_preference!=""),]
-dim(cozie_train_nosparse)
-head(cozie_train_nosparse)
-```
-
-## Distribution of the microsurvey target variables
-```{r}
-attach(cozie_train_nosparse)
-P1=ggplot(cozie_train_nosparse, aes(x=q_thermal_preference )) +
-   #ggplot(data=tips, aes(x=day)) + 
-      geom_bar(aes(y = (..count..)/sum(..count..)),
-               fill=rainbow(length(unique(q_thermal_preference))))+
-  labs(y="Freq",x="q_thermal_preferences")+
-  theme(axis.text=element_text(size=5))
-
-P2=ggplot(cozie_train_nosparse, aes(x=q_noise_nearby )) +
-   #ggplot(data=tips, aes(x=day)) + 
-      geom_bar(aes(y = (..count..)/sum(..count..)),
-               fill=rainbow(length(unique(q_noise_nearby))))+
-  labs(y="Freq",x="q_noise_nearby")+
-  theme(axis.text=element_text(size=5))
-
-P3=ggplot(cozie_train_nosparse, aes(x=q_earphones )) +
-   #ggplot(data=tips, aes(x=day)) + 
-      geom_bar(aes(y = (..count..)/sum(..count..)),
-               fill=rainbow(length(unique(q_earphones))))+
-  labs(y="Freq",x="q_earphones")+
-  theme(axis.text=element_text(size=5))
-
-P4=ggplot(cozie_train_nosparse, aes(x=q_noise_kind )) +
-   #ggplot(data=tips, aes(x=day)) + 
-      geom_bar(aes(y = (..count..)/sum(..count..)),
-               fill=rainbow(length(unique(q_noise_kind))))+
-  labs(y="Freq",x="q_noise_kind")+
-  theme(axis.text=element_text(size=5))
-
-detach(cozie_train_nosparse)
-ggarrange(P1,P2,P3,P4,nrow=2,ncol=2)
-
-```
-
-## Distribution of the environmental variables for a given site
-
-The environmental features have different levels of sparsity for a given site.
-
-```{r}
-plot_onesite=function(x1=air_temp,x2=rainfall,x3=RH,x4=wind_dir,x5=wind_speed,
-                      site="S24"){
-  
-  P_x1=ggplot(data=x1,aes(x=time,y=x1[[site]]))+
-    geom_line(linewidth=.65,color="#9999CC")+
-    labs(y="Air temperature",x="Time", title=site)+
-    theme_bw()+
-    scale_x_datetime(labels = date_format("%y-%m-%d"))+
-    theme(axis.text=element_text(size=6),
-        axis.title=element_text(size=6,face="bold"))
-  
-  P_x2=ggplot(data=x2,aes(x=time,y=x2[[site]]))+
-    geom_line(linewidth=.65,color="#9999CC")+
-    labs(y="Rainfall",x="Time")+
-    theme_bw()+
-    scale_x_datetime(labels = date_format("%y-%m-%d"))+
-    theme(axis.text=element_text(size=6),
-        axis.title=element_text(size=6,face="bold"))
-  
-  P_x3=ggplot(data=x3,aes(x=time,y=x3[[site]]))+
-    geom_line(linewidth=.65,color="#9999CC")+
-    labs(y="Relative humidity",x="Time")+
-    theme_bw()+
-    scale_x_datetime(labels = date_format("%y-%m-%d"))+
-    theme(axis.text=element_text(size=6),
-        axis.title=element_text(size=6,face="bold"))
-  
-  P_x4=ggplot(data=x4,aes(x=time,y=x4[[site]]))+
-    geom_line(linewidth=.65,color="#9999CC")+
-    labs(y="Wind direction",x="Time")+
-    theme_bw()+
-    scale_x_datetime(labels = date_format("%y-%m-%d"))+
-    theme(axis.text=element_text(size=6),
-        axis.title=element_text(size=6,face="bold"))
-  
-  P_x5=ggplot(data=x5,aes(x=time,y=x5[[site]]))+
-    geom_line(linewidth=.65,color="#9999CC")+
-    labs(y="Wind speed",x="Time")+
-    theme_bw()+
-    scale_x_datetime(labels = date_format("%y-%m-%d"))+
-    theme(axis.text=element_text(size=6),
-        axis.title=element_text(size=6,face="bold"))
-  
-  all_P=ggarrange(P_x1, P_x2,P_x3,P_x4,P_x5,
-                  nrow = 5,heights = c(1.5,1.5,1,1,1))
-  return(all_P)
-}
-
-
-plot_onesite(site="S24")
-```
-
-## Distribution of one environmental variable for different sites
-
-For a given feature, the level of sparsity differ for different sites.
-
-```{r}
-P_s24_RH=ggplot(data=RH,aes(x=time,y=S24))+
-  geom_line(linewidth=.65,color="#9999CC")+
-  labs(y="RH - S24",x="Time",title="Relative Humidity")+
+P1=ggplot(data=cozie_train[,c("time",target_vars)], aes(x=time, y = q_earphones)) + 
+  geom_point(color="#9999CC",na.rm = F) +
+  scale_x_datetime(labels = date_format("%y-%m"))+
   theme_bw()+
-  scale_x_datetime(labels = date_format("%y-%m-%d"))
-P_s102_RH=ggplot(data=RH,aes(x=time,y=S102))+
-  geom_line(linewidth=.65,color="#9999CC")+
-  labs(y="RH - S102",x="Time")+
-  theme_bw()+
-  scale_x_datetime(labels = date_format("%y-%m-%d"))
-P_s116_RH=ggplot(data=RH,aes(x=time,y=S116))+
-  geom_line(linewidth=.65,color="#9999CC")+
-  labs(y="RH - S116",x="Time")+
-  theme_bw()+
-  scale_x_datetime(labels = date_format("%y-%m-%d"))
+  labs(x=" ")+
+  theme(axis.text=element_text(size=8))
 
-ggarrange(P_s24_RH, P_s102_RH,P_s116_RH,
-          nrow = 3)
+P2=ggplot(data=cozie_train[,c("time",target_vars)], aes(x=time, y = q_noise_kind)) + 
+  geom_point(color="#9999CC",na.rm = F) +
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(x=" ")+
+  theme(axis.text=element_text(size=8))
+
+P3=ggplot(data=cozie_train[,c("time",target_vars)], aes(x=time, y = q_noise_nearby)) + 
+  geom_point(color="#9999CC",na.rm = F) +
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(x=" ")+
+  theme(axis.text=element_text(size=8))
+
+P4=ggplot(data=cozie_train[,c("time",target_vars)], aes(x=time, y = q_thermal_preference)) + 
+  geom_point(color="#9999CC",na.rm = F) +
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(x=" ")+
+  theme(axis.text=element_text(size=8))
+
+ggarrange(P1,P2,P3,P4,nrow=4,ncol=1)
+
+# plot(cozie_train$time,cozie_train[,target_vars[1]],
+#      xlab="Time",ylab=target_vars[1])
+# plot(cozie_train$time,cozie_train[,target_vars[2]],
+#      xlab="Time",ylab=target_vars[2])
+# plot(cozie_train$time,cozie_train[,target_vars[3]],
+#      xlab="Time",ylab=target_vars[3])
+# plot(cozie_train$time,cozie_train[,target_vars[4]],
+#      xlab="Time",ylab=target_vars[4])
 ```
 
-## Workflow
+There is a time window between January and April with no observations. Let us split the data in two parts, one until 2023-01-21 15:00:16 (indexed 614909), and the other starting from 2023-03-27 11:55:01 (indexed 615204).
 
-For our purposes, we need to construct a dataset containing a first column (some initial columns) with observation for the target feature(s) and, subsequently, all features we believe relevant for prediction (we call these explanatory features).
-
-Regarding the cozie dataset, the target features are sparse, so we need to drop all NAs. Then, we need to parse the remaining observations with the "temporally closest" value of all explanatory features, or summary statistics of them computed based on most "recent" values. 
-
-Considering the varying levels of sparsity across datasets, we follow these steps:
-
-1) Conduct spatio-temporal interpolation of environmental variables to populate empty cells for each time-step, for the entire spatial grid.
-2) Synthesize this data by computing averages to align with the micro-survey datasets' dimensions. (Hint: we might average environmental observations (through EMAs) between two micro-survey observations).
-3) Temporally match these new features with target variables, result: a complete dataset.
-4) Train a machine learning algorithm and subsequently conduct accuracy tests.
+```{r}
+last_date_first_wind=cozie_train$time[614909]
+first_date_second_wind=cozie_train$time[615204]
+```
 
 
 
+## Weather variables, first window
 
+```{r}
+air_temp1=air_temp[air_temp$time<=last_date_first_wind,]
+rainfall1=rainfall[rainfall$time<=last_date_first_wind,]
+RH1=RH[RH$time<=last_date_first_wind,]
+wind_dir1=wind_dir[wind_dir$time<=last_date_first_wind,]
+wind_speed1=wind_speed[wind_speed$time<=last_date_first_wind,]
+```
 
+$\textbf{Air temperature}$
+```{r}
+air_temp1_long=air_temp1 %>%
+  pivot_longer(!time, names_to = "location", values_to = "air_temperature")
+
+ggplot(data=air_temp1_long, aes(x=time, y = air_temperature)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Air temperature",y=" ",x="Time")+
+  theme(axis.text=element_text(size=8),strip.text.x = element_text(size = 7))
+
+```
+
+$\textbf{Relative humidity}$
+```{r}
+# Relative humidity
+RH1_long=RH1 %>%
+  pivot_longer(!time, names_to = "location", values_to = "rh")
+
+ggplot(data=RH1_long, aes(x=time, y = rh)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Relative humidity",y=" ",x="Time")+
+  theme(axis.text=element_text(size=8),strip.text.x = element_text(size = 7))
+
+```
+
+$\textbf{Wind direction}$
+```{r}
+# Relative humidity
+wind_dir1_long=wind_dir1 %>%
+  pivot_longer(!time, names_to = "location", values_to = "wind_dir")
+
+ggplot(data=wind_dir1_long, aes(x=time, y = wind_dir)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Wind direction",y=" ",x="Time")+
+  theme(axis.text=element_text(size=8),strip.text.x = element_text(size = 7))
+
+```
+
+$\textbf{Wind speed}$
+```{r}
+# Relative humidity
+wind_speed1_long=wind_speed1 %>%
+  pivot_longer(!time, names_to = "location", values_to = "wind_speed")
+
+ggplot(data=wind_speed1_long, aes(x=time, y = wind_speed)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Wind speed",y=" ",x="Time")+
+  theme(axis.text=element_text(size=8),strip.text.x = element_text(size = 7))
+
+```
+
+$\textbf{Rainfall}$
+```{r}
+# Relative humidity
+rainfall1_long=rainfall1 %>%
+  pivot_longer(!time, names_to = "location", values_to = "rf")
+
+ggplot(data=rainfall1_long, aes(x=time, y = rf)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Rainfall",y=" ",x="Time")+
+  theme(axis.text=element_text(size=8),strip.background=element_blank(),  strip.text.x = element_blank())
+
+```
