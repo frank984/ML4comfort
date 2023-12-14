@@ -4,6 +4,8 @@
 # by the European Environmental Agency
 # source: https://cran.r-project.org/web/packages/gstat/vignettes/st.pdf
 
+####
+
 library(spacetime)
 rm(list = ls())
 data(air)
