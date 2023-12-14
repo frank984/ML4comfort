@@ -11,6 +11,7 @@ library(ggmap)
 library(gstat)
 
 # Create object of class "sp"
+#
 
 # # Create spatial object
 # sp = cbind(x = c(0,0,1), y = c(0,1,1))
