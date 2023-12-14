@@ -3,6 +3,13 @@ library(tidyr)
 library(tidyverse)
 library(ggplot2)
 library(scales)
+library(sp)
+library(spacetime)
+library(ozmaps)
+library(sf)
+library(ggmap)
+library(gstat)
+
 # Create object of class "sp"
 
 # # Create spatial object
@@ -101,7 +108,6 @@ indx=locations$id%in%colnames(prv_wide3)
 # spatial locations of weather stations in singapore
 singapore_sp =locations[indx,c("latitude","longitude")]
 row.names(singapore_sp) = locations$id[indx]
-library(sp)
 singapore_sp = SpatialPoints(singapore_sp)
 
 # Define time points
@@ -111,8 +117,6 @@ time=prv_wide3$time
 air_t=as.vector(t(prv_wide3[,-1]))
 airdata=data.frame(air=air_t,time=rep(time,each=ncol(prv_wide3[,-1])))
 
-
-library(spacetime)
 # time is of length m
 # data: data.frame with n*m rows corresponding to the observations
 
@@ -204,8 +208,6 @@ ggplot(data = world) +
   theme(panel.background = element_blank()) +
   coord_sf(xlim = c(103.5, 104), ylim = c(1.24,1.45), expand = FALSE)
 
-library(ozmaps)
-library(sf)
 
 
 ggplot()+
@@ -228,8 +230,6 @@ ggplot(data = world2) +
   coord_sf(xlim = c(103.5, 104), ylim = c(1.24,1.45), expand = FALSE)
   
 
-library(ggmap)
-library(ggplot2)
-library(tidyr)
+
 
 
