@@ -164,3 +164,10 @@ server <- function(input, output) {
 
 shinyApp(ui = ui, server = server)
 
+
+# Spatio-temporal kriging with NAs ----------------------------------------
+
+# Suggerimento di Antonio
+#1) Fai kriging univariato per le stazioni con dati mancanti
+#2) Imputa NA con dati da kriging
+#3) Fai kriging completo con tutte le stazioni
