@@ -1,0 +1,92 @@
+---
+title: "SVF and GVF - Milan"
+output: html_document
+date: "2023-12-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=F)
+```
+
+## Data
+
+Data are collected from the Global Urban Network (GUN)
+[dataset](https://figshare.com/articles/dataset/Global_Urban_Network_Dataset/22124219).
+
+## Milan
+
+```{r}
+library(geojsonio)
+library(leaflet)
+library(leaflet.extras)
+library(dplyr)
+
+milan_nodes=geojson_read("Milan_nodes_100m.geojson",what="sp")
+```
+
+Data is available in .geojson format.
+
+# Brief summary statistics
+
+Dataset dimension
+```{r}
+df=milan_nodes %>% as.data.frame
+dim(df)
+summary(df[,c("Sky.View.Mean","Green.View.Mean")])
+```
+
+Histograms of the relevant variables
+```{r}
+par(mfrow=c(1,2))
+hist(df$Sky.View.Mean,xlab=" ", ylab=" ", main="Sky View Factor",col="cyan")
+hist(df$Green.View.Mean,xlab=" ", ylab=" ", main="Green View Factor", col="green")
+```
+
+There is no spatial point with SVF greater than 0.8, as the maximum observed value is 0.67. For this reason, we consider the following scenarios
+
+1) $SVF>0.6$
+2) $SVF<0.4$  and $GVF<0.2$
+3) $SVF<0.4$ and $GVF>0.6$
+
+```{r}
+FirstScen=df[which(df$Sky.View.Mean>.6),c("x","y","Sky.View.Mean")]
+FirstScen$Scen=as.factor(1)
+SecondScen=df[which(df$Sky.View.Mean<.4&df$Green.View.Mean<0.2),
+              c("x","y","Sky.View.Mean","Green.View.Mean")]
+SecondScen$Scen=as.factor(2)
+ThirdScen=df[which(df$Sky.View.Mean<.4&df$Green.View.Mean>0.6),
+             c("x","y","Sky.View.Mean","Green.View.Mean")]
+ThirdScen$Scen=as.factor(3)
+df2=full_join(FirstScen,SecondScen)
+df2=full_join(df2,ThirdScen)
+```
+
+Points satisfying the first condition $SVF>0.6$
+```{r}
+dim(FirstScen)
+```
+
+Points satisfying the second condition $SVF<0.4$  and $GVF<0.2$
+```{r}
+dim(SecondScen)
+```
+
+Points satisfying the third condition $SVF<0.4$ and $GVF>0.6$
+```{r}
+dim(ThirdScen)
+```
+
+
+Interactive map
+```{r}
+pal <- colorFactor(c("blue","red", "darkgreen"), domain = c("1", "2","3"))
+colnames(df2)[1:2]=c("long","lat")
+leaflet(df2) %>% addTiles() %>%
+  addCircleMarkers(
+    radius = 2.5,
+    color = ~pal(Scen),
+    stroke = FALSE, fillOpacity = 0.5
+  )
+```
+
+
