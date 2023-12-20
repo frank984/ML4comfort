@@ -78,33 +78,144 @@ last_date_first_wind=cozie_train$time[614909]
 first_date_second_wind=cozie_train$time[615204]
 ```
 
-# Air temperature
+# Summarize data
 
 ```{r}
-par(mfrow=c(round((ncol(air_temp)-1)/3),3))
-for(i in 2:ncol(air_temp)){
-  plot(air_temp$time,air_temp[,i],type='l',xlab="time",
-       ylab=colnames(air_temp[i]))
+weather_summ=function(x,window="30 minutes"){
+  
+  mean_x=x %>% group_by(time=floor_date(time,window))%>%
+    summarise_if(is.numeric, mean, na.rm = TRUE)
+  sd_x=x %>% group_by(time=floor_date(time,window))%>%
+    summarise_if(is.numeric, sd, na.rm = TRUE)
+  
+  return(list(mean_x=mean_x,sd_x=sd_x))
+  
 }
 ```
 
-# S100
+```{r}
+wdn="1 hour"
+wdn2="30 mins"
+
+air_temp_wdn=weather_summ(air_temp,window=wdn)
+rainfall_wdn=weather_summ(rainfall,window=wdn)
+RH_wdn=weather_summ(RH,window=wdn)
+wind_dir_wdn=weather_summ(wind_dir,window=wdn)
+wind_speed_wdn=weather_summ(wind_speed,window=wdn)
+
+air_temp_wdn2=weather_summ(air_temp,window=wdn2)
+rainfall_wdn2=weather_summ(rainfall,window=wdn2)
+RH_wdn2=weather_summ(RH,window=wdn2)
+wind_dir_wdn2=weather_summ(wind_dir,window=wdn2)
+wind_speed_wdn2=weather_summ(wind_speed,window=wdn2)
+```
+
+# Maximum variability for 30 mins and 1 hour frequency
 
 ```{r}
-par(mfrow=c(3,2))
-plot(air_temp$time,air_temp$S100,type='l',xlab="time",ylab="Air temperature",
-     main="S100")
-plot(RH$time,RH$S100,type='l',xlab="time",ylab="Relative humidity",
-     main="S100")
-plot(rainfall$time,rainfall$S100,type='l',xlab="time",ylab="Rainfall",
-     main="S100")
-plot(wind_dir$time,wind_dir$S100,type='l',xlab="time",ylab="Wind direction",
-     main="S100")
-plot(wind_speed$time,wind_speed$S100,type='l',xlab="time",ylab="Wind speed",
-     main="S100")
+
+max(air_temp_wdn$sd_x[,-1],na.rm = T)
+max(rainfall_wdn$sd_x[,-1],na.rm = T)
+max(RH_wdn$sd_x[,-1],na.rm = T)
+max(wind_dir_wdn$sd_x[,-1],na.rm = T)
+max(wind_speed_wdn$sd_x[,-1],na.rm = T)
+
+max(air_temp_wdn2$sd_x[,-1],na.rm = T)
+max(rainfall_wdn2$sd_x[,-1],na.rm = T)
+max(RH_wdn2$sd_x[,-1],na.rm = T)
+max(wind_dir_wdn2$sd_x[,-1],na.rm = T)
+max(wind_speed_wdn2$sd_x[,-1],na.rm = T)
 
 ```
 
+No huge difference between the two, let us keep the 1 hour frequency dataset.
+
+# Air temperature
+
+```{r}
+air_temp_wdn_long=air_temp_wdn$mean_x %>%
+  pivot_longer(!time, names_to = "location", values_to = "air_temperature")
+
+ggplot(data=air_temp_wdn_long, aes(x=time, y = air_temperature)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Air temperature",y=" ",x="Time")+
+  theme(axis.text.x = element_text(size=5),
+        axis.text.y = element_text(size=5),
+        strip.text = element_text(size=5),
+        panel.spacing = unit(.5, 'pt'))
+
+```
+
+# Rainfall
+
+```{r}
+rainfall_wdn_long=rainfall_wdn$mean_x %>%
+  pivot_longer(!time, names_to = "location", values_to = "rainfall")
+
+ggplot(data=rainfall_wdn_long, aes(x=time, y = rainfall)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Rainfall",y=" ",x="Time")+
+  theme(axis.text=element_text(size=5),strip.background=element_blank(),  strip.text.x = element_blank())
+
+```
+
+# Relative humidity
+
+```{r}
+RH_wdn_long=RH_wdn$mean_x %>%
+  pivot_longer(!time, names_to = "location", values_to = "RH")
+
+ggplot(data=RH_wdn_long, aes(x=time, y = RH)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Relative humidity",y=" ",x="Time")+
+  theme(axis.text.x = element_text(size=5),
+        axis.text.y = element_text(size=5),
+        strip.text = element_text(size=5),
+        panel.spacing = unit(.5, 'pt'))
+
+```
+
+# Wind speed
+
+```{r}
+wind_speed_wdn_long=wind_speed_wdn$mean_x %>%
+  pivot_longer(!time, names_to = "location", values_to = "wind_speed")
+
+ggplot(data=wind_speed_wdn_long, aes(x=time, y = wind_speed)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Wind speed",y=" ",x="Time")+
+  theme(axis.text.x = element_text(size=5),
+        axis.text.y = element_text(size=5),
+        strip.text = element_text(size=5),
+        panel.spacing = unit(.5, 'pt'))
+
+```
+
+# Wind direction
+
+```{r}
+wind_dir_wdn_long=wind_dir_wdn$mean_x %>%
+  pivot_longer(!time, names_to = "location", values_to = "wind_dir")
+
+ggplot(data=wind_dir_wdn_long, aes(x=time, y = wind_dir)) + 
+  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
+  scale_x_datetime(labels = date_format("%y-%m"))+
+  theme_bw()+
+  labs(title="Wind direction",y=" ",x="Time")+
+  theme(axis.text.x = element_text(size=5),
+        axis.text.y = element_text(size=5),
+        strip.text = element_text(size=5),
+        panel.spacing = unit(.5, 'pt'))
+
+```
 
 ## First window analysis
 
@@ -123,60 +234,13 @@ wind_dir1=wind_dir[wind_dir$time<=last_date_first_wind,]
 wind_speed1=wind_speed[wind_speed$time<=last_date_first_wind,]
 ```
 
-# Function to summarize data by time intervals 
+The weather variables have a break around 
+
+# Univariate temporal kriging
 
 ```{r}
-weather_summ=function(x,window="30 minutes"){
-  
-  mean_x=x %>% group_by(time=floor_date(time,window))%>%
-    summarise_if(is.numeric, mean, na.rm = TRUE)
-  sd_x=x %>% group_by(time=floor_date(time,window))%>%
-    summarise_if(is.numeric, sd, na.rm = TRUE)
-  
-  return(list(mean_x=mean_x,sd_x=sd_x))
-  
-}
-```
-
-```{r}
-wdn="30 minutes"
-#wdn="1 hour"
-
-air_temp1_30mins=weather_summ(air_temp1,window=wdn)
-rainfall1_30mins=weather_summ(rainfall1,window=wdn)
-RH1_30mins=weather_summ(RH1,window=wdn)
-wind_dir1_30mins=weather_summ(wind_dir1,window=wdn)
-wind_speed1_30mins=weather_summ(wind_speed1,window=wdn)
-```
-
-# Maximum variability for 30 mins frequency
-
-```{r}
-max(air_temp1_30mins$sd_x[,-1],na.rm = T)
-max(rainfall1_30mins$sd_x[,-1],na.rm = T)
-max(RH1_30mins$sd_x[,-1],na.rm = T)
-max(wind_dir1_30mins$sd_x[,-1],na.rm = T)
-max(wind_speed1_30mins$sd_x[,-1],na.rm = T)
-```
-
-# Air temperature
-
-```{r}
-air_temp1_long=air_temp1 %>%
-  pivot_longer(!time, names_to = "location", values_to = "air_temperature")
-
-ggplot(data=air_temp1_long, aes(x=time, y = air_temperature)) + 
-  geom_line(color="#9999CC",na.rm = F) + facet_wrap(~location,nrow=6,ncol=3)+
-  scale_x_datetime(labels = date_format("%y-%m"))+
-  theme_bw()+
-  labs(title="Air temperature",y=" ",x="Time")+
-  theme(axis.text.x = element_text(size=5),
-        axis.text.y = element_text(size=5),
-        strip.text = element_text(size=5),
-        panel.spacing = unit(.5, 'pt'))
-
-summary(air_temp1[,-1])
 
 ```
+
 
 
