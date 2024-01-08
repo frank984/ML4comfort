@@ -23,8 +23,9 @@ library(sp)
 library(spacetime)
 # library(ozmaps)
 library(sf)
-library(ggmap)
+#library(ggmap)
 library(gstat)
+library(automap)
 
 
 load("cleaned_data.Rdata")
@@ -256,7 +257,7 @@ air_temp1=air_temp_wdn$mean_x[air_temp_wdn$mean_x$time<=last_date_first_wind,]
 # summary(air_temp1)
 
 rainfall1=rainfall_wdn$mean_x[rainfall_wdn$mean_x$time<=last_date_first_wind,]
-dim(rainfall1)
+#dim(rainfall1)
 # summary(rainfall1)
 # tail(rainfall1)
 
@@ -283,6 +284,13 @@ Rainfall
 apply(rainfall1,2,function(x){sum(is.na(x))/length(x)*100})
 ```
 
+Drop S36, S82.
+
+```{r}
+rainfall1=subset(rainfall1, select = -c(S36,S82))
+```
+
+
 Relative humidity
 
 ```{r}
@@ -304,9 +312,124 @@ apply(wind_speed1,2,function(x){sum(is.na(x))/length(x)*100})
 
 # Univariate temporal kriging
 
+The following function performs temporal kriging (needed to "fill the gaps" in the datasets).
 ```{r}
+temp_krige=function(x){
+  x_sp=x
+  
+  temp_grid=1:nrow(x)
+  temp_grid=expand.grid(temp_grid,1)
+  colnames(temp_grid)=c("indx","knot")
+  gridded(temp_grid)=~indx+knot
+  
+  for(i in 2:ncol(x)){
+    #i=17
+    x_sp=x[,c(1,i)]
+    ind_fill=which(is.na(x_sp[,2]))
+    NAcount=sum(is.na(x_sp[,2]))
+    
+    if(NAcount>0){
+      colnames(x_sp)=c("time","z")
+      x_sp$indx=1:nrow(x_sp)
+      x_sp$knot=1
+      x_sp=drop_na(x_sp)
+      coordinates(x_sp) <- ~ indx + knot
+      
+      onedim_krig = autoKrige(z~1, x_sp,temp_grid)
+      x[ind_fill,i]=onedim_krig$krige_output$var1.pred[ind_fill]
+    }
+  }
+  return(x)
+}
+```
+
+$\textbf{Air temperature}$
+
+```{r}
+air_temp1_sp=air_temp1
+
+air_temp1_sp$knot=1
+air_temp1_sp$indx=1:nrow(air_temp1_sp)
+
+air_temp1_sp.full=temp_krige(air_temp1_sp)
+apply(air_temp1_sp.full,2,function(x)sum(is.na(x)))
+```
+
+$\textbf{Rainfall}$
+
+```{r}
+rainfall1_sp=rainfall1
+
+rainfall1_sp$knot=1
+rainfall1_sp$indx=1:nrow(rainfall1_sp)
+
+rainfall1_sp.full=temp_krige(rainfall1_sp)
+apply(rainfall1_sp.full,2,function(x)sum(is.na(x)))
+apply(rainfall1_sp,2,function(x)sum(is.na(x)))
 
 ```
+
+$\textbf{Relative humidity}$
+
+```{r}
+RH1_sp=RH1
+
+RH1_sp$knot=1
+RH1_sp$indx=1:nrow(RH1_sp)
+
+RH1_sp.full=temp_krige(RH1_sp)
+apply(RH1_sp.full,2,function(x)sum(is.na(x)))
+apply(RH1_sp,2,function(x)sum(is.na(x)))
+
+```
+
+$\textbf{Wind speed}$
+
+```{r}
+wind_speed1_sp=wind_speed1
+
+wind_speed1_sp$knot=1
+wind_speed1_sp$indx=1:nrow(wind_speed1_sp)
+
+wind_speed1_sp.full=temp_krige(wind_speed1_sp)
+apply(wind_speed1_sp.full,2,function(x)sum(is.na(x)))
+apply(wind_speed1_sp,2,function(x)sum(is.na(x)))
+
+```
+
+$\textbf{Wind direction}$
+
+```{r}
+wind_dir1_sp=wind_dir1
+
+wind_dir1_sp$knot=1
+wind_dir1_sp$indx=1:nrow(wind_dir1_sp)
+
+wind_dir1_sp.full=temp_krige(wind_dir1_sp)
+apply(wind_dir1_sp.full,2,function(x)sum(is.na(x)))
+apply(wind_dir1_sp,2,function(x)sum(is.na(x)))
+
+```
+
+# Spatial kriging
+
+Define spatial grid
+
+Some considerations:
+
+- Since the cozie app collects data at random time points, does it make sense to consider the temporal dependence of the spatial measurements? Trade-off between accuracy and computational cost
+
+- A quicker approach could involve focusing solely on the time points where the cozie app recorded data, conducting spatial kriging specifically for those observed time instances.
+
+```{r}
+LAT=range(locations$latitude)
+LON=range(locations$longitude)
+step=.001
+singapore_grid=expand.grid(lat=seq(LAT[1],LAT[2],by=step),
+            lon=seq(LON[1],LON[2],by=step))
+```
+
+
 
 
 

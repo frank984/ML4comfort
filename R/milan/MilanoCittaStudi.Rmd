@@ -8,6 +8,15 @@ date: "2024-01-08"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(geojsonio)
+library(leaflet)
+library(leaflet.extras)
+library(dplyr)
+library(lubridate)
+```
+
+
 ## GSV2SVF
 
 GSV2SVF is designed to interactively calculate sky/tree/building view factors from Google Street View (GSV) panoramas in Google Maps. 
@@ -16,8 +25,85 @@ GSV2SVF is designed to interactively calculate sky/tree/building view factors fr
 
 We consider data only for the sky and green view factors (SVF, GVF). We restrict our attention to the area of Città Studi.
 
+```{r}
+df=read.csv("Milano-CittaStudi.csv")
+df$date=ym(df$date)
+str(df)
+summary(df[,c("svf","tvf")])
+```
 
 
-## Thresholds
+## Thresholds - First Scenario
 
-To identify locations characterized by different SVF and GVF scenarios, 
+We first consider the following scenarios:
+
+- SVF>0.8
+- SVF<0.4 and GVF<0.4
+- SVF<0.4 and GVF>0.7
+
+```{r}
+FirstScen=df[which(df$svf>.8),c("lat","lon","date","svf","tvf")]
+FirstScen$Scen=as.factor(1)
+SecondScen=df[which(df$svf<.4&df$tvf<0.4),
+              c("lat","lon","date","svf","tvf")]
+SecondScen$Scen=as.factor(2)
+ThirdScen=df[which(df$svf<.4&df$tvf>0.7),
+             c("lat","lon","date","svf","tvf")]
+ThirdScen$Scen=as.factor(3)
+df2=full_join(FirstScen,SecondScen)
+df2=full_join(df2,ThirdScen)
+```
+
+```{r}
+df2[,c("date","Scen")]
+```
+
+```{r}
+pal <- colorFactor(c("blue","red", "darkgreen"), domain = c("1", "2","3"))
+#colnames(df2)[1:2]=c("long","lat")
+leaflet(df2) %>% addTiles() %>%
+  addCircleMarkers(
+    radius = 2.5,
+    color = ~pal(Scen),
+    stroke = FALSE, fillOpacity = 1
+  )
+```
+
+## Thresholds - Second Scenario
+
+We now set the threshold based on the 30% and 90% quantiles of the empirical distributions for SVF and GVF.
+
+```{r}
+q_svf=quantile(df$svf,probs = c(.3,.9)); q_svf
+q_tvf=quantile(df$tvf,probs=c(.3,.9)); q_tvf
+```
+
+
+```{r}
+FirstScen=df[which(df$svf>q_svf[2]),c("lat","lon","date","svf","tvf")]
+FirstScen$Scen=as.factor(1)
+SecondScen=df[which(df$svf<q_svf[1]&df$tvf<q_tvf[1]),
+              c("lat","lon","date","svf","tvf")]
+SecondScen$Scen=as.factor(2)
+ThirdScen=df[which(df$svf<q_svf[1]&df$tvf>q_svf[2]),
+             c("lat","lon","date","svf","tvf")]
+ThirdScen$Scen=as.factor(3)
+df2=full_join(FirstScen,SecondScen)
+df2=full_join(df2,ThirdScen)
+```
+
+```{r}
+df2[,c("date","Scen")]
+```
+
+
+```{r}
+pal <- colorFactor(c("blue","red", "darkgreen"), domain = c("1", "2","3"))
+#colnames(df2)[1:2]=c("long","lat")
+leaflet(df2) %>% addTiles() %>%
+  addCircleMarkers(
+    radius = 2.5,
+    color = ~pal(Scen),
+    stroke = FALSE, fillOpacity = 1
+  )
+```
