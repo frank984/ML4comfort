@@ -1,0 +1,23 @@
+---
+title: "SVF e GVF - Milano Città Studi"
+output: html_document
+date: "2024-01-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GSV2SVF
+
+GSV2SVF is designed to interactively calculate sky/tree/building view factors from Google Street View (GSV) panoramas in Google Maps. 
+
+## Data
+
+We consider data only for the sky and green view factors (SVF, GVF). We restrict our attention to the area of Città Studi.
+
+
+
+## Thresholds
+
+To identify locations characterized by different SVF and GVF scenarios, 
