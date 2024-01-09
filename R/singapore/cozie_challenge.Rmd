@@ -421,15 +421,38 @@ Some considerations:
 
 - A quicker approach could involve focusing solely on the time points where the cozie app recorded data, conducting spatial kriging specifically for those observed time instances.
 
+# Spatial grid construction
+
+Two crucial questions emerge:
+
+1) What range of values should we employ for latitude and longitude? Opting for the maximum and minimum values recorded by the Cozie app or the weather stations.
+
+2) What level of granularity should we adopt for latitude and longitude? I don't have a definitive answer to this query. Undoubtedly, higher granularity implies increased computational expenses.
+
 ```{r}
-LAT=range(locations$latitude)
-LON=range(locations$longitude)
-step=.001
-singapore_grid=expand.grid(lat=seq(LAT[1],LAT[2],by=step),
-            lon=seq(LON[1],LON[2],by=step))
+lat_range_cozie=range(cozie_train$ws_latitude,na.rm=T)
+lat_range_weath=range(locations$latitude,na.rm=T)
+lon_range_cozie=range(cozie_train$ws_longitude,na.rm=T)
+lon_range_weath=range(locations$longitude,na.rm=T)
+
+LAT=c(min(lat_range_cozie[1],lat_range_weath[1]),
+      max(lat_range_cozie[2],lat_range_weath[2]))
+
+LON=c(min(lon_range_cozie[1],lon_range_weath[1]),
+      max(lon_range_cozie[2],lon_range_weath[2]))
+
+# len.out=100 #preliminary choice
+# singapore_grid=expand.grid(lat=seq(LAT[1],LAT[2],length.out=len.out),
+#             lon=seq(LON[1],LON[2],length.out=len.out))
 ```
 
+# Spatio-temporal kriging
 
+$\textbf{Air temperature}$
+
+```{r}
+air_temp1_sp.full
+```
 
 
 

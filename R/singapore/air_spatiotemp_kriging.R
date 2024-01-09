@@ -97,6 +97,11 @@ mean_impute=function(df){
 
 prv_wide3=mean_impute(prv_wide2)
 
+summary(prv_wide3)
+
+prv_wide3=subset(prv_wide3,select=-c(S117,S102))
+summary(prv_wide3)
+
 # prv=stfdf_air[,"2022-10-10 00:01:00::2022-10-10 01:00:00"]
 
 
