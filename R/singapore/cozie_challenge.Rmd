@@ -352,21 +352,52 @@ air_temp1_sp$knot=1
 air_temp1_sp$indx=1:nrow(air_temp1_sp)
 
 air_temp1_sp.full=temp_krige(air_temp1_sp)
+air_temp1_sp.full=subset(air_temp1_sp.full,select=-c(indx,knot))
 apply(air_temp1_sp.full,2,function(x)sum(is.na(x)))
+apply(air_temp1_sp,2,function(x)sum(is.na(x)))
+
 ```
+
+Stations 102 and 108 had the highest number of NAs
+
+```{r}
+par(mfrow=c(2,1))
+plot(air_temp1_sp.full$time,air_temp1_sp.full$S102,
+     type='l',ylab="S102",main="Air temperature",xlab="Time")
+plot(air_temp1_sp.full$time,air_temp1_sp.full$S108,
+     type='l',ylab="S108",xlab="Time")
+```
+
 
 $\textbf{Rainfall}$
 
 ```{r}
 rainfall1_sp=rainfall1
 
+apply(rainfall1_sp,2,function(x)sum(is.na(x)))
+
+#Remove stations S36, S82
+rainfall1_sp=subset(rainfall1_sp,select=-c(S36,S82))
+
 rainfall1_sp$knot=1
 rainfall1_sp$indx=1:nrow(rainfall1_sp)
 
 rainfall1_sp.full=temp_krige(rainfall1_sp)
+rainfall1_sp.full=subset(rainfall1_sp.full,select=-c(indx,knot))
+
 apply(rainfall1_sp.full,2,function(x)sum(is.na(x)))
 apply(rainfall1_sp,2,function(x)sum(is.na(x)))
 
+```
+
+Stations 102 and 108
+
+```{r}
+par(mfrow=c(2,1))
+plot(rainfall1_sp.full$time,rainfall1_sp.full$S102,
+     type='l',ylab="S102",main="Rainfall",xlab="Time")
+plot(rainfall1_sp.full$time,rainfall1_sp.full$S108,
+     type='l',ylab="S108",xlab="Time")
 ```
 
 $\textbf{Relative humidity}$
@@ -378,10 +409,23 @@ RH1_sp$knot=1
 RH1_sp$indx=1:nrow(RH1_sp)
 
 RH1_sp.full=temp_krige(RH1_sp)
+RH1_sp.full=subset(RH1_sp.full,select=-c(indx,knot))
+
 apply(RH1_sp.full,2,function(x)sum(is.na(x)))
 apply(RH1_sp,2,function(x)sum(is.na(x)))
 
 ```
+
+Stations 102 and 108
+
+```{r}
+par(mfrow=c(2,1))
+plot(RH1_sp.full$time,RH1_sp.full$S102,
+     type='l',ylab="S102",main="Relative humidity",xlab="Time")
+plot(RH1_sp.full$time,RH1_sp.full$S108,
+     type='l',ylab="S108",xlab="Time")
+```
+
 
 $\textbf{Wind speed}$
 
@@ -392,9 +436,21 @@ wind_speed1_sp$knot=1
 wind_speed1_sp$indx=1:nrow(wind_speed1_sp)
 
 wind_speed1_sp.full=temp_krige(wind_speed1_sp)
+wind_speed1_sp.full=subset(wind_speed1_sp.full,select=-c(indx,knot))
+
 apply(wind_speed1_sp.full,2,function(x)sum(is.na(x)))
 apply(wind_speed1_sp,2,function(x)sum(is.na(x)))
 
+```
+
+Stations 102 and 108 had the highest number of NAs.
+
+```{r}
+par(mfrow=c(2,1))
+plot(wind_speed1_sp.full$time,wind_speed1_sp.full$S102,
+     type='l',ylab="S102",main="Wind speed",xlab="Time")
+plot(wind_speed1_sp.full$time,wind_speed1_sp.full$S108,
+     type='l',ylab="S108",xlab="Time")
 ```
 
 $\textbf{Wind direction}$
@@ -406,22 +462,27 @@ wind_dir1_sp$knot=1
 wind_dir1_sp$indx=1:nrow(wind_dir1_sp)
 
 wind_dir1_sp.full=temp_krige(wind_dir1_sp)
+wind_dir1_sp.full=subset(wind_dir1_sp.full,select=-c(indx,knot))
+
 apply(wind_dir1_sp.full,2,function(x)sum(is.na(x)))
 apply(wind_dir1_sp,2,function(x)sum(is.na(x)))
 
 ```
 
+Stations 102 and 108 had the highest number of NAs.
+
+```{r}
+par(mfrow=c(2,1))
+plot(wind_dir1_sp.full$time,wind_dir1_sp.full$S102,
+     type='l',main="Wind direction",ylab="S102",xlab="Time")
+plot(wind_dir1_sp.full$time,wind_dir1_sp.full$S108,
+     type='l',ylab="S108",xlab="Time")
+```
+
+
 # Spatial kriging
 
 Define spatial grid
-
-Some considerations:
-
-- Since the cozie app collects data at random time points, does it make sense to consider the temporal dependence of the spatial measurements? Trade-off between accuracy and computational cost
-
-- A quicker approach could involve focusing solely on the time points where the cozie app recorded data, conducting spatial kriging specifically for those observed time instances.
-
-# Spatial grid construction
 
 Two crucial questions emerge:
 
@@ -441,17 +502,78 @@ LAT=c(min(lat_range_cozie[1],lat_range_weath[1]),
 LON=c(min(lon_range_cozie[1],lon_range_weath[1]),
       max(lon_range_cozie[2],lon_range_weath[2]))
 
-# len.out=100 #preliminary choice
-# singapore_grid=expand.grid(lat=seq(LAT[1],LAT[2],length.out=len.out),
-#             lon=seq(LON[1],LON[2],length.out=len.out))
 ```
 
-# Spatio-temporal kriging
 
 $\textbf{Air temperature}$
 
 ```{r}
-air_temp1_sp.full
+### Which stations recorded data for air_temp?
+# indx=intersect(colnames(air_temp),locations$id)
+indx_air=locations$id%in%colnames(air_temp1_sp.full)
+
+# spatial locations of weather stations in singapore
+singapore_sp_air =locations[indx_air,c("latitude","longitude")]
+row.names(singapore_sp_air) = locations$id[indx_air]
+singapore_sp_air = SpatialPoints(singapore_sp_air)
+
+# Define time points
+time=air_temp1_sp.full$time
+
+# Define long data.frame with air temperature values
+# time is of length m, then
+# data is a data.frame with n*m rows corresponding to the observations
+
+air_t=as.vector(t(air_temp1_sp.full[,-1]))
+airdata=data.frame(air=air_t,time=rep(time,each=ncol(air_temp1_sp.full[,-1])))
+
+stfdf_air = STFDF(singapore_sp_air, time, data = airdata)
+
+# Fit empirical variogram
+vv = variogram(air~1, stfdf_air, width=20, 
+               cutoff = 200,tlags=0:5
+               )
+# At first, we try to fit a metric model 
+
+metricVgm <- vgmST("metric",
+                   joint=vgm(50,"Exp",100,0),
+                   stAni=50)
+metricVgm <- fit.StVariogram(vv, metricVgm)
+attr(metricVgm, "optim")$value
+#plot(vv, metricVgm)
+
+# Now, let us try to fit and plot a separable model
+sepVgm <- vgmST("separable",
+                space=vgm(0.9,"Exp", 123, 0.1),
+                time =vgm(0.9,"Exp", 2.9, 0.1),
+                sill=100)
+
+sepVgm <- fit.StVariogram(vv, sepVgm, method = "L-BFGS-B"
+                          # ,
+                          # lower = c(10,0,0.01,0,1),
+                          # upper = c(500,1,20,1,200)
+                          )
+
+attr(sepVgm, "optim")$value
+
+#### ST kriging ####
+
+# range of the spatial grid
+len.out=100 #preliminary choice
+grid_lat=seq(LAT[1],LAT[2],length.out=len.out)
+grid_lon=seq(LON[1],LON[2],length.out=len.out)
+
+singapore_gridded <- SpatialPoints(cbind(rep(grid_lat,length(grid_lat)), 
+                                         rep(grid_lon,each=length(grid_lon))), 
+                                   proj4string=CRS(proj4string(stfdf_air@sp)))
+
+gridded(singapore_gridded) <- TRUE
+
+singapore_pred <- STF(sp=as(singapore_gridded,"SpatialPoints"), time=stfdf_air@time)
+
+singapore_kriged <- krigeST(air~1, data=stfdf_air, newdata=singapore_pred,
+                     modelList=sepVgm)
+
 ```
 
 
