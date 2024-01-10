@@ -100,7 +100,6 @@ We're excluding it from our current analysis the following variables:
 - dT, the duration between the current and the previous micro-survey response in minutes. 
 - Standard deviations of the urban indexes, such as the Sky View Factor, the Green View Factor etc...
 - Standard deviations of building morphology measures, such as Foorprint, Perimeter etc...
-- id_participant, since we are not interested in predicting target variables for a single individual but for the overall population.
 - id_unique, a unique identifier for the rows.
 
 
@@ -110,7 +109,7 @@ cozie_train.clean=subset(cozie_train.clean,
                                      Green.View.Stdev,Sky.View.Stdev,
                                      Building.View.Stdev,Road.View.Stdev,
                                      Visual.Complexity.Stdev,
-                                     id_participant, id_unique,
+                                     id_unique,
                                      Footprint.Stdev,Perimeter.Total,Perimeter.Stdev,
                                      Complexity.Stdev
                                      ))
@@ -120,8 +119,10 @@ summary(cozie_train.clean)
 
 # Adjusting time observations to preferred frequency
 
+ATTENZIONE: arrotondando al minuto abbiamo più osservazioni con il medesimo record temporale.
+
 ```{r}
 cozie_train.clean2=cozie_train.clean
-cozie_train.clean2$time=format(cozie_train.clean2$time, format='%H:%M:%S')
+cozie_train.clean2$time=round(cozie_train.clean2$time,"mins")
 ```
 
