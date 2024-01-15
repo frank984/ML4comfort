@@ -101,6 +101,7 @@ We're excluding it from our current analysis the following variables:
 - Standard deviations of the urban indexes, such as the Sky View Factor, the Green View Factor etc...
 - Standard deviations of building morphology measures, such as Foorprint, Perimeter etc...
 - id_unique, a unique identifier for the rows.
+- ws_survey_count: increasing counter for each micro-survey response.
 
 
 ```{r}
@@ -111,7 +112,8 @@ cozie_train.clean=subset(cozie_train.clean,
                                      Visual.Complexity.Stdev,
                                      id_unique,
                                      Footprint.Stdev,Perimeter.Total,Perimeter.Stdev,
-                                     Complexity.Stdev
+                                     Complexity.Stdev,
+                                     ws_survey_count
                                      ))
 
 summary(cozie_train.clean)
