@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-#library(geojsonio)
+library(geojsonio)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
