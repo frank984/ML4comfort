@@ -4398,35 +4398,12 @@ display: none;
 </div>
 
 
-<pre class="r"><code>library(geojsonio)</code></pre>
-<pre><code>## Warning: il pacchetto &#39;geojsonio&#39; è stato creato con R versione 4.3.2</code></pre>
-<pre><code>## Registered S3 method overwritten by &#39;geojsonsf&#39;:
-##   method        from   
-##   print.geojson geojson</code></pre>
-<pre><code>## 
-## Caricamento pacchetto: &#39;geojsonio&#39;</code></pre>
-<pre><code>## Il seguente oggetto è mascherato da &#39;package:base&#39;:
-## 
-##     pretty</code></pre>
-<pre class="r"><code>library(leaflet)</code></pre>
-<pre><code>## Warning: il pacchetto &#39;leaflet&#39; è stato creato con R versione 4.3.2</code></pre>
-<pre class="r"><code>library(leaflet.extras)</code></pre>
-<pre><code>## Warning: il pacchetto &#39;leaflet.extras&#39; è stato creato con R versione 4.3.2</code></pre>
-<pre class="r"><code>library(dplyr)</code></pre>
-<pre><code>## 
-## Caricamento pacchetto: &#39;dplyr&#39;</code></pre>
-<pre><code>## I seguenti oggetti sono mascherati da &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## I seguenti oggetti sono mascherati da &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(lubridate)</code></pre>
-<pre><code>## 
-## Caricamento pacchetto: &#39;lubridate&#39;</code></pre>
-<pre><code>## I seguenti oggetti sono mascherati da &#39;package:base&#39;:
-## 
-##     date, intersect, setdiff, union</code></pre>
+<pre class="r"><code>library(geojsonio)
+library(leaflet)
+library(leaflet.extras)
+library(dplyr)
+library(lubridate)
+library(htmltools)</code></pre>
 <div id="gsv2svf" class="section level2">
 <h2>GSV2SVF</h2>
 <p>GSV2SVF is designed to interactively calculate sky/tree/building view
@@ -4458,70 +4435,8 @@ str(df)</code></pre>
 ##  3rd Qu.:0.5049   3rd Qu.:0.459964  
 ##  Max.   :0.8251   Max.   :0.787415</code></pre>
 </div>
-<div id="thresholds---first-scenario" class="section level2">
-<h2>Thresholds - First Scenario</h2>
-<p>We first consider the following scenarios:</p>
-<ul>
-<li>SVF&gt;0.8</li>
-<li>SVF&lt;0.4 and GVF&lt;0.4</li>
-<li>SVF&lt;0.4 and GVF&gt;0.7</li>
-</ul>
-<pre class="r"><code>FirstScen=df[which(df$svf&gt;.8),c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-FirstScen$Scen=as.factor(1)
-SecondScen=df[which(df$svf&lt;.4&amp;df$tvf&lt;0.4),
-              c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-SecondScen$Scen=as.factor(2)
-ThirdScen=df[which(df$svf&lt;.4&amp;df$tvf&gt;0.7),
-             c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-ThirdScen$Scen=as.factor(3)
-df2=full_join(FirstScen,SecondScen)</code></pre>
-<pre><code>## Joining with `by = join_by(lat, lon, date, svf, tvf, Scen)`</code></pre>
-<pre class="r"><code>df2=full_join(df2,ThirdScen)</code></pre>
-<pre><code>## Joining with `by = join_by(lat, lon, date, svf, tvf, Scen)`</code></pre>
-<pre class="r"><code>df2[,c(&quot;date&quot;,&quot;Scen&quot;)]</code></pre>
-<pre><code>##          date Scen
-## 1  2023-04-01    1
-## 2  2023-04-01    2
-## 3  2023-04-01    2
-## 4  2023-04-01    2
-## 5  2023-04-01    2
-## 6  2017-10-01    2
-## 7  2023-04-01    2
-## 8  2023-04-01    2
-## 9  2023-04-01    2
-## 10 2023-04-01    2
-## 11 2023-04-01    2
-## 12 2023-04-01    2
-## 13 2023-04-01    2
-## 14 2023-04-01    2
-## 15 2023-04-01    2
-## 16 2017-10-01    2
-## 17 2023-04-01    2
-## 18 2023-04-01    2
-## 19 2023-04-01    3
-## 20 2023-04-01    3
-## 21 2023-04-01    3
-## 22 2023-04-01    3
-## 23 2023-04-01    3</code></pre>
-<pre class="r"><code>pal &lt;- colorFactor(c(&quot;blue&quot;,&quot;red&quot;, &quot;darkgreen&quot;), domain = c(&quot;1&quot;, &quot;2&quot;,&quot;3&quot;))
-#colnames(df2)[1:2]=c(&quot;long&quot;,&quot;lat&quot;)
-leaflet(df2) %&gt;% addTiles() %&gt;%
-  addCircleMarkers(
-    radius = 2.5,
-    color = ~pal(Scen),
-    stroke = FALSE, fillOpacity = 1
-  )</code></pre>
-<pre><code>## Assuming &quot;lon&quot; and &quot;lat&quot; are longitude and latitude, respectively</code></pre>
-<<<<<<< HEAD
-<div id="htmlwidget-1a42dd113c096a615bdb" style="width:672px;height:480px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1a42dd113c096a615bdb">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[45.4785376745807,45.4834585179497,45.4820930762921,45.4812230922594,45.4787464039944,45.477544867908,45.4810531468002,45.4822984956569,45.4824779076815,45.4829009005067,45.480619981668,45.4817548735836,45.4809639274525,45.482359310911,45.4794286183269,45.4801553993506,45.4795268796161,45.48177941883,45.4779857715769,45.4791374140762,45.4781758255036,45.4805538238013,45.4818946232402],[9.23662419514809,9.23291149420587,9.23135968691977,9.23142661119761,9.22390828377712,9.22905662514796,9.22695622377366,9.23284653856495,9.23429109257369,9.23131756662824,9.23121443774782,9.23196188970343,9.2345621762794,9.23309623317064,9.23319416469774,9.22734362022149,9.23541655395922,9.22806783946734,9.23001694510676,9.23001328152795,9.23001395776565,9.22997244697749,9.22992694311126],2.5,null,null,{"interactive":true,"className":"","stroke":false,"color":["#0000FF","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#0000FF","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400"],"fillOpacity":1},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[45.477544867908,45.4834585179497],"lng":[9.22390828377712,9.23662419514809]}},"evals":[],"jsHooks":[]}</script>
-=======
-<div class="leaflet html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-390ac15dc2e8ade38645" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-390ac15dc2e8ade38645">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[45.47853767458069,45.48345851794966,45.48209307629214,45.48122309225943,45.47874640399438,45.47754486790795,45.48105314680022,45.48229849565691,45.48247790768147,45.48290090050668,45.48061998166797,45.48175487358364,45.48096392745252,45.48235931091098,45.47942861832687,45.48015539935061,45.47952687961612,45.48177941882999,45.47798577157694,45.47913741407625,45.47817582550363,45.48055382380134,45.48189462324019],[9.236624195148085,9.232911494205874,9.231359686919774,9.231426611197605,9.223908283777119,9.229056625147958,9.226956223773664,9.232846538564948,9.234291092573688,9.231317566628244,9.23121443774782,9.231961889703429,9.234562176279399,9.233096233170636,9.233194164697741,9.227343620221493,9.235416553959215,9.228067839467336,9.230016945106758,9.230013281527947,9.230013957765653,9.22997244697749,9.229926943111264],2.5,null,null,{"interactive":true,"className":"","stroke":false,"color":["#0000FF","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#0000FF","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400"],"fillOpacity":1},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[45.47754486790795,45.48345851794966],"lng":[9.223908283777119,9.236624195148085]}},"evals":[],"jsHooks":[]}</script>
->>>>>>> 8f76fd27ad04ddda7f25239cb5f449df238e24b7
-</div>
-<div id="thresholds---second-scenario" class="section level2">
-<h2>Thresholds - Second Scenario</h2>
+<div id="interval-thresholds" class="section level2">
+<h2>Interval thresholds</h2>
 <p>We now set the threshold based on the 30% and 90% quantiles of the
 empirical distributions for SVF and GVF.</p>
 <pre class="r"><code>q_svf=quantile(df$svf,probs = c(.3,.9)); q_svf</code></pre>
@@ -4530,56 +4445,65 @@ empirical distributions for SVF and GVF.</p>
 <pre class="r"><code>q_tvf=quantile(df$tvf,probs=c(.3,.9)); q_tvf</code></pre>
 <pre><code>##       30%       90% 
 ## 0.1350219 0.6599899</code></pre>
-<pre class="r"><code>FirstScen=df[which(df$svf&gt;q_svf[2]),c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-FirstScen$Scen=as.factor(1)
+<pre class="r"><code>scn=c(&quot;Clear sky&quot;,&quot;Urban canyon&quot;,&quot;Green canyon&quot;)
+
+FirstScen=df[which(df$svf&gt;q_svf[2]),c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
+FirstScen$Scen=as.factor(scn[1])
 SecondScen=df[which(df$svf&lt;q_svf[1]&amp;df$tvf&lt;q_tvf[1]),
               c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-SecondScen$Scen=as.factor(2)
+SecondScen$Scen=as.factor(scn[2])
 ThirdScen=df[which(df$svf&lt;q_svf[1]&amp;df$tvf&gt;q_svf[2]),
              c(&quot;lat&quot;,&quot;lon&quot;,&quot;date&quot;,&quot;svf&quot;,&quot;tvf&quot;)]
-ThirdScen$Scen=as.factor(3)
-df2=full_join(FirstScen,SecondScen)</code></pre>
-<pre><code>## Joining with `by = join_by(lat, lon, date, svf, tvf, Scen)`</code></pre>
-<pre class="r"><code>df2=full_join(df2,ThirdScen)</code></pre>
-<pre><code>## Joining with `by = join_by(lat, lon, date, svf, tvf, Scen)`</code></pre>
+ThirdScen$Scen=as.factor(scn[3])
+df2=full_join(FirstScen,SecondScen)
+df2=full_join(df2,ThirdScen)</code></pre>
 <pre class="r"><code>df2[,c(&quot;date&quot;,&quot;Scen&quot;)]</code></pre>
-<pre><code>##          date Scen
-## 1  2017-10-01    1
-## 2  2022-08-01    1
-## 3  2023-04-01    1
-## 4  2019-06-01    1
-## 5  2012-09-01    1
-## 6  2023-04-01    1
-## 7  2023-04-01    1
-## 8  2023-04-01    2
-## 9  2017-10-01    2
-## 10 2023-04-01    2
-## 11 2023-04-01    3
-## 12 2023-04-01    3
-## 13 2023-04-01    3
-## 14 2023-04-01    3
-## 15 2012-09-01    3
-## 16 2023-04-01    3
-## 17 2023-04-01    3
-## 18 2023-04-01    3
-## 19 2023-04-01    3
-## 20 2023-04-01    3</code></pre>
-<pre class="r"><code>pal &lt;- colorFactor(c(&quot;blue&quot;,&quot;red&quot;, &quot;darkgreen&quot;), domain = c(&quot;1&quot;, &quot;2&quot;,&quot;3&quot;))
+<pre><code>##          date         Scen
+## 1  2017-10-01    Clear sky
+## 2  2022-08-01    Clear sky
+## 3  2023-04-01    Clear sky
+## 4  2019-06-01    Clear sky
+## 5  2012-09-01    Clear sky
+## 6  2023-04-01    Clear sky
+## 7  2023-04-01    Clear sky
+## 8  2023-04-01 Urban canyon
+## 9  2017-10-01 Urban canyon
+## 10 2023-04-01 Urban canyon
+## 11 2023-04-01 Green canyon
+## 12 2023-04-01 Green canyon
+## 13 2023-04-01 Green canyon
+## 14 2023-04-01 Green canyon
+## 15 2012-09-01 Green canyon
+## 16 2023-04-01 Green canyon
+## 17 2023-04-01 Green canyon
+## 18 2023-04-01 Green canyon
+## 19 2023-04-01 Green canyon
+## 20 2023-04-01 Green canyon</code></pre>
+<pre class="r"><code>labels &lt;- paste(
+  &quot;&lt;strong&gt;&quot;, df2$lat,
+  &quot;&lt;/strong&gt;&lt;br&gt;Building:&quot;, df2$lon) %&gt;%
+  lapply(htmltools::HTML)
+
+pal &lt;- colorFactor(c(&quot;blue&quot;, &quot;green&quot;,&quot;red&quot;), domain = scn)
 #colnames(df2)[1:2]=c(&quot;long&quot;,&quot;lat&quot;)
 leaflet(df2) %&gt;% addTiles() %&gt;%
+  #addProviderTiles(providers$CartoDB.Positron)%&gt;%
   addCircleMarkers(
-    radius = 2.5,
+    radius = 7,
     color = ~pal(Scen),
-    stroke = FALSE, fillOpacity = 1
+    stroke = FALSE, fillOpacity = 1,
+    #labels=~labels,
+    popup = ~paste(&quot;&lt;br&gt;Lat:&quot;,lat, &quot;&lt;br&gt;Lon:&quot;, lon,
+                            &quot;&lt;br&gt;SVF:&quot;,svf,&quot;&lt;br&gt;GVF:&quot;,tvf)
+    )%&gt;%
+  addLegend(&quot;topleft&quot;, pal = pal, 
+            values = ~Scen,
+    title = &quot;Scenario&quot;,
+    labFormat = labelFormat(prefix = &quot; &quot;),
+    opacity = 1
   )</code></pre>
-<pre><code>## Assuming &quot;lon&quot; and &quot;lat&quot; are longitude and latitude, respectively</code></pre>
-<<<<<<< HEAD
-<div id="htmlwidget-676484bc9498a8bcc54d" style="width:672px;height:480px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-676484bc9498a8bcc54d">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[45.4772474944093,45.4793606419556,45.4781274476369,45.4792339284956,45.4791082203581,45.4785376745807,45.4764238369882,45.4812230922594,45.477544867908,45.4817548735836,45.4769043828516,45.4802679617372,45.4769385628186,45.4779857715769,45.4784003410898,45.4791374140762,45.4781758255036,45.4792426023238,45.4805538238013,45.4818946232402],[9.23536160891361,9.2300016807746,9.22569291953947,9.22576695167251,9.23333756154694,9.23662419514809,9.23436911072242,9.23142661119761,9.22905662514796,9.23196188970343,9.22759382831272,9.22998949225817,9.23297595622718,9.23001694510676,9.2281226211866,9.23001328152795,9.23001395776565,9.23029577525966,9.22997244697749,9.22992694311126],2.5,null,null,{"interactive":true,"className":"","stroke":false,"color":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400"],"fillOpacity":1},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[45.4764238369882,45.4818946232402],"lng":[9.22569291953947,9.23662419514809]}},"evals":[],"jsHooks":[]}</script>
-=======
-<div class="leaflet html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3d2e45c9ecf795399fe3" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-3d2e45c9ecf795399fe3">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[45.47724749440929,45.4793606419556,45.47812744763689,45.47923392849556,45.47910822035815,45.47853767458069,45.47642383698822,45.48122309225943,45.47754486790795,45.48175487358364,45.47690438285161,45.48026796173716,45.47693856281864,45.47798577157694,45.47840034108978,45.47913741407625,45.47817582550363,45.47924260232375,45.48055382380134,45.48189462324019],[9.235361608913605,9.230001680774601,9.225692919539465,9.225766951672508,9.233337561546936,9.236624195148085,9.234369110722417,9.231426611197605,9.229056625147958,9.231961889703429,9.22759382831272,9.229989492258166,9.232975956227184,9.230016945106758,9.228122621186596,9.230013281527947,9.230013957765653,9.230295775259655,9.22997244697749,9.229926943111264],2.5,null,null,{"interactive":true,"className":"","stroke":false,"color":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400","#006400"],"fillOpacity":1},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[45.47642383698822,45.48189462324019],"lng":[9.225692919539465,9.236624195148085]}},"evals":[],"jsHooks":[]}</script>
->>>>>>> 8f76fd27ad04ddda7f25239cb5f449df238e24b7
+<div class="leaflet html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-ea92cff1173d36126f3a" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-ea92cff1173d36126f3a">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[45.47724749440929,45.4793606419556,45.47812744763689,45.47923392849556,45.47910822035815,45.47853767458069,45.47642383698822,45.48122309225943,45.47754486790795,45.48175487358364,45.47690438285161,45.48026796173716,45.47693856281864,45.47798577157694,45.47840034108978,45.47913741407625,45.47817582550363,45.47924260232375,45.48055382380134,45.48189462324019],[9.235361608913605,9.230001680774601,9.225692919539465,9.225766951672508,9.233337561546936,9.236624195148085,9.234369110722417,9.231426611197605,9.229056625147958,9.231961889703429,9.22759382831272,9.229989492258166,9.232975956227184,9.230016945106758,9.228122621186596,9.230013281527947,9.230013957765653,9.230295775259655,9.22997244697749,9.229926943111264],7,null,null,{"interactive":true,"className":"","stroke":false,"color":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#0000FF","#FF0000","#FF0000","#FF0000","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00","#00FF00"],"fillOpacity":1},null,null,["<br>Lat: 45.4772474944093 <br>Lon: 9.23536160891361 <br>SVF: 0.650447469254 <br>GVF: 0.136095219989","<br>Lat: 45.4793606419556 <br>Lon: 9.2300016807746 <br>SVF: 0.61700190056 <br>GVF: 0.293994807291","<br>Lat: 45.4781274476369 <br>Lon: 9.22569291953947 <br>SVF: 0.773564714138 <br>GVF: 0.153747396592","<br>Lat: 45.4792339284956 <br>Lon: 9.22576695167251 <br>SVF: 0.599214232652 <br>GVF: 0.0915804101569","<br>Lat: 45.4791082203581 <br>Lon: 9.23333756154694 <br>SVF: 0.622202615246 <br>GVF: 0.190595590006","<br>Lat: 45.4785376745807 <br>Lon: 9.23662419514809 <br>SVF: 0.825063627796 <br>GVF: 0.11309613181","<br>Lat: 45.4764238369882 <br>Lon: 9.23436911072242 <br>SVF: 0.636850818603 <br>GVF: 0.0715814776445","<br>Lat: 45.4812230922594 <br>Lon: 9.23142661119761 <br>SVF: 0.306179001783 <br>GVF: 0.00154683225788","<br>Lat: 45.477544867908 <br>Lon: 9.22905662514796 <br>SVF: 0.227184847993 <br>GVF: 0.0918151129136","<br>Lat: 45.4817548735836 <br>Lon: 9.23196188970343 <br>SVF: 0.282624322373 <br>GVF: 0.0105261542336","<br>Lat: 45.4769043828516 <br>Lon: 9.22759382831272 <br>SVF: 0.256163396823 <br>GVF: 0.680296665958","<br>Lat: 45.4802679617372 <br>Lon: 9.22998949225817 <br>SVF: 0.303833844942 <br>GVF: 0.598175308526","<br>Lat: 45.4769385628186 <br>Lon: 9.23297595622718 <br>SVF: 0.302650447706 <br>GVF: 0.659989912802","<br>Lat: 45.4779857715769 <br>Lon: 9.23001694510676 <br>SVF: 0.169478621827 <br>GVF: 0.741249351207","<br>Lat: 45.4784003410898 <br>Lon: 9.2281226211866 <br>SVF: 0.18308027815 <br>GVF: 0.631478764599","<br>Lat: 45.4791374140762 <br>Lon: 9.23001328152795 <br>SVF: 0.17478004157 <br>GVF: 0.778089723807","<br>Lat: 45.4781758255036 <br>Lon: 9.23001395776565 <br>SVF: 0.181977004248 <br>GVF: 0.70735406277","<br>Lat: 45.4792426023238 <br>Lon: 9.23029577525966 <br>SVF: 0.280620456512 <br>GVF: 0.691144470139","<br>Lat: 45.4805538238013 <br>Lon: 9.22997244697749 <br>SVF: 0.182039955313 <br>GVF: 0.787414462062","<br>Lat: 45.4818946232402 <br>Lon: 9.22992694311126 <br>SVF: 0.0269967628468 <br>GVF: 0.713575895899"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addLegend","args":[{"colors":["#0000FF","#FF0000","#00FF00"],"labels":[" Clear sky"," Urban canyon"," Green canyon"],"na_color":null,"na_label":"NA","opacity":1,"position":"topleft","type":"factor","title":"Scenario","extra":null,"layerId":null,"className":"info legend","group":null}]}],"limits":{"lat":[45.47642383698822,45.48189462324019],"lng":[9.225692919539465,9.236624195148085]}},"evals":[],"jsHooks":[]}</script>
 </div>
 
 

@@ -4,8 +4,8 @@ output: html_document
 date: "2024-01-08"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 ```
 
 ```{r}
@@ -14,6 +14,7 @@ library(leaflet)
 library(leaflet.extras)
 library(dplyr)
 library(lubridate)
+library(htmltools)
 ```
 
 
@@ -32,44 +33,7 @@ str(df)
 summary(df[,c("svf","tvf")])
 ```
 
-
-## Thresholds - First Scenario
-
-We first consider the following scenarios:
-
-- SVF>0.8
-- SVF<0.4 and GVF<0.4
-- SVF<0.4 and GVF>0.7
-
-```{r}
-FirstScen=df[which(df$svf>.8),c("lat","lon","date","svf","tvf")]
-FirstScen$Scen=as.factor(1)
-SecondScen=df[which(df$svf<.4&df$tvf<0.4),
-              c("lat","lon","date","svf","tvf")]
-SecondScen$Scen=as.factor(2)
-ThirdScen=df[which(df$svf<.4&df$tvf>0.7),
-             c("lat","lon","date","svf","tvf")]
-ThirdScen$Scen=as.factor(3)
-df2=full_join(FirstScen,SecondScen)
-df2=full_join(df2,ThirdScen)
-```
-
-```{r}
-df2[,c("date","Scen")]
-```
-
-```{r}
-pal <- colorFactor(c("blue","red", "darkgreen"), domain = c("1", "2","3"))
-#colnames(df2)[1:2]=c("long","lat")
-leaflet(df2) %>% addTiles() %>%
-  addCircleMarkers(
-    radius = 2.5,
-    color = ~pal(Scen),
-    stroke = FALSE, fillOpacity = 1
-  )
-```
-
-## Thresholds - Second Scenario
+## Thresholds 
 
 We now set the threshold based on the 30% and 90% quantiles of the empirical distributions for SVF and GVF.
 
@@ -80,14 +44,16 @@ q_tvf=quantile(df$tvf,probs=c(.3,.9)); q_tvf
 
 
 ```{r}
+scn=c("Clear sky","Urban canyon","Green canyon")
+
 FirstScen=df[which(df$svf>q_svf[2]),c("lat","lon","date","svf","tvf")]
-FirstScen$Scen=as.factor(1)
+FirstScen$Scen=as.factor(scn[1])
 SecondScen=df[which(df$svf<q_svf[1]&df$tvf<q_tvf[1]),
               c("lat","lon","date","svf","tvf")]
-SecondScen$Scen=as.factor(2)
+SecondScen$Scen=as.factor(scn[2])
 ThirdScen=df[which(df$svf<q_svf[1]&df$tvf>q_svf[2]),
              c("lat","lon","date","svf","tvf")]
-ThirdScen$Scen=as.factor(3)
+ThirdScen$Scen=as.factor(scn[3])
 df2=full_join(FirstScen,SecondScen)
 df2=full_join(df2,ThirdScen)
 ```
@@ -98,12 +64,27 @@ df2[,c("date","Scen")]
 
 
 ```{r}
-pal <- colorFactor(c("blue","red", "darkgreen"), domain = c("1", "2","3"))
+labels <- paste(
+  "<strong>", df2$lat,
+  "</strong><br>Building:", df2$lon) %>%
+  lapply(htmltools::HTML)
+
+pal <- colorFactor(c("blue", "green","red"), domain = scn)
 #colnames(df2)[1:2]=c("long","lat")
 leaflet(df2) %>% addTiles() %>%
+  #addProviderTiles(providers$CartoDB.Positron)%>%
   addCircleMarkers(
-    radius = 2.5,
+    radius = 7,
     color = ~pal(Scen),
-    stroke = FALSE, fillOpacity = 1
+    stroke = FALSE, fillOpacity = 1,
+    #labels=~labels,
+    popup = ~paste("<br>Lat:",lat, "<br>Lon:", lon,
+                            "<br>SVF:",svf,"<br>GVF:",tvf)
+    )%>%
+  addLegend("topleft", pal = pal, 
+            values = ~Scen,
+    title = "Scenario",
+    labFormat = labelFormat(prefix = " "),
+    opacity = 1
   )
 ```
