@@ -27,24 +27,53 @@ GSV2SVF is designed to interactively calculate sky/tree/building view factors fr
 We consider data only for the sky and green view factors (SVF, GVF). We restrict our attention to the area of Città Studi.
 
 ```{r}
-df=read.csv("Milano-CittaStudi.csv")
+df=read.csv("Milano-CittaStudi2.csv")
 df$date=ym(df$date)
 str(df)
 summary(df[,c("svf","tvf")])
 ```
+```{r}
+par(mfrow=c(1,2))
+hist(df$svf,main="SVF",ylab=" ",xlab=" ",breaks=20)
+hist(df$tvf,main="GVF",ylab=" ",xlab=" ",breaks=20)
+```
+
+
+## Spatial distribution 
+
+Here, we present the spatial distribution of sampled points. Click on any point to view its latitude, longitude, SVF, and GVF.
+
+```{r}
+labels <- paste(
+  "<strong>", df$lat,
+  "</strong><br>Building:", df$lon) %>%
+  lapply(htmltools::HTML)
+
+leaflet(df) %>% addTiles() %>%
+  #addProviderTiles(providers$CartoDB.Positron)%>%
+  addCircleMarkers(
+    radius = 4,
+    color = 'black',
+    stroke = FALSE, fillOpacity = 1,
+    #labels=~labels,
+    popup = ~paste("<br>Lat:",lat, "<br>Lon:", lon,
+                            "<br>SVF:",svf,"<br>GVF:",tvf)
+    )
+```
+
 
 ## Thresholds 
 
 We now set the threshold based on the 30% and 90% quantiles of the empirical distributions for SVF and GVF.
 
 ```{r}
-q_svf=quantile(df$svf,probs = c(.3,.9)); q_svf
-q_tvf=quantile(df$tvf,probs=c(.3,.9)); q_tvf
+q_svf=quantile(df$svf,probs = c(.3,.7)); q_svf
+q_tvf=quantile(df$tvf,probs=c(.3,.7)); q_tvf
 ```
 
 
 ```{r}
-scn=c("Clear sky","Urban canyon","Green canyon")
+scn=c("Open Sky","Urban Canyon","GreenSpace")
 
 FirstScen=df[which(df$svf>q_svf[2]),c("lat","lon","date","svf","tvf")]
 FirstScen$Scen=as.factor(scn[1])
@@ -69,7 +98,7 @@ labels <- paste(
   "</strong><br>Building:", df2$lon) %>%
   lapply(htmltools::HTML)
 
-pal <- colorFactor(c("blue", "green","red"), domain = scn)
+pal <- colorFactor(c("green", "blue","red"), domain = scn)
 #colnames(df2)[1:2]=c("long","lat")
 leaflet(df2) %>% addTiles() %>%
   #addProviderTiles(providers$CartoDB.Positron)%>%
@@ -79,7 +108,7 @@ leaflet(df2) %>% addTiles() %>%
     stroke = FALSE, fillOpacity = 1,
     #labels=~labels,
     popup = ~paste("<br>Lat:",lat, "<br>Lon:", lon,
-                            "<br>SVF:",svf,"<br>GVF:",tvf)
+                            "<br>SVF:",svf,"<br>GVF:",tvf,"<br>Date:",date)
     )%>%
   addLegend("topleft", pal = pal, 
             values = ~Scen,
