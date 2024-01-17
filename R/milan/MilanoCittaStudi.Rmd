@@ -64,7 +64,7 @@ leaflet(df) %>% addTiles() %>%
 
 ## Thresholds 
 
-We now set the threshold based on the 30% and 90% quantiles of the empirical distributions for SVF and GVF.
+We now set the threshold based on the 30% and 70% quantiles of the empirical distributions for SVF and GVF.
 
 ```{r}
 q_svf=quantile(df$svf,probs = c(.3,.7)); q_svf
@@ -86,11 +86,6 @@ ThirdScen$Scen=as.factor(scn[3])
 df2=full_join(FirstScen,SecondScen)
 df2=full_join(df2,ThirdScen)
 ```
-
-```{r}
-df2[,c("date","Scen")]
-```
-
 
 ```{r}
 labels <- paste(
@@ -116,4 +111,128 @@ leaflet(df2) %>% addTiles() %>%
     labFormat = labelFormat(prefix = " "),
     opacity = 1
   )
+```
+
+Two distinct zones of interest are delineated as follows:
+
+$\textbf{First Area}$:
+
+(A) The southern stretch of Via Ponzio and a segment of Via Bassini (green space).
+(B) Via Vallisneri, Via Corti, and Via Buschi (urban canyon).
+(C) The remaining section of Via Bassini (open sky).
+
+![](percorso1.png)
+
+```{r}
+p1_UC=read.csv("percorso1_urbancanyon.csv")
+mean(p1_UC$svf)
+mean(p1_UC$tvf)
+```
+
+```{r}
+p1_GS=read.csv("percorso1_greenspace.csv")
+mean(p1_GS$svf)
+mean(p1_GS$tvf)
+```
+
+```{r}
+p1_OS=read.csv("percorso1_opensky.csv")
+mean(p1_OS$svf)
+mean(p1_OS$tvf)
+```
+
+Test differences in mean for:
+
+- Urban canyon vs open sky
+```{r}
+# SVF
+tts=t.test(x=p1_UC$svf,y=p1_OS$svf)
+tts$p.value
+```
+
+- Green space vs open sky
+```{r}
+# SVF
+tts=t.test(x=p1_GS$svf,y=p1_OS$svf)
+tts$p.value
+
+# GVF
+ttg=t.test(x=log(p1_GS$tvf),y=log(p1_OS$tvf))
+ttg$p.value
+
+```
+
+- Green space vs  urban canyon
+
+```{r}
+# SVF
+tts=t.test(x=p1_GS$svf,y=p1_UC$svf)
+tts$p.value
+
+# GVF
+ttg=t.test(x=log(p1_GS$tvf),y=log(p1_UC$tvf))
+ttg$p.value
+
+```
+
+
+
+$\textbf{Second Area}$:
+
+(A) Piazzale Gorini (green space).
+(B) Via Vigilio Inama (urban canyon).
+(C) Via Giacomo Venezian and via Camillo Golgi (open sky).
+
+![](percorso2.png)
+
+```{r}
+p2_UC=read.csv("percorso2_urbancanyon.csv")
+mean(p2_UC$svf)
+mean(p2_UC$tvf)
+```
+
+```{r}
+p2_GS=read.csv("percorso2_greenspace.csv")
+mean(p2_GS$svf)
+mean(p2_GS$tvf)
+```
+
+```{r}
+p2_OS=read.csv("percorso2_opensky.csv")
+mean(p2_OS$svf)
+mean(p2_OS$tvf)
+```
+
+Test differences in mean for:
+
+- Urban canyon vs open sky
+```{r}
+# SVF
+tts=t.test(x=p2_UC$svf,y=p2_OS$svf)
+tts$p.value
+```
+
+- Green space vs open sky
+```{r}
+# SVF
+tts=t.test(x=p2_GS$svf,y=p2_OS$svf)
+tts$p.value
+
+# GVF
+ttg=t.test(x=log(p2_GS$tvf),y=log(p2_OS$tvf))
+ttg$p.value
+
+```
+
+- Green space vs  urban canyon
+
+```{r}
+# SVF
+tts=t.test(x=p2_GS$svf,y=p2_UC$svf)
+tts$p.value
+
+# GVF
+ttg=t.test(x=log(p2_GS$tvf),y=log(p2_UC$tvf))
+ttg$p.value
+
 ```
