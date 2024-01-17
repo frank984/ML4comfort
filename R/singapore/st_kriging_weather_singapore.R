@@ -115,8 +115,14 @@ weather_STkrig=function(x,len.out=1000,LAT,LON){
 
 
 air1_STKRIG=weather_STkrig(air_temp1_sp.full,len.out=1000,LAT,LON)
+save(air1_STKRIG,file="air1_STKRIG.Rdata")
 RH1_STKRIG=weather_STkrig(RH1_sp.full,len.out=1000,LAT,LON)
+save(RH1_STKRIG,file="RH1_STKRIG,Rdata")
 rainfall1_STKRIG=weather_STkrig(rainfall1_sp.full,len.out=1000,LAT,LON)
+save(rainfall1_STKRIG,file="rainfall1_STKRIG.Rdata")
 wind_dir1_STKRIG=weather_STkrig(wind_dir1_sp.full,len.out=1000,LAT,LON)
+save(wind_dir1_STKRIG,file="wind_dir1_STKRIG.Rdata")
 wind_speed1_STKRIG=weather_STkrig(wind_speed1_sp.full,len.out=1000,LAT,LON)
+save(wind_speed1_STKRIG,file="wind_speed1_STKRIG.Rdata")
+
 
