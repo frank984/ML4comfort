@@ -68,8 +68,8 @@ weather_STkrig=function(x,len.out=1000,LAT,LON){
   )
   # At first, we try to fit a metric model 
   metricVgm <- vgmST("metric",
-                     joint=vgm(0,"Exp",20,0),
-                     stAni=1)
+                     joint=vgm(100,"Exp",100,0),
+                     stAni=10)
   metricVgm <- fit.StVariogram(vv, metricVgm)
   
   #preliminary choice
