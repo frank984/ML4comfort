@@ -76,6 +76,7 @@ q_svf=quantile(df$svf,probs = c(.3,.7));
 q_tvf=quantile(df$tvf,probs=c(.3,.7)); data.frame(index=c("SVF","GVF"),q30=c(q_svf[1],q_tvf[1]),q70=c(q_svf[2],q_tvf[2]))
 ```
 
+Click on the points below to see relative latitude, longitude, SVF, GVF, and date of measurement.
 
 ```{r}
 scn=c("Open Sky","Urban Canyon","GreenSpace")
