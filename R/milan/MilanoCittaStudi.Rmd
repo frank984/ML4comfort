@@ -26,12 +26,17 @@ GSV2SVF is designed to interactively calculate sky/tree/building view factors fr
 
 We consider data only for the sky and green view factors (SVF, GVF). We restrict our attention to the area of Città Studi.
 
+## Summary statistics of SVF and GVF
+
 ```{r}
 df=read.csv("Milano-CittaStudi2.csv")
 df$date=ym(df$date)
-str(df)
+#str(df)
 summary(df[,c("svf","tvf")])
 ```
+
+## Histograms of SVF and GVF
+
 ```{r}
 par(mfrow=c(1,2))
 hist(df$svf,main="SVF",ylab=" ",xlab=" ",breaks=20)
@@ -64,11 +69,11 @@ leaflet(df) %>% addTiles() %>%
 
 ## Thresholds 
 
-We now set the threshold based on the 30% and 70% quantiles of the empirical distributions for SVF and GVF.
+We now set the thresholds for the identification of the three scenarios (opena sky, urban canyon, green space) based on the 30% and 70% quantiles of the empirical distributions for SVF and GVF, which are reported below.
 
 ```{r}
-q_svf=quantile(df$svf,probs = c(.3,.7)); q_svf
-q_tvf=quantile(df$tvf,probs=c(.3,.7)); q_tvf
+q_svf=quantile(df$svf,probs = c(.3,.7)); 
+q_tvf=quantile(df$tvf,probs=c(.3,.7)); data.frame(index=c("SVF","GVF"),q30=c(q_svf[1],q_tvf[1]),q70=c(q_svf[2],q_tvf[2]))
 ```
 
 
@@ -115,33 +120,62 @@ leaflet(df2) %>% addTiles() %>%
 
 Two distinct zones of interest are delineated as follows:
 
-$\textbf{First Area}$:
+# First area
 
 (A) The southern stretch of Via Ponzio and a segment of Via Bassini (green space).
-(B) Via Vallisneri, Via Corti, and Via Buschi (urban canyon).
-(C) The remaining section of Via Bassini (open sky).
+(B) The remaining section of Via Bassini (open sky).
+(C) Via Vallisneri, Via Corti, and Via Buschi (urban canyon).
 
 ![](percorso1.png)
 
 ```{r}
 p1_UC=read.csv("percorso1_urbancanyon.csv")
-mean(p1_UC$svf)
-mean(p1_UC$tvf)
-```
-
-```{r}
 p1_GS=read.csv("percorso1_greenspace.csv")
-mean(p1_GS$svf)
-mean(p1_GS$tvf)
+p1_OS=read.csv("percorso1_opensky.csv")
 ```
+
+Mean values for SVF and GVF in the three scenarios
 
 ```{r}
-p1_OS=read.csv("percorso1_opensky.csv")
-mean(p1_OS$svf)
-mean(p1_OS$tvf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           meanSVF=c(mean(p1_OS$svf),mean(p1_UC$svf),mean(p1_GS$svf)),
+           meanGVF=c(mean(p1_OS$tvf),mean(p1_UC$tvf),mean(p1_GS$tvf)))
 ```
 
-Test differences in mean for:
+Test normality for SVFs.
+
+```{r}
+sh_OS=shapiro.test(p1_OS$svf)
+sh_UC=shapiro.test(p1_UC$svf)
+sh_GS=shapiro.test(p1_GS$svf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           pvalues=c(sh_OS$p.value,sh_UC$p.value,sh_GS$p.value))
+
+```
+
+Test normality for GVFs
+
+```{r}
+sh_OS=shapiro.test(p1_OS$tvf)
+sh_UC=shapiro.test(p1_UC$tvf)
+sh_GS=shapiro.test(p1_GS$tvf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           pvalues=c(sh_OS$p.value,sh_UC$p.value,sh_GS$p.value))
+
+```
+
+Test normality for log(GVFs)
+
+```{r}
+sh_OS=shapiro.test(log(p1_OS$tvf))
+sh_UC=shapiro.test(log(p1_UC$tvf))
+sh_GS=shapiro.test(log(p1_GS$tvf))
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           pvalues=c(sh_OS$p.value,sh_UC$p.value,sh_GS$p.value))
+
+```
+
+Below, we test differences in mean for:
 
 - Urban canyon vs open sky
 ```{r}
@@ -177,7 +211,7 @@ ttg$p.value
 
 
 
-$\textbf{Second Area}$:
+# Second area
 
 (A) Piazzale Gorini (green space).
 (B) Via Vigilio Inama (urban canyon).
@@ -187,20 +221,39 @@ $\textbf{Second Area}$:
 
 ```{r}
 p2_UC=read.csv("percorso2_urbancanyon.csv")
-mean(p2_UC$svf)
-mean(p2_UC$tvf)
-```
-
-```{r}
 p2_GS=read.csv("percorso2_greenspace.csv")
-mean(p2_GS$svf)
-mean(p2_GS$tvf)
+p2_OS=read.csv("percorso2_opensky.csv")
+
 ```
 
+Mean values for SVF and GVF in the three scenarios
+
 ```{r}
-p2_OS=read.csv("percorso2_opensky.csv")
-mean(p2_OS$svf)
-mean(p2_OS$tvf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           meanSVF=c(mean(p2_OS$svf),mean(p2_UC$svf),mean(p2_GS$svf)),
+           meanGVF=c(mean(p2_OS$tvf),mean(p2_UC$tvf),mean(p2_GS$tvf)))
+```
+
+Test normality for SVFs.
+
+```{r}
+sh_OS=shapiro.test(p2_OS$svf)
+sh_UC=shapiro.test(p2_UC$svf)
+sh_GS=shapiro.test(p2_GS$svf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           pvalues=c(sh_OS$p.value,sh_UC$p.value,sh_GS$p.value))
+
+```
+
+Test normality for GVFs
+
+```{r}
+sh_OS=shapiro.test(p2_OS$tvf)
+sh_UC=shapiro.test(p2_UC$tvf)
+sh_GS=shapiro.test(p2_GS$tvf)
+data.frame(Scenario=c("Open sky","Urban canyon","Green space"),
+           pvalues=c(sh_OS$p.value,sh_UC$p.value,sh_GS$p.value))
+
 ```
 
 Test differences in mean for:
@@ -219,7 +272,7 @@ tts=t.test(x=p2_GS$svf,y=p2_OS$svf)
 tts$p.value
 
 # GVF
-ttg=t.test(x=log(p2_GS$tvf),y=log(p2_OS$tvf))
+ttg=t.test(x=p2_GS$tvf,y=p2_OS$tvf)
 ttg$p.value
 
 ```
@@ -227,10 +280,6 @@ ttg$p.value
 - Green space vs  urban canyon
 
 ```{r}
-# SVF
-tts=t.test(x=p2_GS$svf,y=p2_UC$svf)
-tts$p.value
-
 # GVF
 ttg=t.test(x=log(p2_GS$tvf),y=log(p2_UC$tvf))
 ttg$p.value
