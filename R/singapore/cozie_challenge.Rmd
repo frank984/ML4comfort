@@ -377,7 +377,7 @@ rainfall1_sp=rainfall1
 apply(rainfall1_sp,2,function(x)sum(is.na(x)))
 
 #Remove stations S36, S82
-rainfall1_sp=subset(rainfall1_sp,select=-c(S36,S82))
+#rainfall1_sp=subset(rainfall1_sp,select=-c(S36,S82))
 
 rainfall1_sp$knot=1
 rainfall1_sp$indx=1:nrow(rainfall1_sp)
