@@ -11,6 +11,23 @@ load("wind_dir1_sp_full.Rdata")
 load("wind_speed1_sp_full.Rdata")
 load("cleaned_data.RData")
 
+# Load packages
+library(scales)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(lubridate)
+
+library(sp)
+library(spacetime)
+# library(ozmaps)
+library(sf)
+#library(ggmap)
+library(gstat)
+library(automap)
+
 # Spatial kriging
 
 # Define spatial grid
@@ -86,7 +103,7 @@ weather_STkrig=function(x,len.out=1000,LAT,LON){
   
   start=Sys.time()
   space_kriged <- krigeST(vr~1, data=stfdf_x, newdata=space_pred,
-                              modelList=sepVgm)
+                              modelList=metricVgm)
   end=Sys.time()
   total_time=end-start
   return(list(space_kriged=space_kriged,
