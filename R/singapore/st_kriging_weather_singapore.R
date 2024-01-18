@@ -130,6 +130,7 @@ weather_STkrig=function(x,len.out=1000,LAT,LON){
 # 
 # attr(sepVgm, "optim")$value
 
+# Overwhelming outputs! Switching to spatial kriging
 
 air1_STKRIG=weather_STkrig(air_temp1_sp.full,len.out=1000,LAT,LON)
 save(air1_STKRIG,file="air1_STKRIG.Rdata")
