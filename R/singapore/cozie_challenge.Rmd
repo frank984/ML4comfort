@@ -267,7 +267,7 @@ wind_speed1=wind_speed_wdn$mean_x[wind_speed_wdn$mean_x$time<=last_date_first_wi
 
 ```
 
-Air temperature
+Air temperature - percentage of NAs
 
 ```{r}
 apply(air_temp1,2,function(x){sum(is.na(x))/length(x)*100})
@@ -279,7 +279,7 @@ Drop S117 (all NAs).
 air_temp1=subset(air_temp1, select = -S117)
 ```
 
-Rainfall
+Rainfall - percentage of NAs
 ```{r}
 apply(rainfall1,2,function(x){sum(is.na(x))/length(x)*100})
 ```
@@ -291,19 +291,19 @@ rainfall1=subset(rainfall1, select = -c(S36,S82))
 ```
 
 
-Relative humidity
+Relative humidity - percentage of NAs
 
 ```{r}
 apply(RH1,2,function(x){sum(is.na(x))/length(x)*100})
 ```
 
-Wind direction
+Wind direction - percentage of NAs
 
 ```{r}
 apply(wind_dir1,2,function(x){sum(is.na(x))/length(x)*100})
 ```
 
-Wind speed
+Wind speed - percentage of NAs
 
 ```{r}
 apply(wind_speed1,2,function(x){sum(is.na(x))/length(x)*100})
@@ -479,6 +479,16 @@ plot(wind_dir1_sp.full$time,wind_dir1_sp.full$S108,
      type='l',ylab="S108",xlab="Time")
 ```
 
+# Save results of temporal kriging
+
+```{r}
+save(air_temp1_sp.full,file="air_temp1_sp.full.Rdata")
+save(rainfall1_sp.full,file="rainfall1_sp.full.Rdata")
+save(RH1_sp.full,file="RH1_sp.full.Rdata")
+save(wind_speed1_sp.full,file="wind_speed1_sp.full.Rdata")
+save(wind_dir1_sp.full,file="wind_dir1_sp.full.Rdata")
+```
+
 
 # Spatial kriging
 
@@ -486,9 +496,9 @@ Define spatial grid
 
 Two crucial questions emerge:
 
-1) What range of values should we employ for latitude and longitude? Opting for the maximum and minimum values recorded by the Cozie app or the weather stations.
+1) What range of values should we employ for latitude and longitude? We opt for the maximum and minimum values recorded by the Cozie app or the weather stations.
 
-2) What level of granularity should we adopt for latitude and longitude? I don't have a definitive answer to this query. Undoubtedly, higher granularity implies increased computational expenses.
+2) What level of granularity should we adopt for latitude and longitude? I don't have a definitive answer to this query, but higher granularity implies increased computational expenses.
 
 ```{r}
 lat_range_cozie=range(cozie_train$ws_latitude,na.rm=T)
