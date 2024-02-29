@@ -48,6 +48,8 @@ plot(lzn.vgm, lzn.fit)
 
 coordinates(meuse.grid) <- ~ x + y # step 3 above
 lzn.kriged <- krige(log(zinc) ~ 1, meuse, meuse.grid, model=lzn.fit)
+
+
 lzn.kriged %>% as.data.frame %>%
   ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
   scale_fill_gradient(low = "yellow", high="red") +
