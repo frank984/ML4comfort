@@ -80,6 +80,8 @@ plot(cozie_train$time,cozie_train[,target_vars[4]],
      xlab="Time",ylab=target_vars[4])
 ```
 
+# First and second time window
+
 There is a time window between January and April with no observations. Let us split the data in two parts, one until 2023-01-21 15:00:16 (indexed 614909), and the other starting from 2023-03-27 11:55:01 (indexed 615204).
 
 ```{r}
@@ -746,12 +748,12 @@ load("wind_dir1_sp.full.Rdata")
 # save(air_temp2_sp.full,file="air_temp2_sp.full.Rdata")
 # save(rainfall2_sp.full,file="rainfall2_sp.full.Rdata")
 # save(RH2_sp.full,file="RH2_sp.full.Rdata")
-# save(wind_dir2_sp.full,file="wind_dir2_sp.full")
+# save(wind_dir2_sp.full,file="wind_dir2_sp.full.Rdata")
 # save(wind_speed2_sp.full,file="wind_speed2_sp.full.Rdata")
 load("air_temp2_sp.full.Rdata")
 load("rainfall2_sp.full.Rdata")
 load("RH2_sp.full.Rdata")
-load("wind_dir2_sp.full")
+load("wind_dir2_sp.full.Rdata")
 load("wind_speed2_sp.full.Rdata")
 
 ```
@@ -794,14 +796,9 @@ grid_coords=pairs[,c("ws_latitude","ws_longitude")]
 
 ```
 
-
-$\textbf{Air temperature}$
+Function for spatio-temporal kriging
 
 ```{r}
-### Which stations recorded data for air_temp?
-# indx=intersect(colnames(air_temp),locations$id)
-
-x=air_temp1_sp.full[1:50,]
 
 spatio_temp_kr=function(x,locations,grid_coords){
   indx=locations$id%in%colnames(x)
@@ -823,6 +820,7 @@ spatio_temp_kr=function(x,locations,grid_coords){
   
   stfdf_x = STFDF(x_sp, time, data = xdata)
   
+  start=Sys.time()
   # Fit empirical variogram
   vv = variogram(xv~1, stfdf_x, 
                  width=90, 
@@ -831,14 +829,19 @@ spatio_temp_kr=function(x,locations,grid_coords){
   )
   
   metricVgm <- vgmST("metric",
-                     joint=vgm(psill=100,model="Exp",range=500,nugget=0),
+                     joint=vgm(psill=100,
+                               model="Exp",
+                               range=500,
+                               nugget=0),
                      stAni=30)
   metricVgm <- fit.StVariogram(vv, metricVgm)
   #attr(metricVgm, "optim")$value
   # Metric model 
+  end=Sys.time()
   
-  windows()
-  plot(vv, metricVgm)
+  extime_vgm=end-start
+  # windows()
+  # plot(vv, metricVgm)
   
 #   # Separable model
 #   sepVgm <- vgmST("separable",
@@ -870,15 +873,25 @@ spatio_temp_kr=function(x,locations,grid_coords){
   x_kriged <- krigeST(xv~1, data=stfdf_x, newdata=x_pred,
                               modelList=metricVgm)
   end=Sys.time()
-  (dur=end-start)
+  extime_krg=end-start
 
   df_plotkrige=as.data.frame(x_kriged)
                              
-  return(metricVgm)
+  return(list(df_plotkrige=df_plotkrige,
+              extime_vgm=extime_vgm,
+              extime_krg=extime_krg,
+              variogrm=metricVgm,
+              krige_obj=x_kriged)
+         )
  }
-
 
 ```
 
+$\textbf{Air temperature}$
+
+```{r}
+x=air_temp1_sp.full[1:50,]
+air_krg=spatio_temp_kr(x,locations,grid_coords)
+```
 
 
