@@ -887,24 +887,36 @@ spatio_temp_kr=function(x,locations,grid_coords){
 
 ```
 
-$\textbf{Air temperature}$
-
 ```{r}
 
 air1_krg=spatio_temp_kr(air_temp1_sp.full,locations,grid_coords)
+save(air1_krg,file="air1_krg.Rdata")
 air2_krg=spatio_temp_kr(air_temp2_sp.full,locations,grid_coords)
+save(air2_krg,file="air2_krg.Rdata")
 
 RH1_krg=spatio_temp_kr(RH1_sp.full,locations,grid_coords)
+save(RH1_krg,file="RH1_krg.Rdata")
+
 RH2_krg=spatio_temp_kr(RH2_sp.full,locations,grid_coords)
+save(RH2_krg,file="RH2_krg.Rdata")
 
 rainfall1_krg=spatio_temp_kr(rainfall1_sp.full,locations,grid_coords)
+save(rainfall1_krg,file="rainfall1_krg.Rdata")
+
 rainfall2_krg=spatio_temp_kr(rainfall2_sp.full,locations,grid_coords)
+save(rainfall2_krg,file="rainfall2_krg.Rdata")
 
 wind_dir1_krg=spatio_temp_kr(wind_dir1_sp.full,locations,grid_coords)
+save(wind_dir1_krg,file="wind_dir1_krg.Rdata")
+
 wind_dir2_krg=spatio_temp_kr(wind_dir2_sp.full,locations,grid_coords)
+save(wind_dir2_krg,file="wind_dir2_krg.Rdata")
 
 wind_speed1_krg=spatio_temp_kr(wind_speed1_sp.full,locations,grid_coords)
+save(wind_speed1_krg,file="wind_speed1_krg.Rdata")
+
 wind_speed2_krg=spatio_temp_kr(wind_speed2_sp.full,locations,grid_coords)
+save(wind_speed2_krg,file="wind_speed2_krg.Rdata")
 
 ```
 
