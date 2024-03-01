@@ -758,7 +758,7 @@ load("wind_speed2_sp.full.Rdata")
 
 ```
 
-# Spatial kriging
+# Spatio-temporal kriging
 
 Define spatial grid
 
@@ -887,38 +887,41 @@ spatio_temp_kr=function(x,locations,grid_coords){
 
 ```
 
+Spatio-temporal kriging is impractical due to memory constraints, as it generates files exceeding 500 GB.
+
 ```{r}
 
-air1_krg=spatio_temp_kr(air_temp1_sp.full,locations,grid_coords)
-save(air1_krg,file="air1_krg.Rdata")
-air2_krg=spatio_temp_kr(air_temp2_sp.full,locations,grid_coords)
-save(air2_krg,file="air2_krg.Rdata")
-
-RH1_krg=spatio_temp_kr(RH1_sp.full,locations,grid_coords)
-save(RH1_krg,file="RH1_krg.Rdata")
-
-RH2_krg=spatio_temp_kr(RH2_sp.full,locations,grid_coords)
-save(RH2_krg,file="RH2_krg.Rdata")
-
-rainfall1_krg=spatio_temp_kr(rainfall1_sp.full,locations,grid_coords)
-save(rainfall1_krg,file="rainfall1_krg.Rdata")
-
-rainfall2_krg=spatio_temp_kr(rainfall2_sp.full,locations,grid_coords)
-save(rainfall2_krg,file="rainfall2_krg.Rdata")
-
-wind_dir1_krg=spatio_temp_kr(wind_dir1_sp.full,locations,grid_coords)
-save(wind_dir1_krg,file="wind_dir1_krg.Rdata")
-
-wind_dir2_krg=spatio_temp_kr(wind_dir2_sp.full,locations,grid_coords)
-save(wind_dir2_krg,file="wind_dir2_krg.Rdata")
-
-wind_speed1_krg=spatio_temp_kr(wind_speed1_sp.full,locations,grid_coords)
-save(wind_speed1_krg,file="wind_speed1_krg.Rdata")
-
-wind_speed2_krg=spatio_temp_kr(wind_speed2_sp.full,locations,grid_coords)
-save(wind_speed2_krg,file="wind_speed2_krg.Rdata")
+# air1_krg=spatio_temp_kr(air_temp1_sp.full,locations,grid_coords)
+# save(air1_krg,file="air1_krg.Rdata")
+# air2_krg=spatio_temp_kr(air_temp2_sp.full,locations,grid_coords)
+# save(air2_krg,file="air2_krg.Rdata")
+# 
+# RH1_krg=spatio_temp_kr(RH1_sp.full,locations,grid_coords)
+# save(RH1_krg,file="RH1_krg.Rdata")
+# 
+# RH2_krg=spatio_temp_kr(RH2_sp.full,locations,grid_coords)
+# save(RH2_krg,file="RH2_krg.Rdata")
+# 
+# rainfall1_krg=spatio_temp_kr(rainfall1_sp.full,locations,grid_coords)
+# save(rainfall1_krg,file="rainfall1_krg.Rdata")
+# 
+# rainfall2_krg=spatio_temp_kr(rainfall2_sp.full,locations,grid_coords)
+# save(rainfall2_krg,file="rainfall2_krg.Rdata")
+# 
+# wind_dir1_krg=spatio_temp_kr(wind_dir1_sp.full,locations,grid_coords)
+# save(wind_dir1_krg,file="wind_dir1_krg.Rdata")
+# 
+# wind_dir2_krg=spatio_temp_kr(wind_dir2_sp.full,locations,grid_coords)
+# save(wind_dir2_krg,file="wind_dir2_krg.Rdata")
+# 
+# wind_speed1_krg=spatio_temp_kr(wind_speed1_sp.full,locations,grid_coords)
+# save(wind_speed1_krg,file="wind_speed1_krg.Rdata")
+# 
+# wind_speed2_krg=spatio_temp_kr(wind_speed2_sp.full,locations,grid_coords)
+# save(wind_speed2_krg,file="wind_speed2_krg.Rdata")
 
 ```
+
 
 ## Match survey, physio, and weather variable
 
@@ -930,7 +933,7 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
   # var_name is the name of the weather variable
 
   # extract kriged data
-  B=x$df_plotkrige
+  B=x_kriged$df_plotkrige
   
   # extract times
   Btime=data.frame(time=index(x$krige_obj@time),
@@ -965,4 +968,118 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
 }
 
 ```
+
+## Spatial kriging
+
+```{r}
+# (*)In air_temp, consider only times at which we have survey measurement
+t_indx1=air_temp1_sp.full$time%in%spatialkr_t
+air_temp1_sp.full_shrink=air_temp1_sp.full[t_indx1,]
+
+t_indx2=air_temp2_sp.full$time%in%spatialkr_t
+air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
+
+x_shr=air_temp1_sp.full_shrink
+
+#
+spat_kr=function(x_shr,var_name,grid_coords){
+  
+  # x_shr is the weather var dataframe in wide format considering only relevant times (see (*) above)
+  
+  res_fin=NULL
+  coordinates(grid_coords) <- ~ ws_latitude + ws_longitude 
+  #var_name="air_temp"
+  for(i in 1:nrow(x_shr)){
+    
+    # sp_indx=locations$id%in%colnames(air_temp1_sp.full_shrink)
+    # x_sp =locations[sp_indx,c("latitude","longitude","id")]
+    # x_sp$var=as.vector(air_temp1_sp.full_shrink[i,-1])
+    
+    x_shr_long=x_shr[i,] %>%
+      pivot_longer(!time, names_to = "id", values_to = "value")
+    x_shr_long$id=as.factor(x_shr_long$id)
+    
+    x_shr_long2=merge(x_shr_long,locations,by="id")
+    x_shr_long2=x_shr_long2[c("latitude", "longitude", "value")]
+    
+    coordinates(x_shr_long2) = ~ latitude + longitude
+    
+    # 1. Calculate the sample variogram. This is done with the variogram function
+    v.vgm <- variogram(value~1, x_shr_long2)
+    #plot(v.vgm)
+    
+    # 2. Fit a model to the sample variogram
+    v.fit <- fit.variogram(v.vgm, vgm(10,"Gau",10,0))
+    
+    #plot(v.vgm, v.fit)
+    
+    v.kriged <- krige(value ~ 1, x_shr_long2, grid_coords, model=v.fit)
+    
+    res=v.kriged %>% as.data.frame
+    res$time=x_shr$time[i]
+    res=res[c("time","ws_latitude","ws_longitude","var1.pred")]
+    colnames(res)[4]=var_name
+    
+    res_fin=rbind(res,res_fin)
+  }
+  return(res_fin)
+}
+
+start=Sys.time()
+prv=spat_kr(air_temp1_sp.full_shrink,"air_temp",grid_coords)
+end=Sys.time()
+end-start
+```
+
+## Match survey/physio and weather data
+
+```{r}
+x_kriged=prv
+x_kriged=drop_na(x_kriged)
+var_name="air_temp"
+```
+
+
+```{r}
+match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
+  # df_cozie is the physio and survey dataset
+  # x_kriged is the weather variable dataset after kriging has been performed
+  # var_name is the name of the weather variable
+
+  # extract kriged data
+  B=x_kriged#$df_plotkrige
+  
+  # extract times
+  Btime=data.frame(time=index(x$krige_obj@time),
+                   timeIndex=x$krige_obj@time,
+                   row.names = x$krige_obj@time)
+  
+  # match times
+  AB=bayesbio::nearestTime(x_kriged,df_cozie,"time","time")
+  AB$newvar=0
+  
+  for(i in 1:nrow(AB)){
+    
+    tI=AB$timeIndex[i]
+    B_temp=B[which(B$timeIndex==tI),]
+    
+    ref_points=unlist(as.vector(A[i,c("ws_latitude", "ws_longitude")]))
+    
+    # Find point in B_temp[c("ws_latitude", "ws_longitude")] spatially closest point to A[i,c("ws_latitude", "ws_longitude")] 
+    # or, equivalently
+    
+    # Compute euclidian distance between A[i,c("ws_latitude", "ws_longitude")] and each point in B-temp
+    tmp=sqrt(rowSums(
+      as.matrix(B_temp[c("ws_latitude", "ws_longitude")])-
+        matrix(rep(ref_points,dim(B_temp)[1]),ncol=2,byrow = T))^2)
+    
+    # Find the minimum
+    mindist=which.min(tmp)
+    AB$newvar[i]=B_temp$var1.pred[mindist]
+  }
+  colnames(AB)[colnames(AB)==tail(colnames(AB),1)]=var_name
+  return(AB[c("time",var_name)])
+}
+```
+
 
