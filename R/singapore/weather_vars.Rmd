@@ -908,4 +908,49 @@ wind_speed2_krg=spatio_temp_kr(wind_speed2_sp.full,locations,grid_coords)
 
 ```
 
+## Match survey, physio, and weather variable
+
+```{r}
+
+match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
+  # df_cozie is the physio and survey dataset
+  # x_kriged is the weather variable dataset after kriging has been performed
+  # var_name is the name of the weather variable
+
+  # extract kriged data
+  B=x$df_plotkrige
+  
+  # extract times
+  Btime=data.frame(time=index(x$krige_obj@time),
+                   timeIndex=x$krige_obj@time,
+                   row.names = x$krige_obj@time)
+  
+  # match times
+  AB=bayesbio::nearestTime(df_cozie,Btime,"time","time")
+  AB$newvar=0
+  
+  for(i in 1:nrow(AB)){
+    
+    tI=AB$timeIndex[i]
+    B_temp=B[which(B$timeIndex==tI),]
+    
+    ref_points=unlist(as.vector(A[i,c("ws_latitude", "ws_longitude")]))
+    
+    # Find point in B_temp[c("ws_latitude", "ws_longitude")] spatially closest point to A[i,c("ws_latitude", "ws_longitude")] 
+    # or, equivalently
+    
+    # Compute euclidian distance between A[i,c("ws_latitude", "ws_longitude")] and each point in B-temp
+    tmp=sqrt(rowSums(
+      as.matrix(B_temp[c("ws_latitude", "ws_longitude")])-
+        matrix(rep(ref_points,dim(B_temp)[1]),ncol=2,byrow = T))^2)
+    
+    # Find the minimum
+    mindist=which.min(tmp)
+    AB$newvar[i]=B_temp$var1.pred[mindist]
+  }
+  colnames(AB)[colnames(AB)==tail(colnames(AB),1)]=var_name
+  return(AB[c("time",var_name)])
+}
+
+```
 
