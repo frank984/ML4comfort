@@ -973,10 +973,10 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
 
 ```{r}
 # (*)In air_temp, consider only times at which we have survey measurement
-t_indx1=air_temp1_sp.full$time%in%spatialkr_t
+t_indx1=air_temp1_sp.full$time%in%df_cozie$time
 air_temp1_sp.full_shrink=air_temp1_sp.full[t_indx1,]
 
-t_indx2=air_temp2_sp.full$time%in%spatialkr_t
+t_indx2=air_temp2_sp.full$time%in%df_cozie$time
 air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
 
 x_shr=air_temp1_sp.full_shrink
@@ -1047,6 +1047,7 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
   # var_name is the name of the weather variable
 
   # extract kriged data
+  
   B=x_kriged#$df_plotkrige
   
   # extract times
@@ -1082,4 +1083,12 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
 }
 ```
 
+```{r}
+st=Sys.time()
+prvmatch=match_krg_weath_coz(df_cozie,x_kriged,var_name)
+######Errore in match_krg_weath_coz(df_cozie, x_kriged, var_name) : 
+#####oggetto 'x' non trovato
+en=Sys.time()
+en-st
+```
 
