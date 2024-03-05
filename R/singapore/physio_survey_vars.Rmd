@@ -187,7 +187,7 @@ indx=which(df_cozie_merged$min_times<60*60*tol_hours)
 length(indx)
 
 df_cozie=df_cozie_merged$dfAll[indx,]
-
+load("df_cozie.Rdata")
 ```
 
 

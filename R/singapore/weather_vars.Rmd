@@ -972,15 +972,6 @@ match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
 ## Spatial kriging
 
 ```{r}
-# (*)In air_temp, consider only times at which we have survey measurement
-t_indx1=air_temp1_sp.full$time%in%df_cozie$time
-air_temp1_sp.full_shrink=air_temp1_sp.full[t_indx1,]
-
-t_indx2=air_temp2_sp.full$time%in%df_cozie$time
-air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
-
-x_shr=air_temp1_sp.full_shrink
-
 #
 spat_kr=function(x_shr,var_name,grid_coords){
   
@@ -1009,7 +1000,7 @@ spat_kr=function(x_shr,var_name,grid_coords){
     #plot(v.vgm)
     
     # 2. Fit a model to the sample variogram
-    v.fit <- fit.variogram(v.vgm, vgm(10,"Gau",10,0))
+    v.fit <- fit.variogram(v.vgm, vgm(100,"Gau",100,0))
     
     #plot(v.vgm, v.fit)
     
@@ -1025,69 +1016,156 @@ spat_kr=function(x_shr,var_name,grid_coords){
   return(res_fin)
 }
 
-start=Sys.time()
-prv=spat_kr(air_temp1_sp.full_shrink,"air_temp",grid_coords)
-end=Sys.time()
-end-start
 ```
+
+Run spatial kriging for each weather variable
+
+$\textbf{Air Temperature}$
+```{r}
+# (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
+
+t_indx1=air_temp1_sp.full$time%in%df_cozie$time
+air_temp1_sp.full_shrink=air_temp1_sp.full[t_indx1,]
+t_indx2=air_temp2_sp.full$time%in%df_cozie$time
+air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
+air_kriged1=spat_kr(air_temp1_sp.full_shrink,"air_temp",grid_coords)
+air_kriged2=spat_kr(air_temp2_sp.full_shrink,"air_temp",grid_coords)
+air_kriged=cbind(air_kriged1,air_kriged2)
+save(air_kriged,file="air_kriged.Rdata")
+
+```
+
+$\textbf{Rainfall}$
+```{r}
+# (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
+
+t_indx1=rainfall1_sp.full$time%in%df_cozie$time
+rainfall1_sp.full_shrink=rainfall1_sp.full[t_indx1,]
+t_indx2=rainfall2_sp.full$time%in%df_cozie$time
+rainfall2_sp.full_shrink=rainfall2_sp.full[t_indx2,]
+rainfall_kriged1=spat_kr(rainfall1_sp.full_shrink,"rainfall",grid_coords)
+rainfall_kriged2=spat_kr(rainfall2_sp.full_shrink,"rainfall",grid_coords)
+rainfall_kriged=cbind(rainfall_kriged1,rainfall_kriged2)
+save(rainfall_kriged,file="rainfall_kriged.Rdata")
+
+
+```
+
+
+$\textbf{Relative humidity}$
+```{r}
+# (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
+
+t_indx1=RH1_sp.full$time%in%df_cozie$time
+RH1_sp.full_shrink=RH1_sp.full[t_indx1,]
+t_indx2=RH2_sp.full$time%in%df_cozie$time
+RH2_sp.full_shrink=RH2_sp.full[t_indx2,]
+RH_kriged1=spat_kr(RH1_sp.full_shrink,"relative_humidity",grid_coords)
+RH_kriged2=spat_kr(RH2_sp.full_shrink,"relative_humidity",grid_coords)
+RH_kriged=cbind(RH_kriged1,RH_kriged2)
+save(RH_kriged,file="RH_kriged.Rdata")
+
+
+```
+
+$\textbf{Wind Speed}$
+```{r}
+# (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
+
+t_indx1=wind_speed1_sp.full$time%in%df_cozie$time
+wind_speed1_sp.full_shrink=wind_speed1_sp.full[t_indx1,]
+t_indx2=wind_speed2_sp.full$time%in%df_cozie$time
+wind_speed2_sp.full_shrink=wind_speed2_sp.full[t_indx2,]
+wind_speed_kriged1=spat_kr(wind_speed1_sp.full_shrink,"wind_speed",grid_coords)
+wind_speed_kriged2=spat_kr(wind_speed2_sp.full_shrink,"wind_speed",grid_coords)
+wind_speed_kriged=cbind(wind_speed_kriged1,wind_speed_kriged2)
+save(wind_speed_kriged,file="wind_speed_kriged.Rdata")
+```
+
+$\textbf{Wind Direction}$
+```{r}
+# (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
+
+t_indx1=wind_dir1_sp.full$time%in%df_cozie$time
+wind_dir1_sp.full_shrink=wind_dir1_sp.full[t_indx1,]
+t_indx2=wind_dir2_sp.full$time%in%df_cozie$time
+wind_dir2_sp.full_shrink=wind_dir2_sp.full[t_indx2,]
+wind_dir_kriged1=spat_kr(wind_dir1_sp.full_shrink,"wind_dir",grid_coords)
+wind_dir_kriged2=spat_kr(wind_dir2_sp.full_shrink,"wind_dir",grid_coords)
+wind_dir_kriged=cbind(wind_dir_kriged1,wind_dir_kriged2)
+save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
+
+```
+
 
 ## Match survey/physio and weather data
 
 ```{r}
-x_kriged=prv
 x_kriged=drop_na(x_kriged)
+x_kriged2=drop_na(x_kriged2)
 var_name="air_temp"
+```
+
+```{r}
+# Format long
+# x_shr_long=x_shr%>%
+#       pivot_longer(!time, names_to = "id", values_to = "value")
+# x_shr_long$id=as.factor(x_shr_long$id)
+#     
+#     x_shr_long2=merge(x_shr_long,locations,by="id")
+#     x_shr_long2=x_shr_long2[c("latitude", "longitude", "value")]
 ```
 
 
 ```{r}
-match_krg_weath_coz=function(df_cozie,x_kriged,var_name){
-  # df_cozie is the physio and survey dataset
-  # x_kriged is the weather variable dataset after kriging has been performed
+match_krg_weath_coz=function(A,B,var_name){
+  # A is the physio and survey dataset
+  # B is the weather variable dataset after kriging has been performed
   # var_name is the name of the weather variable
-
-  # extract kriged data
   
-  B=x_kriged#$df_plotkrige
+  #   A=df_cozie[,c("time","q_thermal_preference","ts_step_count","ws_latitude","ws_longitude")]
+  # B=x_kriged
   
-  # extract times
-  Btime=data.frame(time=index(x$krige_obj@time),
-                   timeIndex=x$krige_obj@time,
-                   row.names = x$krige_obj@time)
-  
-  # match times
-  AB=bayesbio::nearestTime(x_kriged,df_cozie,"time","time")
+  AB=A
   AB$newvar=0
-  
-  for(i in 1:nrow(AB)){
+  # Find closest in time
+  for(i in 1:nrow(A)){
     
-    tI=AB$timeIndex[i]
-    B_temp=B[which(B$timeIndex==tI),]
+    t_ind=which(B$time==ti)
     
-    ref_points=unlist(as.vector(A[i,c("ws_latitude", "ws_longitude")]))
-    
-    # Find point in B_temp[c("ws_latitude", "ws_longitude")] spatially closest point to A[i,c("ws_latitude", "ws_longitude")] 
-    # or, equivalently
-    
-    # Compute euclidian distance between A[i,c("ws_latitude", "ws_longitude")] and each point in B-temp
-    tmp=sqrt(rowSums(
-      as.matrix(B_temp[c("ws_latitude", "ws_longitude")])-
-        matrix(rep(ref_points,dim(B_temp)[1]),ncol=2,byrow = T))^2)
-    
-    # Find the minimum
-    mindist=which.min(tmp)
-    AB$newvar[i]=B_temp$var1.pred[mindist]
+    if(length(t_ind)!=0){
+      # Find closest in space
+      B_temp=B[t_ind,]
+      
+      ref_points=unlist(as.vector(A[i,c("ws_latitude", "ws_longitude")]))
+      
+      # Find point in B_temp[c("ws_latitude", "ws_longitude")] spatially closest point to A[i,c("ws_latitude", "ws_longitude")] 
+      # or, equivalently
+      
+      # Compute euclidian distance between A[i,c("ws_latitude", "ws_longitude")] and each point in B-temp
+      tmp=sqrt(rowSums(
+        as.matrix(B_temp[c("ws_latitude", "ws_longitude")])-
+          matrix(rep(ref_points,dim(B_temp)[1]),ncol=2,byrow = T))^2)
+      
+      # Find the minimum
+      mindist=which.min(tmp)
+      AB$newvar[i]=B_temp[mindist,var_name]
+    }
   }
-  colnames(AB)[colnames(AB)==tail(colnames(AB),1)]=var_name
-  return(AB[c("time",var_name)])
+  
+  AB$newvar[which(AB$newvar==0)]=NA
+  AB=drop_na(AB)
+  colnames(AB)[dim(AB)[2]]=var_name
+  return(AB)
 }
 ```
 
 ```{r}
+
+B=rbind(x_kriged,x_kriged2)
+
 st=Sys.time()
-prvmatch=match_krg_weath_coz(df_cozie,x_kriged,var_name)
-######Errore in match_krg_weath_coz(df_cozie, x_kriged, var_name) : 
-#####oggetto 'x' non trovato
+air_match=match_krg_weath_coz(df_cozie,x_kriged,var_name)
 en=Sys.time()
 en-st
 ```
