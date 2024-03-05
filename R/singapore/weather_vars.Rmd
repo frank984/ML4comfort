@@ -1011,7 +1011,7 @@ spat_kr=function(x_shr,var_name,grid_coords){
     res=res[c("time","ws_latitude","ws_longitude","var1.pred")]
     colnames(res)[4]=var_name
     
-    res_fin=rbind(res,res_fin)
+    res_fin=cbind(res,res_fin)
   }
   return(res_fin)
 }
@@ -1132,7 +1132,7 @@ match_krg_weath_coz=function(A,B,var_name){
   AB$newvar=0
   # Find closest in time
   for(i in 1:nrow(A)){
-    
+    ti=A$time[i]
     t_ind=which(B$time==ti)
     
     if(length(t_ind)!=0){
