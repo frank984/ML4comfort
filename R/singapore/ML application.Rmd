@@ -1,0 +1,27 @@
+---
+title: "ML application"
+author: "Federico Cortese"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Data loading
+
+```{r}
+load("df_train.Rdata")
+summary(df_train)
+barplot(table(df_train$id_participant))
+max(table(df_train$id_participant))
+which.max(table(df_train$id_participant))
+
+
+```
+
+```{r}
+df_xesh029=df_train[df_train$id_participant=='xesh029',]
+```
+
