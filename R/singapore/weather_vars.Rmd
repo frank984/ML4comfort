@@ -1031,6 +1031,8 @@ air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
 air_kriged1=spat_kr(air_temp1_sp.full_shrink,"air_temp",grid_coords)
 air_kriged2=spat_kr(air_temp2_sp.full_shrink,"air_temp",grid_coords)
 air_kriged=cbind(air_kriged1,air_kriged2)
+air_kriged=drop_na(air_kriged)
+
 save(air_kriged,file="air_kriged.Rdata")
 
 ```
@@ -1046,6 +1048,8 @@ rainfall2_sp.full_shrink=rainfall2_sp.full[t_indx2,]
 rainfall_kriged1=spat_kr(rainfall1_sp.full_shrink,"rainfall",grid_coords)
 rainfall_kriged2=spat_kr(rainfall2_sp.full_shrink,"rainfall",grid_coords)
 rainfall_kriged=cbind(rainfall_kriged1,rainfall_kriged2)
+rainfall_kriged=drop_na(rainfall_kriged)
+
 save(rainfall_kriged,file="rainfall_kriged.Rdata")
 
 
@@ -1063,6 +1067,8 @@ RH2_sp.full_shrink=RH2_sp.full[t_indx2,]
 RH_kriged1=spat_kr(RH1_sp.full_shrink,"relative_humidity",grid_coords)
 RH_kriged2=spat_kr(RH2_sp.full_shrink,"relative_humidity",grid_coords)
 RH_kriged=cbind(RH_kriged1,RH_kriged2)
+RH_kriged=drop_na(RH_kriged)
+
 save(RH_kriged,file="RH_kriged.Rdata")
 
 
@@ -1079,6 +1085,7 @@ wind_speed2_sp.full_shrink=wind_speed2_sp.full[t_indx2,]
 wind_speed_kriged1=spat_kr(wind_speed1_sp.full_shrink,"wind_speed",grid_coords)
 wind_speed_kriged2=spat_kr(wind_speed2_sp.full_shrink,"wind_speed",grid_coords)
 wind_speed_kriged=cbind(wind_speed_kriged1,wind_speed_kriged2)
+wind_speed_kriged=drop_na(wind_speed_kriged)
 save(wind_speed_kriged,file="wind_speed_kriged.Rdata")
 ```
 
@@ -1093,6 +1100,7 @@ wind_dir2_sp.full_shrink=wind_dir2_sp.full[t_indx2,]
 wind_dir_kriged1=spat_kr(wind_dir1_sp.full_shrink,"wind_dir",grid_coords)
 wind_dir_kriged2=spat_kr(wind_dir2_sp.full_shrink,"wind_dir",grid_coords)
 wind_dir_kriged=cbind(wind_dir_kriged1,wind_dir_kriged2)
+wind_dir_kriged=drop_na(wind_dir_kriged)
 save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
 
 ```
@@ -1101,8 +1109,6 @@ save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
 ## Match survey/physio and weather data
 
 ```{r}
-x_kriged=drop_na(x_kriged)
-x_kriged2=drop_na(x_kriged2)
 var_name="air_temp"
 ```
 
@@ -1160,13 +1166,17 @@ match_krg_weath_coz=function(A,B,var_name){
 }
 ```
 
+Matching
+
 ```{r}
 
-B=rbind(x_kriged,x_kriged2)
+air_match=match_krg_weath_coz(df_cozie,air_kriged,var_name="air_temp")
+rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
+RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
+wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
+wind_dir=match_krg_weath_coz(df_cozie,wind_dir,var_name="wind_dir")
 
-st=Sys.time()
-air_match=match_krg_weath_coz(df_cozie,x_kriged,var_name)
-en=Sys.time()
-en-st
+# TO DO: MERGE OF THESE 5 DATASETS ABOVE
+
 ```
 
