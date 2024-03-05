@@ -1109,10 +1109,6 @@ save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
 ## Match survey/physio and weather data
 
 ```{r}
-var_name="air_temp"
-```
-
-```{r}
 # Format long
 # x_shr_long=x_shr%>%
 #       pivot_longer(!time, names_to = "id", values_to = "value")
