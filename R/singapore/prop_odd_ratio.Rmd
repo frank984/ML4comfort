@@ -1,0 +1,37 @@
+---
+title: "Proportional odds ratio"
+output: html_document
+date: "2024-03-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data loading
+
+```{r}
+load("df_train.Rdata")
+summary(df_train)
+```
+
+The following file contains information about how to interpret levels for each categorcial variable.
+
+```{r}
+load("lev_interpr.Rdata")
+lev_interpr[[7]]
+```
+
+
+## Data cleaning
+
+Let us consider only relevant variables
+
+Response variable: thermal preference
+
+```{r}
+y=df_train$q_thermal_preference
+summary(y)
+barplot(table(y)/length(y),col=rainbow(length(unique(y))))
+```
+

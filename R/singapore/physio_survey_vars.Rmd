@@ -49,7 +49,10 @@ physio_data=cozie_train[c("id_participant","time",physio_vars)]
 
 participants=unique(cozie_train$id_participant)
 
-physio_summ=function(x,window="2 hours"){
+# wnd_phy="2 hours"
+wnd_phy="1 hour"
+
+physio_summ=function(x,window=wnd_phy){
   
   mean_x=x %>% group_by(time=floor_date(time,window))%>%
     summarise_if(is.numeric, mean, na.rm = TRUE)
@@ -79,12 +82,15 @@ apply(physio_data_x,2,function(x){100*sum(is.na(x))/length(x)})
 # physio_lowT_all=physio_lowT_all[!is.na(physio_lowT_all$ts_resting_heart_rate ),]
 
 ```
+
 If we consider all physio vars we obtain the following dataset
+
 ```{r}
 physio_lowT_all=physio_data_x[complete.cases(physio_data_x), ]
 dim(physio_lowT_all)
 ```
-But the final dimension is not satisfying, let us drop $\texttt{ts_oxygen_saturation}$ and $\texttt{ts_resting_heart_rate}$ which have around 90% of missing, and $\texttt{ts_stand_time}$, which has more than 50% of missings
+
+But the final dimension is not satisfying, let us drop $\texttt{ts_oxygen_saturation}$ and $\texttt{ts_resting_heart_rate}$ which have around 90% of missing
 
 ```{r}
 physio_highT_all=subset(physio_data_x, select = -c(ts_oxygen_saturation,
@@ -95,8 +101,7 @@ physio_highT_all=physio_highT_all[complete.cases(physio_highT_all), ]
 dim(physio_highT_all)
 ```
 
-
-Merge with cozie data finding the "closest" ts_ for each row of cozie_train
+Merge with cozie data finding the "closest" ts\_ for each row of cozie_train
 
 ```{r}
 library(bayesbio)
@@ -111,6 +116,9 @@ data_cozie_train_clean=subset(cozie_train, select = -c(ts_oxygen_saturation,
 data_cozie_train_clean=data_cozie_train_clean[complete.cases(data_cozie_train_clean), ]
 
 dim(data_cozie_train_clean)
+# save(data_cozie_train_clean,file="data_cozie_train_clean.Rdata")
+load("data_cozie_train_clean.Rdata")
+
 ```
 
 We modify the $\texttt{bayesbio::nearestTimeandID}$ function to output minimum times (time difference computed for matching the two datasets)
@@ -127,6 +135,7 @@ nearestTimeandID2=function (df1, df2, timeCol1, timeCol2, IDcol){
   #
   min_times=NULL
   #
+  A=NULL
   for (i in 1:nrow(df1)) {
     ID = df1[i, IDcol]
     min_rows = vector()
@@ -145,8 +154,14 @@ nearestTimeandID2=function (df1, df2, timeCol1, timeCol2, IDcol){
       }
     }
     mins = (min_rows == min(min_rows))
-    dfMinTime[i, ] = df2[which.min(min_rows), !(colnames(df2) %in% 
-                                                  timeCol2), drop = FALSE]
+    
+    A = rbind(df2[which.min(min_rows), !(colnames(df2) %in% 
+                                                  timeCol2), drop = FALSE],A)
+    
+    ### Why does it change factors into integer here???
+    # dfMinTime[i, ]=df2[which.min(min_rows), !(colnames(df2) %in% 
+    #                                                   timeCol2), drop = FALSE]
+    ###
     min_times=c(min(min_rows,na.rm = T),min_times)
     if (sum(mins, na.rm = TRUE) > 1) {
       ties_count = ties_count + 1
@@ -185,9 +200,56 @@ load("df_cozie_merged.Rdata")
 tol_hours=1
 indx=which(df_cozie_merged$min_times<60*60*tol_hours)
 length(indx)
+```
 
+Save results
+
+```{r}
 df_cozie=df_cozie_merged$dfAll[indx,]
+```
+
+Factorize variables
+
+```{r}
+str(df_cozie)
+
+df_cozie$q_alone_group=as.factor(df_cozie$q_alone_group)
+df_cozie$q_earphones=as.factor(df_cozie$q_earphones)
+df_cozie$q_location=as.factor(df_cozie$q_location)
+df_cozie$q_location_office=as.factor(df_cozie$q_location_office)
+df_cozie$q_location_transport=as.factor(df_cozie$q_location_transport)
+df_cozie$q_noise_kind=as.factor(df_cozie$q_noise_kind)
+df_cozie$q_noise_nearby=as.factor(df_cozie$q_noise_nearby)
+df_cozie$q_thermal_preference=as.factor(df_cozie$q_thermal_preference)
+df_cozie$q_activity_category_alone=as.factor(df_cozie$q_activity_category_alone)
+df_cozie$q_activity_category_group=as.factor(df_cozie$q_activity_category_group)
+
+```
+
+Save
+
+```{r}
+#save(df_cozie,file="df_cozie.Rdata")
 load("df_cozie.Rdata")
 ```
 
+Save legend with factor variables levels interpretation
 
+```{r}
+q_vars=c("q_alone_group",
+         "q_activity_category_alone","q_activity_category_group",
+         "q_earphones","q_noise_kind","q_noise_nearby",
+         "q_thermal_preference",
+         "q_location","q_location_office","q_location_transport")
+lev_interpr=list()
+
+for(i in 1:length(q_vars)){
+  lev_interpr[[i]]=data.frame(
+    code=unique(df_cozie[q_vars[i]]),
+    meaning=unique(data_cozie_train_clean[q_vars[i]])
+    )
+}
+#save(lev_interpr,file="lev_interpr.Rdata")
+load("lev_interpr.Rdata")
+
+```

@@ -1144,7 +1144,7 @@ match_krg_weath_coz=function(A,B,var_name){
   unique_times=unique(A$time)
   # Find closest in time
   for(i in 1:nrow(A)){
-    #ti=A$time[i]
+    ti=A$time[i]
     
     t_ind=which(B$time==ti)
     
