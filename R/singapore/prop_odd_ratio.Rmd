@@ -12,14 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 load("df_train.Rdata")
-summary(df_train)
-```
-
-The following file contains information about how to interpret levels for each categorcial variable.
-
-```{r}
-load("lev_interpr.Rdata")
-lev_interpr[[7]]
+#names(df_train)
 ```
 
 
@@ -27,11 +20,68 @@ lev_interpr[[7]]
 
 Let us consider only relevant variables
 
-Response variable: thermal preference
-
 ```{r}
 y=df_train$q_thermal_preference
+y=as.ordered(y)
+X=df_train[,c(3:7,8:12,16,21,49,51,53,57)]
+```
+
+Below, a brief description of each variable
+
+```{r}
+names(X)
+```
+
+- $\texttt{air_temp}$ (°C);
+- $\texttt{rainfall}$ (mm);
+- $\texttt{relative_humidity}$ (%);
+- $\texttt{wind_speed}$ (knots);
+- $\texttt{wind_dir}$ (°);
+- $\texttt{ts_stand_time}$ (min);
+- $\texttt{ts_step_count}$ (number of steps);
+- $\texttt{ts_walking_distance}$ (m);
+- $\texttt{ts_heart_rate}$ (beats per minute);
+- $\texttt{ts_audio_exposure_environment}$ (dB);
+- $\texttt{q_location}$ response to micro-survey question "Where are you?";
+- $\texttt{q_noise_nearby}$ response to micro-survey question "Noise distractions nearby?";
+- $\texttt{Green.View.Mean}$ GVF;
+- $\texttt{Sky.View.Mean}$ SVF;
+- $\texttt{Building.View.Mean}$ Building View Factor;
+- $\texttt{Visual.Complexity.Mean}$ Visual Complexity Index.
+
+Response variable: thermal preference. It is an ordinal variables 
+
+```{r}
+class(y)
+```
+
+
+with the following levels
+
+```{r}
+head(y)
+```
+
+Summary statistics of the response variable
+
+```{r}
 summary(y)
 barplot(table(y)/length(y),col=rainbow(length(unique(y))))
+```
+
+Summary statistics of the explanatory variables
+
+```{r}
+summary(X)
+dim(X)
+```
+
+```{r}
+library(MASS)
+dat=X
+dat$y=y
+head(dat$y)
+fit=polr(y~.,data=dat)
+summary(fit)
 ```
 

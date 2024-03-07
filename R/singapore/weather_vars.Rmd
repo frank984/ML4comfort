@@ -1202,6 +1202,10 @@ df_fin=merge(df_fin,
              wind_dir_match[c("id_participant","time","wind_dir")],
              by=c("time","id_participant"))
 
+#save(df_fin,file="df_final_weather.Rdata")
+load("df_final_weather.Rdata")
+
+
 df_train=merge(df_fin,df_cozie,
                by=c("time","id_participant"))
 #save(df_train,file='df_train.Rdata')

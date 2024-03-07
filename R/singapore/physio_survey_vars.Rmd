@@ -171,7 +171,8 @@ nearestTimeandID2=function (df1, df2, timeCol1, timeCol2, IDcol){
   if (ties_count > 0) {
     message("Warning: there were ", ties_count, " difftime ties, for which the first corresponding row of df2 was chosen for merging.")
   }
-  dfAll = cbind(df1, dfMinTime)
+  #dfAll = cbind(df1, dfMinTime)
+  dfAll = cbind(df1, A)
   dfAll = dfAll[, !duplicated(colnames(dfAll))]
   return(list(dfAll=dfAll,
               min_times=min_times))
@@ -208,23 +209,23 @@ Save results
 df_cozie=df_cozie_merged$dfAll[indx,]
 ```
 
-Factorize variables
+<!-- Factorize variables -->
 
-```{r}
-str(df_cozie)
+<!-- ```{r} -->
+<!-- str(df_cozie) -->
 
-df_cozie$q_alone_group=as.factor(df_cozie$q_alone_group)
-df_cozie$q_earphones=as.factor(df_cozie$q_earphones)
-df_cozie$q_location=as.factor(df_cozie$q_location)
-df_cozie$q_location_office=as.factor(df_cozie$q_location_office)
-df_cozie$q_location_transport=as.factor(df_cozie$q_location_transport)
-df_cozie$q_noise_kind=as.factor(df_cozie$q_noise_kind)
-df_cozie$q_noise_nearby=as.factor(df_cozie$q_noise_nearby)
-df_cozie$q_thermal_preference=as.factor(df_cozie$q_thermal_preference)
-df_cozie$q_activity_category_alone=as.factor(df_cozie$q_activity_category_alone)
-df_cozie$q_activity_category_group=as.factor(df_cozie$q_activity_category_group)
+<!-- df_cozie$q_alone_group=as.factor(df_cozie$q_alone_group) -->
+<!-- df_cozie$q_earphones=as.factor(df_cozie$q_earphones) -->
+<!-- df_cozie$q_location=as.factor(df_cozie$q_location) -->
+<!-- df_cozie$q_location_office=as.factor(df_cozie$q_location_office) -->
+<!-- df_cozie$q_location_transport=as.factor(df_cozie$q_location_transport) -->
+<!-- df_cozie$q_noise_kind=as.factor(df_cozie$q_noise_kind) -->
+<!-- df_cozie$q_noise_nearby=as.factor(df_cozie$q_noise_nearby) -->
+<!-- df_cozie$q_thermal_preference=as.factor(df_cozie$q_thermal_preference) -->
+<!-- df_cozie$q_activity_category_alone=as.factor(df_cozie$q_activity_category_alone) -->
+<!-- df_cozie$q_activity_category_group=as.factor(df_cozie$q_activity_category_group) -->
 
-```
+<!-- ``` -->
 
 Save
 
@@ -233,23 +234,23 @@ Save
 load("df_cozie.Rdata")
 ```
 
-Save legend with factor variables levels interpretation
+<!-- Save legend with factor variables levels interpretation -->
 
-```{r}
-q_vars=c("q_alone_group",
-         "q_activity_category_alone","q_activity_category_group",
-         "q_earphones","q_noise_kind","q_noise_nearby",
-         "q_thermal_preference",
-         "q_location","q_location_office","q_location_transport")
-lev_interpr=list()
+<!-- ```{r} -->
+<!-- q_vars=c("q_alone_group", -->
+<!--          "q_activity_category_alone","q_activity_category_group", -->
+<!--          "q_earphones","q_noise_kind","q_noise_nearby", -->
+<!--          "q_thermal_preference", -->
+<!--          "q_location","q_location_office","q_location_transport") -->
+<!-- lev_interpr=list() -->
 
-for(i in 1:length(q_vars)){
-  lev_interpr[[i]]=data.frame(
-    code=unique(df_cozie[q_vars[i]]),
-    meaning=unique(data_cozie_train_clean[q_vars[i]])
-    )
-}
-#save(lev_interpr,file="lev_interpr.Rdata")
-load("lev_interpr.Rdata")
+<!-- for(i in 1:length(q_vars)){ -->
+<!--   lev_interpr[[i]]=data.frame( -->
+<!--     code=unique(df_cozie[q_vars[i]]), -->
+<!--     meaning=unique(data_cozie_train_clean[q_vars[i]]) -->
+<!--     ) -->
+<!-- } -->
+<!-- #save(lev_interpr,file="lev_interpr.Rdata") -->
+<!-- load("lev_interpr.Rdata") -->
 
-```
+<!-- ``` -->
