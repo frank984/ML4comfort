@@ -1110,6 +1110,15 @@ save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
 
 Consider using the $\textbf{npreg}$ package
 
+```{r}
+library(np)
+# da rivedere
+fit=npreg(value~latitude+longitude, data=x_shr_long2, regfamily="gaussian")
+
+
+```
+
+
 ## Load kriging results
 
 ```{r}
