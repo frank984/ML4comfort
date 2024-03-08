@@ -793,7 +793,8 @@ pairs=cozie_locations %>% group_by(ws_latitude,ws_longitude) %>%
 grid_coords=pairs[,c("ws_latitude","ws_longitude")]
 # lats=pairs$ws_latitude
 # lons=pairs$ws_longitude
-
+# save(grid_coords,file="grid_coords.Rdata")
+load("grid_coords.Rdata")
 ```
 
 Function for spatio-temporal kriging
@@ -1105,6 +1106,10 @@ save(wind_dir_kriged,file="wind_dir_kriged.Rdata")
 
 ```
 
+## Spatial interpolation
+
+Consider using the $\textbf{npreg}$ package
+
 ## Load kriging results
 
 ```{r}
@@ -1208,6 +1213,7 @@ load("df_final_weather.Rdata")
 
 df_train=merge(df_fin,df_cozie,
                by=c("time","id_participant"))
+df_train$rainfall[which(df_train$rainfall<0)]=0
 #save(df_train,file='df_train.Rdata')
 load('df_train.Rdata')
 
