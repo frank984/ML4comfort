@@ -1112,12 +1112,131 @@ Consider using the $\textbf{npreg}$ package
 
 ```{r}
 library(np)
-# da rivedere
-fit=npreg(value~latitude+longitude, data=x_shr_long2, regfamily="gaussian")
+spat_int=function(x_shr,var_name,grid_coords,locations){
+  
+  # x_shr is the weather var dataframe in wide format considering only relevant times
+  # var_name is the name of the weather variable
+  # grid_coords is the spatial grid
+  # locations is the spatial locations of the weather stations
+  
+  res_fin=NULL
+  nd <- as.data.frame(grid_coords) 
+  colnames(nd)=c("latitude","longitude")
+  #var_name="air_temp"
+  for(i in 1:nrow(x_shr)){
+    
+    # sp_indx=locations$id%in%colnames(air_temp1_sp.full_shrink)
+    # x_sp =locations[sp_indx,c("latitude","longitude","id")]
+    # x_sp$var=as.vector(air_temp1_sp.full_shrink[i,-1])
+    
+    x_shr_long=x_shr[i,] %>%
+      pivot_longer(!time, names_to = "id", values_to = "value")
+    x_shr_long$id=as.factor(x_shr_long$id)
+    
+    x_shr_long2=merge(x_shr_long,locations,by="id")
+    x_shr_long2=x_shr_long2[c("latitude", "longitude", "value")]
+    
+    fit=npreg(value~latitude+longitude, data=x_shr_long2,newdata = nd)
+    
+    res=data.frame(time=x_shr$time[i],value=fit$mean,fit$eval)
+    colnames(res)=c("time",var_name,"ws_latitude","ws_longitude")
+    res_fin=rbind(res,res_fin)
+    
+  }
+  return(res_fin)
+}
+
+```
+
+Run spatial interpolation
+
+$\textbf{Air Temperature}$
+```{r}
+t_indx1=air_temp1_sp.full$time%in%df_cozie$time
+t_indx2=air_temp2_sp.full$time%in%df_cozie$time
+air_temp1_sp.full_shrink=air_temp1_sp.full[t_indx1,]
+air_temp2_sp.full_shrink=air_temp2_sp.full[t_indx2,]
+air_int1=spat_int(air_temp1_sp.full_shrink,"air_temp",grid_coords,locations)
+air_int2=spat_int(air_temp2_sp.full_shrink,"air_temp",grid_coords,locations)
+air_int=rbind(air_int1,air_int2)
+air_int=drop_na(air_int)
+```
+
+$\textbf{Rainfall}$
+```{r}
+t_indx1=rainfall1_sp.full$time%in%df_cozie$time
+t_indx2=rainfall2_sp.full$time%in%df_cozie$time
+rainfall1_sp.full_shrink=rainfall1_sp.full[t_indx1,]
+rainfall2_sp.full_shrink=rainfall2_sp.full[t_indx2,]
+rainfall_int1=spat_int(rainfall1_sp.full_shrink,"rainfall",grid_coords,locations)
+rainfall_int2=spat_int(rainfall2_sp.full_shrink,"rainfall",grid_coords,locations)
+rainfall_int=rbind(rainfall_int1,rainfall_int2)
+rainfall_int=drop_na(rainfall_int)
+
+```
+
+$\textbf{Relative humidity}$
+```{r}
+t_indx1=RH1_sp.full$time%in%df_cozie$time
+t_indx2=RH2_sp.full$time%in%df_cozie$time
+RH1_sp.full_shrink=RH1_sp.full[t_indx1,]
+RH2_sp.full_shrink=RH2_sp.full[t_indx2,]
+RH_int1=spat_int(RH1_sp.full_shrink,"relative_humidity",grid_coords,locations)
+RH_int2=spat_int(RH2_sp.full_shrink,"relative_humidity",grid_coords,locations)
+RH_int=rbind(RH_int1,RH_int2)
+RH_int=drop_na(RH_int)
+
+
+```
+  
+$\textbf{Wind Speed}$
+```{r}
+t_indx1=wind_speed1_sp.full$time%in%df_cozie$time
+t_indx2=wind_speed2_sp.full$time%in%df_cozie$time
+wind_speed1_sp.full_shrink=wind_speed1_sp.full[t_indx1,]
+wind_speed2_sp.full_shrink=wind_speed2_sp.full[t_indx2,]
+wind_speed_int1=spat_int(wind_speed1_sp.full_shrink,"wind_speed",grid_coords,locations)
+wind_speed_int2=spat_int(wind_speed2_sp.full_shrink,"wind_speed",grid_coords,locations)
+wind_speed_int=rbind(wind_speed_int1,wind_speed_int2)
+wind_speed_int=drop_na(wind_speed_int)
 
 
 ```
 
+$\textbf{Wind Direction}$
+```{r}
+t_indx1=wind_dir1_sp.full$time%in%df_cozie$time
+t_indx2=wind_dir2_sp.full$time%in%df_cozie$time
+wind_dir1_sp.full_shrink=wind_dir1_sp.full[t_indx1,]
+wind_dir2_sp.full_shrink=wind_dir2_sp.full[t_indx2,]
+wind_dir_int1=spat_int(wind_dir1_sp.full_shrink,"wind_dir",grid_coords,locations)
+wind_dir_int2=spat_int(wind_dir2_sp.full_shrink,"wind_dir",grid_coords,locations)
+wind_dir_int=rbind(wind_dir_int1,wind_dir_int2)
+wind_dir_int=drop_na(wind_dir_int)
+
+
+```
+
+## Save interpolation results
+
+```{r}
+# save(air_int,file="air_int.Rdata")
+# save(rainfall_int,file="rainfall_int.Rdata")
+# save(RH_int,file="RH_int.Rdata")
+# save(wind_speed_int,file="wind_speed_int.Rdata")
+# save(wind_dir_int,file="wind_dir_int.Rdata")
+```
+
+## Load interpolation results
+
+```{r}
+load("air_int.Rdata")
+load("rainfall_int.Rdata")
+load("RH_int.Rdata")
+load("wind_speed_int.Rdata")
+load("wind_dir_int.Rdata")
+
+```
 
 ## Load kriging results
 
@@ -1193,11 +1312,18 @@ Matching
 
 ```{r}
 
-air_match=match_krg_weath_coz(df_cozie,air_kriged,var_name="air_temp")
-rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
-RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
-wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
-wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_kriged,var_name="wind_dir")
+
+air_match=match_krg_weath_coz(df_cozie,air_int,var_name="air_temp")
+rainfall_match=match_krg_weath_coz(df_cozie,rainfall_int,var_name="rainfall")
+RH_match=match_krg_weath_coz(df_cozie,RH_int,var_name="relative_humidity")
+wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_int,var_name="wind_speed")
+wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_int,var_name="wind_dir")
+
+#air_match=match_krg_weath_coz(df_cozie,air_kriged,var_name="air_temp")
+# rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
+# RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
+# wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
+# wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_kriged,var_name="wind_dir")
 
 # TO DO: MERGE OF THESE 5 DATASETS ABOVE
 
