@@ -994,6 +994,9 @@ spat_kr=function(x_shr,var_name,grid_coords){
     x_shr_long2=merge(x_shr_long,locations,by="id")
     x_shr_long2=x_shr_long2[c("latitude", "longitude", "value")]
     
+    # Remov stations with NAs for time i
+    x_shr_long2=x_shr_long2[complete.cases(x_shr_long2),]
+    
     coordinates(x_shr_long2) = ~ latitude + longitude
     
     # 1. Calculate the sample variogram. This is done with the variogram function
@@ -1012,7 +1015,7 @@ spat_kr=function(x_shr,var_name,grid_coords){
     res=res[c("time","ws_latitude","ws_longitude","var1.pred")]
     colnames(res)[4]=var_name
     
-    res_fin=cbind(res,res_fin)
+    res_fin=rbind(res,res_fin)
   }
   return(res_fin)
 }
@@ -1038,6 +1041,56 @@ air_kriged=drop_na(air_kriged)
 
 ```
 
+$\textbf{Air Temperature}$ - alternative approach (using Kalman-smoothed data)
+```{r}
+
+# plot observation in air_temp_full in a grid where each plot refers to a different station
+air_temp_long=air_temp_full %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+# ggplot them
+ggplot(air_temp_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+# Impute NA to not useable smoothed observations
+#plot(is.na(air_temp3$S102[3369:3372]))
+# For S102, from 1 to 371 and from 3370 to the end
+air_temp_full$S102[c(1:371,3370:6408)]=NA
+
+# For S117, from 1 to 2800
+air_temp_full$S117[1:2800]=NA
+
+#plot(is.na(air_temp3$S117[1:2800]))
+
+# plot again
+
+air_temp_long=air_temp_full %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+# ggplot them
+ggplot(air_temp_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+t_indx=air_temp_full$time%in%unique(df_cozie$time)
+
+air_temp_full_shrink=air_temp_full[t_indx,]
+
+# plot shrinked data
+air_temp_full_shrink_long=air_temp_full_shrink %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+
+apply(air_temp_full_shrink_long,2,function(x){sum(is.na(x))})
+
+# ggplot them
+ggplot(air_temp_full_shrink_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+
+airsmooth_kriged=spat_kr(air_temp_full_shrink,"air_temp",grid_coords)
+save(airsmooth_kriged,file="airsmooth_kriged.Rdata")
+```
+
 $\textbf{Rainfall}$
 ```{r}
 # (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
@@ -1052,7 +1105,6 @@ rainfall_kriged=rbind(rainfall_kriged1,rainfall_kriged2)
 rainfall_kriged=drop_na(rainfall_kriged)
 
 #save(rainfall_kriged,file="rainfall_kriged.Rdata")
-
 
 ```
 
@@ -1312,20 +1364,22 @@ Matching
 
 ```{r}
 
+air_match=match_krg_weath_coz(df_cozie,airsmooth_kriged,var_name="air_temp")
 
-air_match=match_krg_weath_coz(df_cozie,air_int,var_name="air_temp")
-rainfall_match=match_krg_weath_coz(df_cozie,rainfall_int,var_name="rainfall")
-RH_match=match_krg_weath_coz(df_cozie,RH_int,var_name="relative_humidity")
-wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_int,var_name="wind_speed")
-wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_int,var_name="wind_dir")
+#air_match=match_krg_weath_coz(df_cozie,air_int,var_name="air_temp")
+
+# rainfall_match=match_krg_weath_coz(df_cozie,rainfall_int,var_name="rainfall")
+# RH_match=match_krg_weath_coz(df_cozie,RH_int,var_name="relative_humidity")
+# wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_int,var_name="wind_speed")
+# wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_int,var_name="wind_dir")
 
 #air_match=match_krg_weath_coz(df_cozie,air_kriged,var_name="air_temp")
-# rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
-# RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
-# wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
-# wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_kriged,var_name="wind_dir")
+rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
+RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
+wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
+wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_kriged,var_name="wind_dir")
 
-# TO DO: MERGE OF THESE 5 DATASETS ABOVE
+# MERGE 5 DATASETS ABOVE
 
 df_fin=merge(air_match[c("id_participant","time","air_temp")],
              rainfall_match[c("id_participant","time","rainfall")],

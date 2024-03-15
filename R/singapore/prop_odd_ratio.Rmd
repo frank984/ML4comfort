@@ -33,7 +33,7 @@ We want to focus on outdoor thermal comfort, so we consider only observations fr
 
 ```{r}
 dat=subset(dat,q_location=="Outdoor")
-dat=dat[,-11]
+dat=subset(dat,select=-q_location)
 ```
 
 Below, a brief description of each variable

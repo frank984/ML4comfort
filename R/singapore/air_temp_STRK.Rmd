@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 Load *packages*
@@ -55,7 +57,10 @@ air_temp3=air_temp2%>%
   right_join(data.frame(time=eqdist_times),by="time")%>%
   arrange(time)
 
+save(air_temp3, file="air_temp3.RData")
+```
 
+```{r})
 head(air_temp3)
 ```
 
@@ -205,7 +210,7 @@ air_temp_long=air_temp_full %>%
 Plot all air temperature stations with for loop
 
 ```{r}
-par(mfrow=c(4,5),mar=c(1,1,2,1))
+par(mfrow=c(4,5),mar=c(2,2,2,2))
 for(i in 2:ncol(air_temp_full)){
   plot(x=air_temp_full$time,y=as.vector(unlist(air_temp_full[,i])),type="l",col="red",
        xlab="",ylab="")
