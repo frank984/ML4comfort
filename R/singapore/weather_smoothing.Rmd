@@ -34,6 +34,9 @@ Load *data*
 load("cleaned_data.RData")
 ```
 
+# Air temperature
+
+## Summarize data
 Let us focus on hourly-summarized air temperature data
 
 ```{r}
@@ -74,6 +77,7 @@ Summary of the data
 summary(air_temp3)
 ```
 
+## Plot air temperature data 
 Put air_temp in long format
 
 ```{r}
@@ -151,6 +155,8 @@ plot(x=air_temp3$time,y=y24_sm,type="l",col="blue")
 lines(x=air_temp3$time,y=air_temp3$S24,type="l",col="red")
 ```
 
+## SARIMA and smoothing 
+
 Wrap up in a function
 
 ```{r}
@@ -207,6 +213,8 @@ air_temp_long=air_temp_full %>%
 
 ```
 
+## Plot results
+
 Plot all air temperature stations with for loop
 
 ```{r}
@@ -232,4 +240,111 @@ legend("topright", legend=c("filled","original"), col=c("red","black"), lty=1:1,
 save(air_temp_full, file="air_temp_filled_smooth.RData")
 ```
 
+# Relative humidity
+
+```{r}
+weath=RH
+var_name="RH"
+
+# summarize 
+
+weath2=weath %>% 
+  group_by(time=floor_date(time,"1 hour"))%>%
+  summarise_if(is.numeric, mean, na.rm = TRUE)
+
+# Inpute NaN values with NA
+
+weath2[,-1]=weath2[,-1]%>% mutate_all(~ifelse(is.nan(.), NA, .))
+
+# Create vector of equally spaced times
+
+eqdist_times=seq(from=weath2$time[1],
+                 to=tail(weath2$time,1),
+                 by="1 hour")
+
+weath3=weath2%>% 
+  right_join(data.frame(time=eqdist_times),by="time")%>%
+  arrange(time)
+
+# save(weath3, file="air_temp3.RData")
+
+summary(weath3)
+
+weath_long=weath3 %>%
+  pivot_longer(!time, names_to = "station", values_to = var_name)
+
+
+# Plot each station 
+windows()
+par(mfrow=c(4,5),mar=c(1,1,2,1))
+for(i in 2:ncol(weath3)){
+  plot(x=weath3$time[1:100],y=as.vector(unlist(weath3[1:100,i])),type="l",col="black",
+       xlab=" ",ylab=" ",
+       main=colnames(weath3[,i]))
+  title(main=colnames(weath3)[i])
+}
+
+# SARIMA and smoothing
+
+fill_weath=function(weath3){
+  # air_temp=air_temp %>% 
+  #   group_by(time=floor_date(time,"1 hour"))%>%
+  #   summarise_if(is.numeric, mean, na.rm = TRUE)
+  # 
+  # # Inpute NaN values with NA
+  # 
+  # air_temp[,-1]=air_temp[,-1]%>% mutate_all(~ifelse(is.nan(.), NA, .))
+  # 
+  # # Create vector of equally spaced times
+  # 
+  # eqdist_times=seq(from=air_temp$time[1],
+  #                  to=tail(air_temp$time,1),
+  #                  by="1 hour")
+  # 
+  # air_temp3=air_temp%>% 
+  #   right_join(data.frame(time=eqdist_times),by="time")%>%
+  #   arrange(time)
+  
+  for(i in 2:ncol(weath3)){
+    fit_weath=arima(x=weath3[,i], order=c(1,0,1),
+                  seasonal = list(order=c(1,0,1)
+                                  ,period=24
+                                  ,include.mean =T
+                                  ,method="ML"
+                  ))
+    kr_sm=KalmanSmooth(as.numeric(unlist(weath3[,i])),
+                       fit_weath$model)
+    id.na <- which(is.na(weath3[,i]))
+    y24_sm=as.numeric(unlist(weath3[,i]))
+    for (j in id.na){
+      y24_sm[j] <- kr_sm$smooth[j,1]
+    }
+    weath3[,i]=y24_sm
+  }
+  
+  return(weath3)
+  
+}
+
+
+weath_full=fill_weath(weath3)
+# Long format
+weath_long=weath_full %>%
+  pivot_longer(!time, names_to = "station", values_to = var_name)
+
+par(mfrow=c(4,5),mar=c(2,2,2,2))
+for(i in 2:ncol(weath_full)){
+  plot(x=weath_full$time,y=as.vector(unlist(weath_full[,i])),type="l",col="red",
+       xlab="",ylab="")
+  lines(x=weath3$time,y=as.vector(unlist(weath3[,i])),type="l",col="black",
+        xlab="",ylab="",main=colnames(weath3[,i]))
+  title(main=colnames(weath_full)[i])
+}
+plot(1, type="n", axes=FALSE, xlab="", ylab="")
+legend("topright", legend=c("filled","original"), col=c("red","black"), lty=1:1, cex=1.5,lwd=c(3,3),
+       title=var_name)
+RH_full=weath_full
+save(RH_full,file="RH_full_smooth.RData")
+
+```
 

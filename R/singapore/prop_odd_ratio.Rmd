@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data loading
 
 ```{r}
-load("df_train.Rdata")
+load("df_train2.Rdata")
 #names(df_train)
 ```
 
@@ -88,7 +88,7 @@ dim(dat)
 Summary statistics of the explanatory variables
 
 ```{r}
-summary(dat[c("air_temp","rainfall","relative_humidity","wind_speed",
+summary(dat[c("air_temp","rainfall","RH","wind_speed",
               "Green.View.Mean","Sky.View.Mean","Building.View.Mean")])
 ```
 
@@ -111,7 +111,7 @@ summaryBy(air_temp ~ q_thermal_preference, data=dat, FUN=c(mean, sd, min, max))
 summaryBy(rainfall ~ q_thermal_preference, data=dat, FUN=c(mean, sd, min, max))
 
 #Relative humidity
-summaryBy(relative_humidity ~ q_thermal_preference, data=dat, FUN=c(mean, sd, min, max))
+summaryBy(RH ~ q_thermal_preference, data=dat, FUN=c(mean, sd, min, max))
 
 #Wind speed
 summaryBy(wind_speed ~ q_thermal_preference, data=dat, FUN=c(mean, sd, min, max))
@@ -135,6 +135,26 @@ summaryBy(Building.View.Mean ~ q_thermal_preference, data=dat, FUN=c(mean))
 
 ```
 
+# Combined effect of air temperature and humidity
+
+
+```{r}
+dat2=data.frame(dat,
+                air_RH=dat$air_temp*dat$RH)
+dat_scaled=apply(dat2[,-c(11,16)],2,scale)
+dat_scaled=data.frame(dat_scaled,
+                q_noise_nearby=dat$q_noise_nearby,
+                q_thermal_preference=dat$q_thermal_preference)
+
+fit_sc=polr(q_thermal_preference~.,data=dat_scaled)
+summary(fit_sc)
+
+fit_=polr(q_thermal_preference~.,data=dat)
+summary(fit_)
+
+```
+
+
 ## Thermal comfort model
 
 ```{r}
@@ -147,6 +167,8 @@ Estimated coefficients
 ```{r}
 summary(fit)
 ```
+
+
 
 # Acustic comfort
 

@@ -1127,6 +1127,62 @@ RH_kriged=drop_na(RH_kriged)
 
 ```
 
+$\textbf{Relative humidity}$ - alternative approach (using Kalman-smoothed data)
+
+```{r}
+RH_long=RH_full %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+# ggplot them
+
+ggplot(RH_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+RH3=weath3
+# Impute NA to not useable smoothed observations
+
+# plot(is.na(RH3$S108[5100:5105]))
+RH_full$S108[5100:dim(RH_full)[1]]=NA
+
+# For S102, do not use any smoothed obs
+RH_full$S102=RH3$S102
+
+# For S100 
+#plot(is.na(RH3$S108[5100:5110]))
+RH_full$S100[5100:dim(RH_full)[1]]=NA
+
+# plot again
+
+RH_long=RH_full %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+# ggplot them
+ggplot(RH_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+t_indx=RH_full$time%in%unique(df_cozie$time)
+
+RH_full_shrink=RH_full[t_indx,]
+
+# plot shrinked data
+RH_full_shrink_long=RH_full_shrink %>%
+  pivot_longer(!time, names_to = "id", values_to = "value")
+
+apply(RH_full_shrink_long,2,function(x){sum(is.na(x))})
+
+# ggplot shrinked data
+ggplot(RH_full_shrink_long, aes(x = time, y = value)) +
+  geom_line() +
+  facet_wrap(~id, scales = "free_y")
+
+
+RHsmooth_kriged=spat_kr(RH_full_shrink,"RH",grid_coords)
+save(RHsmooth_kriged,file="RHsmooth_kriged.Rdata")
+
+```
+
+
+
 $\textbf{Wind Speed}$
 ```{r}
 # (*)In air_temp (and all other weather vars), consider only times at which we have survey measurement
@@ -1370,12 +1426,16 @@ air_match=match_krg_weath_coz(df_cozie,airsmooth_kriged,var_name="air_temp")
 
 # rainfall_match=match_krg_weath_coz(df_cozie,rainfall_int,var_name="rainfall")
 # RH_match=match_krg_weath_coz(df_cozie,RH_int,var_name="relative_humidity")
+
+RH_match=match_krg_weath_coz(df_cozie,
+                             RHsmooth_kriged,var_name="RH")
+
 # wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_int,var_name="wind_speed")
 # wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_int,var_name="wind_dir")
 
 #air_match=match_krg_weath_coz(df_cozie,air_kriged,var_name="air_temp")
 rainfall_match=match_krg_weath_coz(df_cozie,rainfall_kriged,var_name="rainfall")
-RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
+#RH_match=match_krg_weath_coz(df_cozie,RH_kriged,var_name="relative_humidity")
 wind_speed_match=match_krg_weath_coz(df_cozie,wind_speed_kriged,var_name="wind_speed")
 wind_dir_match=match_krg_weath_coz(df_cozie,wind_dir_kriged,var_name="wind_dir")
 
@@ -1386,8 +1446,12 @@ df_fin=merge(air_match[c("id_participant","time","air_temp")],
              by=c("time","id_participant"))
 
 
+# df_fin=merge(df_fin,
+#              RH_match[c("id_participant","time","relative_humidity")],
+#              by=c("time","id_participant"))
+
 df_fin=merge(df_fin,
-             RH_match[c("id_participant","time","relative_humidity")],
+             RH_match[c("id_participant","time","RH")],
              by=c("time","id_participant"))
 df_fin=merge(df_fin,
              wind_speed_match[c("id_participant","time","wind_speed")],
@@ -1397,14 +1461,19 @@ df_fin=merge(df_fin,
              by=c("time","id_participant"))
 
 #save(df_fin,file="df_final_weather.Rdata")
-load("df_final_weather.Rdata")
+# save(df_fin,file="df_final_weather_smooth.Rdata")
+#load("df_final_weather.Rdata")
+load("df_final_weather_smooth.Rdata")
 
 
 df_train=merge(df_fin,df_cozie,
                by=c("time","id_participant"))
 df_train$rainfall[which(df_train$rainfall<0)]=0
 #save(df_train,file='df_train.Rdata')
-load('df_train.Rdata')
+#load('df_train.Rdata')
+
+#save(df_train,file='df_train2.Rdata')
+load('df_train2.Rdata')
 
 ```
 
