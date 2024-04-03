@@ -89,7 +89,7 @@ last_date_first_wind=cozie_train$time[614909]
 first_date_second_wind=cozie_train$time[615204]
 ```
 
-# Summarize weather data data
+# Summarize weather data
 
 ```{r}
 weather_summ=function(x,window="30 minutes"){
