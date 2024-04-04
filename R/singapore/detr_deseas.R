@@ -9,7 +9,7 @@ delta=15 # intervallo di tempo in minuti
 tgrid = seq(air_temp$time[1]-60,tail(air_temp$time,1)+60, by = delta*60)
 
 # assegno una etichetta per indicizzare i diversi intervalli su cui fare la media
-# calcolo lungo
+# calcolo lungo 
 idtime=numeric(nrow(air_temp))
 for(i in 1:(length(tgrid)-1)){
   ind = air_temp$time >= tgrid[i] & air_temp$time < tgrid[i+1]
