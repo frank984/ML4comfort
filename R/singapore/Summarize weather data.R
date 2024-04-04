@@ -22,6 +22,7 @@ library(geoR)
 # Load data ---------------------------------------------------------------
 
 load("cleaned_data.RData")
+# The following should be repeated for each weather variables, e.g. relative humidity, rainfall, etc.
 
 # Summarize data ----------------------------------------------------------
 
