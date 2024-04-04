@@ -1,5 +1,5 @@
 # Load packages -----------------------------------------------------------
-# Load libraries
+
 library(scales)
 library(dplyr)
 library(tidyr)
@@ -17,10 +17,16 @@ library(automap)
 library(geoR)
 
 
+# Load data ---------------------------------------------------------------
+
+load("cleaned_data.RData")
+
 # Summarize data ----------------------------------------------------------
 
+# Time window for averaging
 wdn="15 mins"
 
+# Average air temperature
 air_temp2=air_temp %>% 
   group_by(time=floor_date(time,wdn))%>%
   summarise_if(is.numeric, mean, na.rm = TRUE) 
@@ -28,7 +34,6 @@ air_temp2=air_temp %>%
 # With this value, when we compute mean for all NA values, it returns NaN.
 
 # Inpute NaN values with NA
-
 air_temp2[,-1]=air_temp2[,-1]%>% mutate_all(~ifelse(is.nan(.), NA, .))
 
 # Equally distanced times -------------------------------------------------
@@ -37,6 +42,7 @@ eqdist_times=seq(from=air_temp2$time[1],
                  to=tail(air_temp2$time,1),
                  by=wdn)
 
+# Merge data
 air_temp3=air_temp2%>% 
   right_join(data.frame(time=eqdist_times),by="time")%>%
   arrange(time)
