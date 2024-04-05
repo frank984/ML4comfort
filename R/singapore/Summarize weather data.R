@@ -56,7 +56,7 @@ air_temp3=air_temp2%>%
 air_temp_long=air_temp3 %>%
   pivot_longer(!time, names_to = "station", values_to = "air_temperature")
 
-
+windows()
 par(mfrow=c(4,5),mar=c(2,2,2,2))
 for(i in 2:ncol(air_temp3)){
   plot(x=air_temp3$time,y=as.vector(unlist(air_temp3[,i])),type="l",col="black",
@@ -64,3 +64,4 @@ for(i in 2:ncol(air_temp3)){
        main=colnames(air_temp3[,i]))
   title(main=colnames(air_temp3)[i])
 }
+save(air_temp3,air_temp_long,file="air_temp.RData")
