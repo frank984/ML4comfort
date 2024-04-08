@@ -4,7 +4,8 @@ load("air_temp.RData")
 # Remove trend (non-parametric) ------------------------------------------------------------
 #
 # 4-weeks moving averages (4*24*28=2688 quarti d'ora)
-k=4*24*28
+weeks=4
+k=weeks*24*28
 library(zoo)
 #prv=zoo::rollmean(x,k,align = "left", na.pad = TRUE)
 MAs <- apply(air_temp3[,-1],2,
@@ -14,14 +15,16 @@ MAs=data.frame(time=air_temp3$time,MAs)
 
 # Average of the moving averages
 MAs_sum=rowMeans(MAs[,-1],na.rm = T)
+plot(MAs_sum,type="l")
 # Linear interpolation of the moving averages to fill the missing values
+library(forecast)
 MAs_int=na.interp(MAs_sum)
 MAs_data=data.frame(time=MAs$time,MAs_sum, MAs_int)
 
 par(mfrow=c(1,1),mar=c(2,2,2,2))
 plot(x=MAs_data$time,y=as.vector(unlist(MAs_data[,3])),type="l",col="red",
      xlab=" ",ylab=" ",
-     main="2-weeks moving averages")
+     main=paste0(weeks," weeks moving averages") )
 lines(x=MAs_data$time,y=as.vector(unlist(MAs_data[,2])),col="black")
 
 # Remove the trend
@@ -42,7 +45,7 @@ for(i in 2:ncol(air_temp3)){
 }
 
 # Remove seasonal component -----------------------------------------------
-
+library(dplyr)
 period=24*4 #(4 quarti d'ora ogni ora ogni giorno)
 
 wdnw=(1:period)
@@ -52,9 +55,11 @@ temp=data.frame(air_detrend,period=wdnw)
 temp=temp%>%group_by(period) %>%
   summarise_if(is.numeric, mean, na.rm = TRUE) 
 
+# Create dataframe to be subtracted from the original data
 n <- dim(air_detrend)[1]/period
 air_seas=do.call("rbind", replicate(n, temp, simplify = FALSE))
 
+# Remove seasonal component
 air_deseas=air_temp3[,-1]-air_seas[,-1]
 air_deseas=data.frame(time=air_temp3$time,air_deseas)
 
@@ -76,9 +81,9 @@ for(i in 2:ncol(air_temp3)){
 load("locations.Rdata")
 
 # Long format 
-
 air_deseas$time_ind=1:dim(air_deseas)[1]
 
+library(tidyr)
 air_deseas_long=air_deseas %>%
   pivot_longer(!c(time,time_ind), names_to = "station", values_to = "air_temperature")
 
@@ -97,7 +102,7 @@ air_res=
 
 air_res=data.frame(time=air_deseas_long$time,station=air_deseas_long$station,air_res)
 
-# Transform long format to wide format
+# Transform long format into wide format
 air_res_wide=air_res%>%pivot_wider(names_from = station,values_from = air_res)
 
 # Sort by time
