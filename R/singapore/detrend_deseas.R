@@ -2,7 +2,7 @@ load("air_temp.RData")
 
 
 # Remove trend (non-parametric) ------------------------------------------------------------
-
+£
 # 4-weeks moving averages (4*24*28=2688 quarti d'ora)
 k=4*24*28
 library(zoo)
