@@ -50,6 +50,8 @@ air_temp3=air_temp2%>%
   right_join(data.frame(time=eqdist_times),by="time")%>%
   arrange(time)
 
+# Save number of points used to calculate 15-mins averages
+
 # Plot  -------------------------------------------------------------------
 
 # Long format for easier plotting
