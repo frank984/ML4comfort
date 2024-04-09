@@ -28,6 +28,7 @@ load("cleaned_data.RData")
 
 # Time window for averaging
 wdn="15 mins"
+wdn="1 hour"
 
 # Average air temperature
 air_temp2=air_temp %>% 
@@ -66,4 +67,6 @@ for(i in 2:ncol(air_temp3)){
        main=colnames(air_temp3[,i]))
   title(main=colnames(air_temp3)[i])
 }
-save(air_temp3,air_temp_long,file="air_temp.RData")
+#save(air_temp3,air_temp_long,file="air_temp.RData")
+#save(air_temp3,air_temp_long,file="air_temp_1hour.RData")
+

@@ -1,4 +1,5 @@
-load("air_temp.RData")
+#load("air_temp.RData")
+load("air_temp_1hour.Rdata")
 load("cleaned_data.RData")
 load("locations.RData")
 
@@ -52,12 +53,6 @@ air_temp3=subset(air_temp3,select=-c(S102,S117))
 
 # Fill small gaps ---------------------------------------------------------
 
-# There is a time window between January and April with no observations. 
-# Let us split the data in two parts, one until 2023-01-21 15:00:16 (indexed 614909), and the other starting from 2023-03-27 11:55:01 (indexed 615204).
-
-last_date_first_wind=cozie_train$time[614909]
-first_date_second_wind=cozie_train$time[615204]
-
 # Plot stations in air_temp
 windows()
 par(mfrow=c(3,5),mar=c(2,2,2,2))
@@ -71,14 +66,7 @@ for(i in 2:ncol(air_temp3)){
   title(main=colnames(air_temp3)[i])
 }
 
-# # Split data
-# air_temp_full=air_temp3
-# air_temp3_first=subset(air_temp3,time<=last_date_first_wind)
-# air_temp3_second=subset(air_temp3,time>=first_date_second_wind)
-
-
-# Count gaps length for each station-------------------------------------------------------
-
+# Function to count gaps
 count_gaps=function(x){
   gaps=list()
   gaps[[1]]=x[,1]
@@ -94,12 +82,19 @@ count_gaps=function(x){
 }
 
 Na_count=count_gaps(air_temp3)
+Na_count
+
+# Remove first component (time) in Na_count
+Na_count_nt=Na_count[-1]
+
+# Max gap for each station
+sapply(Na_count_nt,function(x){max(x)})
 
 # For many stations, the maximum gap is long 875 observations
 
 
 # Use SARIMA model 
-fill_gaps=function(x,period=96){
+fill_gaps=function(x,period){
   for(i in 2:ncol(x)){
     fit_air=arima(x=x[,i], order=c(1,0,1),
                   seasonal = list(order=c(1,0,1)
@@ -117,14 +112,77 @@ fill_gaps=function(x,period=96){
     x[,i]=y_sm
   }
   
-  return(air_temp3)
+  return(x)
   
 }
 
 # Fill ALL gaps
-air_temp3_filled=fill_gaps(air_temp3)
+air_temp3_filled=fill_gaps(air_temp3,period = 24)
 # Keep only "filled" gaps where there were consecutive NAs for at least n observations (875)
 
+# Plot sarima results
+windows()
+par(mfrow=c(3,5),mar=c(2,2,2,2))
+for(i in 2:ncol(air_temp3)){
+  plot(x=air_temp3$time,y=as.vector(unlist(air_temp3_filled[,i])),col="red"
+    ,type='l',
+       xlab=" ",ylab=" ",
+       main=colnames(air_temp3[,i]))
+  lines(x=air_temp3$time,y=as.vector(unlist(air_temp3[,i])),type="l",col="black")
+  title(main=colnames(air_temp3)[i])
+}
+
+# air_temp3_filled in long format
+air_temp3_filled_long=air_temp3_filled %>%
+  pivot_longer(!time, names_to = "station", values_to = "air_temperature")
+colnames(air_temp3_filled_long)[3]="air_temp_filled"
+
+# air_temp3 in long format
+air_temp3_long=air_temp3 %>%
+  pivot_longer(!time, names_to = "station", values_to = "air_temperature")
+
+# Join air_temp3_filled_long with air_temp3_long
+air_temp3_filled_merged=merge(air_temp3_filled_long,
+                            air_temp3_long,
+                            by=c("time","station"))
+
+# Add column that indicates if the value was filled
+air_temp3_filled_merged$filled=ifelse(is.na(air_temp3_filled_merged$air_temperature),1,0)
+
+# Add column that counts consecutive NAs
+air_temp3_filled_merged$consecutive_na=0
+
+for(j in unique(air_temp3_filled_merged$station)){
+  id=which(air_temp3_filled_merged$station==j)
+  for(i in 1:length(id)){
+    if(air_temp3_filled_merged$filled[id[i]]==1){
+      air_temp3_filled_merged$consecutive_na[id[i]]=air_temp3_filled_merged$consecutive_na[id[i-1]]+1
+    }
+  }
+}
+
+prv=air_temp3_filled_merged%>%
+  group_by(station)%>%
+  summarise(max_consecutive_na=max(consecutive_na))
+
+library(data.table)
+# Simulate some data
+df <- data.frame(x = c(0, 1, 2, 0, 1, 0, 1, 2, 3, 0))
+df=air_temp3_filled_merged$consecutive_na[which(air_temp3_filled_merged$station=="S60")]
+df=data.frame(x=df)
+# Convert to data.table
+setDT(df)
+
+# Create a helper column to identify consecutive sequences
+df[, grp := cumsum(x == 0)]
+
+# Calculate max within each group, assign 0 to z where x is 0
+df[, z := ifelse(x == 0, 0, max(x)), by = grp]
+
+# Remove the helper column
+df[, grp := NULL]
+
+df
 
 # Remove trend (non-parametric) ------------------------------------------------------------
 #
