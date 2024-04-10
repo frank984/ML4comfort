@@ -7,6 +7,7 @@ library(geojsonio)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
+library(tidyr)
 library(lubridate)
 library(htmltools)
 
@@ -84,15 +85,6 @@ count_gaps=function(x){
 Na_count=count_gaps(air_temp3)
 Na_count
 
-# Remove first component (time) in Na_count
-Na_count_nt=Na_count[-1]
-
-# Max gap for each station
-sapply(Na_count_nt,function(x){max(x)})
-
-# For many stations, the maximum gap is long 875 observations
-
-
 # Use SARIMA model 
 fill_gaps=function(x,period){
   for(i in 2:ncol(x)){
@@ -118,7 +110,9 @@ fill_gaps=function(x,period){
 
 # Fill ALL gaps
 air_temp3_filled=fill_gaps(air_temp3,period = 24)
-# Keep only "filled" gaps where there were consecutive NAs for at least n observations (875)
+
+# save(air_temp3_filled,file="air_temp3_filled.Rdata")
+load("air_temp3_filled.Rdata")
 
 # Plot sarima results
 windows()
@@ -134,61 +128,107 @@ for(i in 2:ncol(air_temp3)){
 
 # air_temp3_filled in long format
 air_temp3_filled_long=air_temp3_filled %>%
-  pivot_longer(!time, names_to = "station", values_to = "air_temperature")
-colnames(air_temp3_filled_long)[3]="air_temp_filled"
+  pivot_longer(!time, names_to = "station", values_to = "air_temp_filled")
+
+# Sort by time
+air_temp3_filled_long=air_temp3_filled_long[order(air_temp3_filled_long$time),]
 
 # air_temp3 in long format
 air_temp3_long=air_temp3 %>%
   pivot_longer(!time, names_to = "station", values_to = "air_temperature")
 
+# Sort by time
+air_temp3_long=air_temp3_long[order(air_temp3_long$time),]
+
 # Join air_temp3_filled_long with air_temp3_long
-air_temp3_filled_merged=merge(air_temp3_filled_long,
+air_temp3_filled_long=merge(air_temp3_filled_long,
                             air_temp3_long,
                             by=c("time","station"))
 
+# Sort by time
+air_temp3_filled_long=air_temp3_filled_long[order(air_temp3_filled_long$time),]
+
 # Add column that indicates if the value was filled
-air_temp3_filled_merged$filled=ifelse(is.na(air_temp3_filled_merged$air_temperature),1,0)
+air_temp3_filled_long$filled=ifelse(is.na(air_temp3_filled_long$air_temperature),1,0)
 
 # Add column that counts consecutive NAs
-air_temp3_filled_merged$consecutive_na=0
+air_temp3_filled_long$consecutive_na=0
 
-for(j in unique(air_temp3_filled_merged$station)){
-  id=which(air_temp3_filled_merged$station==j)
+for(j in unique(air_temp3_filled_long$station)){
+  id=which(air_temp3_filled_long$station==j)
   for(i in 1:length(id)){
-    if(air_temp3_filled_merged$filled[id[i]]==1){
-      air_temp3_filled_merged$consecutive_na[id[i]]=air_temp3_filled_merged$consecutive_na[id[i-1]]+1
+    if(air_temp3_filled_long$filled[id[i]]==1){
+      air_temp3_filled_long$consecutive_na[id[i]]=air_temp3_filled_long$consecutive_na[id[i-1]]+1
     }
   }
 }
+# 
 
-prv=air_temp3_filled_merged%>%
-  group_by(station)%>%
-  summarise(max_consecutive_na=max(consecutive_na))
+# Create a column that reports the block length of consecutive NAs
 
-library(data.table)
-# Simulate some data
-df <- data.frame(x = c(0, 1, 2, 0, 1, 0, 1, 2, 3, 0))
-df=air_temp3_filled_merged$consecutive_na[which(air_temp3_filled_merged$station=="S60")]
-df=data.frame(x=df)
-# Convert to data.table
-setDT(df)
+air_stat=unique(air_temp3_filled_long$station)
+for(i in 1:length(air_stat)){
+  df=air_temp3_filled_long$consecutive_na[which(air_temp3_filled_long$station==air_stat[i])]
+  df=data.frame(x=df)
+  # Convert to data.table
+  setDT(df)
+  
+  # Create a helper column to identify consecutive sequences
+  df[, grp := cumsum(x == 0)]
+  
+  # Calculate max within each group, assign 0 to z where x is 0
+  df[, z := ifelse(x == 0, 0, max(x)), by = grp]
+  
+  # Remove the helper column
+  df[, grp := NULL]
+  
+  df=as.data.frame(df)
+  air_temp3_filled_long$consecutive_na[which(air_temp3_filled_long$station==air_stat[i])]=df$z
+}
 
-# Create a helper column to identify consecutive sequences
-df[, grp := cumsum(x == 0)]
+# Keep only "filled" gaps where there were consecutive NAs for at most 24 observations (1 day)
+air_temp3_filled_long$air_temp_filled[air_temp3_filled_long$consecutive_na>=24]=NA
 
-# Calculate max within each group, assign 0 to z where x is 0
-df[, z := ifelse(x == 0, 0, max(x)), by = grp]
+# From now on, we will use air_temp3_filled_merged. Let's transform it back to wide format
+air_temp3_new=air_temp3_filled_long[,c("time","station","air_temp_filled")]
 
-# Remove the helper column
-df[, grp := NULL]
+air_temp3_new=air_temp3_new %>%
+  pivot_wider(names_from = station, values_from = air_temp_filled)
 
-df
+# Save air_temp3_new
+#save(air_temp3_new,file="air_temp3_smallgaps_filled.Rdata")
+
+# Check filled data -------------------------------------------------------
+
+dim(air_temp3)
+dim(air_temp3_new)
+
+# Check percentage of NA for each station and compare with original data
+na_new=apply(air_temp3_new[,-1],2,function(x){sum(is.na(x))/length(x)}); na_new*100
+na*100
+
+# Check NAs block lengths
+Na_count_new=count_gaps(air_temp3_new)
+Na_count_new$S108
+Na_count$S108
+
+# Plot S108 in air_temp3 in black and S108 in air_temp3_new in red
+zoom=600:1000
+windows()
+par(mfrow=c(1,1),mar=c(2,2,2,2))
+plot(air_temp3$time[zoom],air_temp3_new$S108[zoom],type="l",col="red",main="S108")
+lines(air_temp3$time[zoom],air_temp3$S108[zoom],col="black")
+
+air_temp3_old=air_temp3
+air_temp3=air_temp3_new
 
 # Remove trend (non-parametric) ------------------------------------------------------------
-#
-# 2-weeks moving averages (4*24*28=2688 quarti d'ora)
-#weeks=2
-k=24*4
+
+
+# 1-day moving averages 
+
+# period
+k=24
 library(zoo)
 #prv=zoo::rollmean(x,k,align = "left", na.pad = TRUE)
 # Check if possible to weight rollmean based on the number of observations available for that specific hour quarter
@@ -201,46 +241,35 @@ MAs <- apply(air_temp3[,-1],2,
 MAs=data.frame(time=air_temp3$time,MAs)
 
 # Plot one station
-plot(air_temp3$time,air_temp3$S60,type="l",col="grey")
-lines(air_temp3$time,MAs$S60,type="l",col="red")
+windows()
+par(mfrow=c(1,1),mar=c(2,2,2,2))
+zoom=500:1000
+plot(air_temp3$time[zoom],air_temp3$S60[zoom],type="l",col="darkgrey",main="S60")
+lines(air_temp3$time[zoom],MAs$S60[zoom],type="l",col="red")
 
 
-#Detrend
+# Detrend
 air_detrend=air_temp3[,-1]-MAs[,-1]
-air_detrend$time=air_temp3$time
-#air_detrend=air_detrend[-(1:k),]
+air_detrend=data.frame(time=air_temp3$time,air_detrend)
+
+# Sort by time
+air_detrend=air_detrend[order(air_detrend$time),]
 
 # Plot station S60
-zoom
-plot(air_detrend$time,air_detrend$S60,type="l",col="black")
-
-# Average of the moving averages 
-# MAs_sum=rowMeans(MAs[,-1],na.rm = T)
-# plot(MAs_sum,type="l")
-# # Linear interpolation of the moving averages to fill the missing values
-# library(forecast)
-# MAs_int=na.interp(MAs_sum)
-# MAs_data=data.frame(time=MAs$time,MAs_sum, MAs_int)
-
+windows()
 par(mfrow=c(1,1),mar=c(2,2,2,2))
-plot(x=air_detrend$time,y=as.vector(unlist(MAs_data[,3])),type="l",col="red",
-     xlab=" ",ylab=" ",
-     main=paste0(weeks," weeks moving averages") )
-lines(x=MAs_data$time,y=as.vector(unlist(MAs_data[,2])),col="black")
-
-# Remove the trend
-# air_detrend=apply(air_temp3[,-1],2,function(x){x-MAs_data$MAs_int})
-# air_detrend=data.frame(time=air_temp3$time,air_detrend)
+plot(air_detrend$time,air_detrend$S60,type="l",col="darkgrey",main="S60")
 
 summary(air_detrend$S60)
 summary(air_temp3$S60)
 summary(MAs$S60)
 
 # Plot detrended series
-par(mfrow=c(4,5),mar=c(2,2,2,2))
+windows()
+par(mfrow=c(3,5),mar=c(2,2,2,2))
 for(i in 2:ncol(air_temp3)){
   plot(x=air_detrend$time,
-       y=as.vector(unlist(air_detrend[,i])),type="l",col="black",
+       y=as.vector(unlist(air_detrend[,i])),type="l",col="darkgrey",
        xlab=" ",ylab=" ",
        main=colnames(air_detrend[,i]))
   title(main=colnames(air_detrend)[i])
@@ -249,6 +278,7 @@ for(i in 2:ncol(air_temp3)){
 # Zoom
 zoom=500
 i=2
+windows()
 par(mfrow=c(1,1),mar=c(2,2,2,2))
 plot(x=air_detrend$time[1:zoom],
      y=as.vector(unlist(air_detrend[1:zoom,i])),type="l",col="black",
@@ -259,37 +289,43 @@ plot(x=air_detrend$time[1:zoom],
 library(dplyr)
 load("locations.Rdata")
 names(locations)[2]="station"
-period=24*4 #(4 quarti d'ora ogni ora ogni giorno)
-
+#period=24*4 #(4 quarti d'ora ogni ora ogni giorno)
+period=24 #(24 ore ogni giorno)
+  
 wdnw=(1:period)
 
-temp=data.frame(air_detrend,period=wdnw)
+#air_seas=data.frame(air_detrend,period=wdnw)
+air_seas=data.frame(air_temp3[,-1],period=wdnw)
 
-# Add weights here based on number of observations used to compute mean (or consdier median)
-temp=temp%>%group_by(period) %>%
+air_seas=air_seas%>%group_by(period) %>%
   summarise_if(is.numeric, mean, na.rm = TRUE) 
 
-# temp in long format
-temp_long=temp %>%
+# air_seas in long format
+air_seas_long=air_seas %>%
   pivot_longer(!c(period), names_to = "station", values_to = "seasonal")
 
 # Save seasonal component in long format (needed after kriging to add it back to the data)
-air_seas_long=merge(locations,temp_long,by="station")
+air_seas_long=merge(locations,air_seas_long,by="station")
 
-# Plot S60 in temp
+# Plot S60 in air_seas
+windows()
 par(mfrow=c(1,1),mar=c(2,2,2,2))
-plot(air_temp3$time[1:k],temp$S60,type="l",col="black")
+plot(air_temp3$time,air_seas$S60,type="l",col="black")
 
 
-# Create dataframe to be subtracted from the original data
+# Create dataframe with seasonal components to be subtracted from the original data
 n <- dim(air_detrend)[1]/period
-air_seas=do.call("rbind", replicate(n, temp, simplify = FALSE))
+#n <- dim(air_temp3)[1]/period
+air_seas=do.call("rbind", replicate(n, air_seas, simplify = FALSE))
 
 # Remove seasonal component
 air_deseas=air_temp3[,-1]-air_seas[,-1]
 air_deseas=data.frame(time=air_temp3$time,air_deseas)
 
-# Use average seasonal component when doing prediction
+# Sort by time
+air_deseas=air_deseas[order(air_deseas$time),]
+
+# We will use average seasonal component when doing prediction
 
 # # Remove (all-stations average) seasonal component
 # air_av_seas=air_seas_long[,c("period","seasonal")]%>%group_by(period) %>%
@@ -302,7 +338,7 @@ air_deseas=data.frame(time=air_temp3$time,air_deseas)
 
 # Plot deseasonalized series
 windows()
-par(mfrow=c(4,5),mar=c(2,2,2,2))
+par(mfrow=c(3,5),mar=c(2,2,2,2))
 for(i in 2:ncol(air_temp3)){
   plot(x=air_deseas$time,
        y=as.vector(unlist(air_deseas[,i])),type="l",col="blue",
@@ -315,12 +351,20 @@ for(i in 2:ncol(air_temp3)){
 # To correctly estimate seasonal component we need complete series (96 obs)
 # FILL SMALL GAPS BEFORE COMPUTING MOVING AVERAGES FOR NON PARAMETRIC TREND
 
-zoom=200
+zoom=1:200
 i=2
 windows()
 par(mfrow=c(1,1),mar=c(2,2,2,2))
-plot(x=air_deseas$time[1:zoom],
-     y=as.vector(unlist(air_deseas[1:zoom,i])),type="l")
+plot(x=air_deseas$time[zoom],
+     y=as.vector(unlist(air_deseas[zoom,i])),type="l",
+     main=colnames(air_deseas)[i],col="black")
+
+# Plot first differences in air_deseas
+windows()
+par(mfrow=c(1,1),mar=c(2,2,2,2))
+plot(x=air_deseas$time[-1],
+     y=diff(as.vector(unlist(air_deseas[,i]))),type="l",
+     main=colnames(air_deseas)[i],col="black")
 
 # Parametric trend  -------------------------------------------------------
 
