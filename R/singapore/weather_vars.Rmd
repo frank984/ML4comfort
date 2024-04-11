@@ -1004,7 +1004,9 @@ spat_kr=function(x_shr,var_name,grid_coords){
     #plot(v.vgm)
     
     # 2. Fit a model to the sample variogram
-    v.fit <- fit.variogram(v.vgm, vgm(100,"Gau",100,0))
+    #v.fit <- fit.variogram(v.vgm, vgm(100,"Gau",100,0))
+    v.fit <- fit.variogram(v.vgm, vgm(NA,"Gau",100,NA)) # check if this line is valid when we want to estimate nugget, sill, and range from data
+# range=NA (sometimes)turns into the following error "variogram range can never be negative". Change to fixed value
     
     #plot(v.vgm, v.fit)
     
