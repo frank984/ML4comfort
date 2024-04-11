@@ -359,7 +359,7 @@ plot(x=air_deseas$time[zoom],
      y=as.vector(unlist(air_deseas[zoom,i])),type="l",
      main=colnames(air_deseas)[i],col="black")
 
-# Plot first differences in air_deseas
+# Plot 
 windows()
 par(mfrow=c(1,1),mar=c(2,2,2,2))
 plot(x=air_deseas$time[-1],
@@ -392,8 +392,29 @@ air_deseas_long=air_deseas_long[order(air_deseas_long$time),]
 linreg=lm(air_temperature~time_ind+latitude+longitude,data=air_deseas_long)
 summary(linreg)
 
+# Detrend all stations
 
+air_detren_reg=air_deseas_long$air_temperature - predict(linreg,air_deseas_long)
 
+air_detr_deseas=data.frame(time=air_deseas_long$time,station=air_deseas_long$station,air_detren_reg)
+
+# Sort by time
+air_detr_deseas=air_detr_deseas[order(air_detr_deseas$time),]
+
+# wide format
+air_detr_deseas=air_detr_deseas %>%
+  pivot_wider(names_from = station, values_from = air_detren_reg)
+
+# plot results
+windows()
+par(mfrow=c(3,5),mar=c(2,2,2,2))
+for(i in 2:ncol(air_detr_deseas)){
+  plot(x=air_detr_deseas$time,
+       y=as.vector(unlist(air_detr_deseas[,i])),type="l",col="black",
+       xlab=" ",ylab=" ",
+       main=colnames(air_detr_deseas[,i]))
+  title(main=colnames(air_detr_deseas)[i])
+}
 
 # # Use TBATS ---------------------------------------------------------------
 # 
