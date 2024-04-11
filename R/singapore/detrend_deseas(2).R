@@ -366,7 +366,7 @@ plot(x=air_deseas$time[-1],
      y=diff(as.vector(unlist(air_deseas[,i]))),type="l",
      main=colnames(air_deseas)[i],col="black")
 
-# Parametric trend  -------------------------------------------------------
+# Parametric trend (remove)  -------------------------------------------------------
 
 # Fit a linear model to the deseasonalized series with covariates time, latitude and longitude
 
@@ -415,6 +415,8 @@ for(i in 2:ncol(air_detr_deseas)){
        main=colnames(air_detr_deseas[,i]))
   title(main=colnames(air_detr_deseas)[i])
 }
+
+
 
 # # Use TBATS ---------------------------------------------------------------
 # 
