@@ -252,6 +252,219 @@ spplot(k.one, zcol="var1.pred", col.regions=bpy.colors(64),
 
 # Spatio-temporal prediction ----------------------------------------------
 
+# Missing values present in the following object. The function can somehow handle them
 r5to10[,1:200]
+
+# Too time-consuming, consider using a subset
 vst <- variogramST(PM10 ~ 1, r5to10[,1:200])
+
+# default space-time variogram plot is the 2.5D plot
+windows()
+plot(vst, xlab="separation (km)", ylab="separation (+days)",
+     main="Semivariance, PM10")
+
+# Second, parallel spatial variograms, one per time lag
+windows()
+plot(vst, map = FALSE, xlab="separation (km)",
+     ylab = "Semivariance, PM10")
+
+# Third, a 3D wireframe plot, showing both space and time
+library(lattice)
+
+windows()
+plot(vst, wireframe=TRUE)
+
+
+# Metric model ------------------------------------------------------------
+
+# 1) METRIC. Simplest model: Time is considered as
+# another dimension, which must be re-scaled to match the spatial
+# dimension
+
+# The critical parameter here is the time anisotropy.
+# This is the ratio of the time scale to the spatial scale.
+
+# One way to estimate this is to compute the anisotropy ratio (distance/time) 
+# for all the variogram bins within a certain range of semivariances, and then summarize
+
+dim(tmp <- vst[(vst$gamma > 70) &
+                 (vst$gamma < 80) &
+                 (vst$timelag !=0),])
+
+summary(metric.aniso <- tmp$spacelag/as.numeric(tmp$timelag))
+
+# Build metric model
+# (vgm.metric <- vgmST(stModel="metric",joint=vgm(50,"Exp",100,0),nugget=10,stAni=mean(metric.aniso)))
+(vgm.metric <- vgmST(stModel="metric",joint=vgm(50,"Exp",100,0),nugget=10,stAni=mean(metric.aniso)))
+vgmf.metric <- fit.StVariogram(vst, vgm.metric,
+                               method="L-BFGS-B",
+                               control=list(maxit=1024))
+
+# Plot
+windows()
+plot(vst, vgmf.metric)
+windows()
+plot(vst, vgmf.metric, map=FALSE)
+
+
+# Separable model ---------------------------------------------------------
+
+# 2)SEPARABLE. Separate spatial and temporal
+# structures, which are considered to interact only multiplicatively
+# and so can be fit independently but with a common sill.
+
+# The overall sill can be estimated from the empirical variogram as some
+# proportion of the maximum semivariance in the space-time variogram
+
+(estimated.sill <- quantile(na.omit(vst$gamma), .8))
+
+# The partial sill arguments in the space and time variograms are ignored
+# in favour of the specified overall sill
+
+(vgm.sep <- vgmST(stModel="separable",
+                  space=vgm(0.9,"Exp", 300,0.1),
+                  time=vgm(0.95,"Exp", 2, 0.05),
+                  sill=estimated.sill))
+
+# we have to ensure
+# that the optim “optimize” function called by fit.StVariogram does not
+# try to use un-physical values, in particular, negative ranges or semivariances.
+
+vgmf.sep <- fit.StVariogram(vst, vgm.sep,
+                            method="L-BFGS-B",
+                            lower=c(100,0.001,1,0.001,40),
+                            control=list(maxit=500))
+
+attr(vgmf.sep, "optim.output")$par
+
+# Value of the optimization function
+attr(vgmf.sep, "optim.output")$value
+
+# Plot
+windows()
+plot(vst, vgmf.sep)
+windows()
+plot(vst, vgmf.sep, map=FALSE)
+
+# sumMetric model ---------------------------------------------------------
+
+# 3) sumMETRIC. separate terms for the spatial
+# and temporal components, and an interaction component for the
+# residuals not accounted for by these two.
+
+# The interaction term allows geometric anisotropy, i.e., same structure,
+# nugget and partial sill but the range can vary in different dimensions
+# (here, the time vs. space dimensions)
+
+# 10 parameters:
+# a) the spatial marginal variogram, 3 parameters: partial sill, nugget, range
+# b) the temporal marginal variogram, 3 parameters: partial sill, nugget, range
+# c) space-time residual variogram, 4 parameters: partial sill, nugget, range of residuals, anisotropy ratio (the ratio between the space and time and ranges)
+
+# The two marginal variograms can be estimated by the variograms at lag
+# 0 in the remaining dimension
+
+(v.sp <- vst[vst$timelag==0,c("spacelag","gamma")])
+(v.t <- vst[vst$spacelag==0,c("timelag","gamma")])
+
+# Since exp models are used, the range is 1/3 of the effective range as estimated from the marginal variogram, i.e.,
+# where the semivariance reaches 95% of the estimated sill
+#(i.e. 240 km and 6 days)
+
+# The anisotropy parameter stAni is estimated as the ratio of these two
+# 240=6
+# The gstat package version 1.0-25 and later now has a function
+# estiStAni to estimate this parameter
+
+# Inspecting empirical variogram we can find
+# range at which there seems to be no more interaction between
+# space and time, that is, where the single-time variograms have the
+# same shape, but with different total sills
+
+# We assume the nugget effects are in either space or time but not
+# their interaction.
+
+# The partial sill is estimated as the semivariance at zero
+# time lag at this estimated range; here this appears to be about 30
+
+
+
+vgm.sum.metric <- vgmST(stModel="sumMetric",
+                        space=vgm(0.9*max(v.sp$gamma, na.rm=TRUE),
+                                  "Exp", 250/3,0),
+                        time=vgm(0.9*max(v.t$gamma, na.rm=TRUE),
+                                 "Exp", 6/3, 0),
+                        joint=vgm(30,
+                                  "Exp",50/3, 0),
+                        stAni=240/6)
+
+# We again bound the parameters;
+# these are in the order: spatial sill, range, nugget; temporal sill, range,
+# nugget; joint sill, range, nugget; joint anisotropy.
+
+# See page 50 of Rossiter
+(sp.sill.lb <- 0.7 * max(v.sp$gamma, na.rm=TRUE))
+(sp.range.lb <- v.sp[which(v.sp > sp.sill.lb)[1]-1, "spacelag"])
+(t.sill.lb <- 0.7 * max(v.t$gamma, na.rm=TRUE))
+(t.range.lb <- v.t[which(v.t$gamma > t.sill.lb)[1]-1, "timelag"])
+
+system.time(vgmf.sum.metric <-
+              fit.StVariogram(vst, vgm.sum.metric,
+                              method="L-BFGS-B",
+                              control=list(maxit=500),
+                              lower=c(sp.sill.lb, sp.range.lb/3,0,
+                                      t.sill.lb, t.range.lb/3,0,
+                                      0,1,0,
+                                      1)))
+
+round(attr(vgmf.sum.metric, "optim.output")$par,3)
+
+# Compare goodness-of-fit of the three models -----------------------------
+
+attr(vgmf.metric, "optim.output")$value
+attr(vgmf.sep, "optim.output")$value
+attr(vgmf.sum.metric, "optim.output")$value
+
+
+# Spatio-temporal kriging -------------------------------------------------
+
+# We have a spatial grid; to do space-time kriging the grid must have both
+# a space and time component
+
+rr.t <- r5to10[,"2006-06-21/2006-06-26"]
+
+windows()
+stplot(rr.t, col.regions=bpy.colors(64),
+       sp.layout=list(list("sp.polygons",de.boundary)))
+
+# Create an interpolation grid over the entire bounding box,
+# and just for the portion (partially) covered by Germany
+
+rr.t <- as(rr.t,"STSDF")
+de.bbox.grid <- STF(sp=as(de.bbox.grid,"SpatialPoints"), time=rr.t@time)
+de.grid <- STF(sp=as(de.grid,"SpatialPoints"), time=rr.t@time)
+
+# Predict over the 6-day space-time grid of Germany by kriging
+# with the three fitted space-time models
+
+k.de.sum.metric <- krigeST(PM10~1, data=rr.t, newdata=de.grid,
+                           modelList=vgmf.sum.metric)
+gridded(k.de.sum.metric@sp) <- TRUE
+
+# Display resulting map
+windows()
+plot.zlim <- seq(floor(min(
+  # k.de.met$var1.pred,
+  #                          k.de.sep$var1.pred,
+                           k.de.sum.metric$var1.pred)),
+                 ceiling(max(
+                   # k.de.met$var1.pred,
+                   #           k.de.sep$var1.pred,
+                             k.de.sum.metric$var1.pred)),
+                 by = 0.5)
+stplot(k.de.sum.metric, main="PM10, Germany",
+       sub="Sum-metric space-time model",
+       col.regions=bpy.colors(length(plot.zlim)),
+       at=plot.zlim)
+
 
