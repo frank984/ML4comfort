@@ -84,5 +84,24 @@ air_temp_long=merge(air_temp_long, locations, by="station")
 air_temp_long=air_temp_long[order(air_temp_long$time),]
 air_temp_long=subset(air_temp_long,select = -c(X,name))
 
+# Create spacetime object
+air_temp_st=stConstruct(air_temp_long, 
+                        time="time", 
+                        space=c("longitude","latitude"))
 
+
+#proj4string(air_temp_st) <- CRS("+init=EPSG:4269")
+str(air_temp_st)
+# this is of class STIDF, “unstructured spatio-temporal data”,
+
+# If we assume that every spatial record has a time seriesof data of length nrow(time)
+# then consider the following object
+
+air_temp_st=as(air_temp_st,"STFDF")
+str(air_temp_st)
+summary(air_temp_st)
+#save(air_temp_st,file="air_temp_st.Rdata")
+load("air_temp_st.Rdata")
+length(unique(air_temp_st@data$station))
+unique(air_temp_st@data$station)
 
