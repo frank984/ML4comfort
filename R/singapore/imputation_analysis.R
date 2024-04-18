@@ -301,16 +301,6 @@ for(i in 2:ncol(air_20)){
 }
 mtext("Air temperatures - 20% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
 
-# RMSE
-rmse(air_short,air_5_sarima)
-rmse(air_short,air_10_sarima)
-rmse(air_short,air_20_sarima)
-
-# MABE
-mabe(air_short,air_5_sarima)
-mabe(air_short,air_10_sarima)
-mabe(air_short,air_20_sarima)
-
 
 # 1-dim kriging -----------------------------------------------------------
 
@@ -397,19 +387,40 @@ mtext("Air temperatures - 20% NAs - temporal kriging", side = 3, line = - 2, out
 
 # Multiple imputation -----------------------------------------------------
 
+# Not feasible cause we should do kriging on each imputed dataset
 
 # Other -------------------------------------------------------------------
 
 
+# Comparison --------------------------------------------------------------
 
-# Trend and seasonal components -------------------------------------------
+# RMSE
+rmse(air_short,air_5_sarima)
+rmse(air_short,air_5_tkr)
+rmse(air_short,air_10_sarima)
+rmse(air_short,air_10_tkr)
+rmse(air_short,air_20_sarima)
+rmse(air_short,air_20_tkr)
 
-decompose_ts=function(tsx,sw,tw,start){
+# MABE
+mabe(air_short,air_5_sarima)
+mabe(air_short,air_5_tkr)
+mabe(air_short,air_10_sarima)
+mabe(air_short,air_10_tkr)
+mabe(air_short,air_20_sarima)
+mabe(air_short,air_20_tkr)
+
+
+# The impact of preliminary trend and seasonal decomposition (MAYBE NOT) --------------
+
+
+# 1) Decompose data with missing values to estimate trend and seas --------
+
+decompose_ts=function(tsx,sw,tw){
   # tsx is vector of observations
   
   # Transform tsx in a ts object, first turing it into a matrix
   tsx=ts(tsx,
-         start=start,
          frequency = sw)
   
   ts.stl <- stl(tsx, 
@@ -423,35 +434,207 @@ decompose_ts=function(tsx,sw,tw,start){
   return(list(ts.stl=ts.stl,res=res,trend=trend,seasonal=seasonal))
 }
 
-# Shorter time window
-Tnew=250
-air_data_short=air_data_wide[1:250,]
-
 # Apply to each station 
 sw=24
 tw=6
-air_data_wide_decomp=list()
-for(i in 2:ncol(air_data_wide)){
-  air_data_wide_decomp[[i-1]]=decompose_ts(air_data_short[,i],sw,tw)
+air_data_decomp5=list()
+air_data_decomp10=list()
+air_data_decomp20=list()
+
+for(i in 2:ncol(air_short)){
+  air_data_decomp5[[i-1]]=decompose_ts(air_5[,i],sw,tw)
+  air_data_decomp10[[i-1]]=decompose_ts(air_10[,i],sw,tw)
+  air_data_decomp20[[i-1]]=decompose_ts(air_20[,i],sw,tw)
 }
+
+# Decomposition results fir station S50
+plot(air_data_decomp5[[1]]$ts.stl,main="Air temperature - S50 - 5% NAs")
+plot(air_data_decomp10[[1]]$ts.stl,main="Air temperature - S50 - 10% NAs")
+plot(air_data_decomp20[[1]]$ts.stl,main="Air temperature - S50 - 20% NAs")
+
+res5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+res10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+res20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+
+trend5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+trend10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+trend20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+
+seas5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+seas10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+seas20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+
+# Construct a dataset for residuals, trens and seasonal components
+for(i in 1:length(air_data_decomp5)){
+  res5[,i]=air_data_decomp5[[i]]$res
+  res10[,i]=air_data_decomp10[[i]]$res
+  res20[,i]=air_data_decomp20[[i]]$res
+  
+  trend5[,i]=air_data_decomp5[[i]]$trend
+  trend10[,i]=air_data_decomp10[[i]]$trend
+  trend20[,i]=air_data_decomp20[[i]]$trend 
+  
+  seas5[,i]=air_data_decomp5[[i]]$seasonal
+  seas10[,i]=air_data_decomp10[[i]]$seasonal
+  seas20[,i]=air_data_decomp20[[i]]$seasonal
+  
+}
+
+# Fill with NAs where needed
+res5[na_start[1]:(na_start[1]+na_len[1]),]=NA
+res10[na_start[2]:(na_start[2]+na_len[2]),]=NA
+res20[na_start[3]:(na_start[3]+na_len[3]),]=NA
+
+res5=as.data.frame(res5)
+res10=as.data.frame(res10)
+res20=as.data.frame(res20)
+colnames(res5)=colnames(air_short)[-1]
+colnames(res10)=colnames(air_short)[-1]
+colnames(res20)=colnames(air_short)[-1]
+
+trend5=as.data.frame(trend5)
+trend10=as.data.frame(trend10)
+trend20=as.data.frame(trend20)
+colnames(trend5)=colnames(air_short)[-1]
+colnames(trend10)=colnames(air_short)[-1]
+colnames(trend20)=colnames(air_short)[-1]
+
+seas5=as.data.frame(seas5)
+seas10=as.data.frame(seas10)
+seas20=as.data.frame(seas20)
+colnames(seas5)=colnames(air_short)[-1]
+colnames(seas10)=colnames(air_short)[-1]
+colnames(seas20)=colnames(air_short)[-1]
+
+# Plot
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res5)){
+  plot(x=air_short$time,y=as.vector(unlist(res5[,i])),type="l",col="black",
+       xlab=" ",ylab=" ",
+       main=colnames(res5)[i])
+}
+mtext("Residuals - 5% NAs", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res10)){
+  plot(x=air_short$time,y=as.vector(unlist(res10[,i])),type="l",col="black",
+       xlab=" ",ylab=" ",
+       main=colnames(res10)[i])
+}
+mtext("Residuals - 10% NAs", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res20)){
+  plot(x=air_short$time,y=as.vector(unlist(res20[,i])),type="l",col="black",
+       xlab=" ",ylab=" ",
+       main=colnames(res20)[i])
+}
+mtext("Residuals - 20% NAs", side = 3, line = - 2, outer = TRUE)
+
+
+# 2) Apply imputation to residuals ----------------------------------------
+
+# ARIMA
+
+fill_arima=function(x,period){
+  for(i in 1:ncol(x)){
+    fit_air=arima(x=x[,i], order=c(1,0,1)
+                  # ,
+                  # seasonal = list(order=c(1,0,1)
+                  #                 ,period=period
+                  #                 ,include.mean =T
+                  #                 ,method="ML")
+                  )
+    kr_sm=KalmanSmooth(as.numeric(unlist(x[,i])),
+                       fit_air$model)
+    id.na <- which(is.na(x[,i]))
+    y_sm=as.numeric(unlist(x[,i]))
+    for (j in id.na){
+      y_sm[j] <- kr_sm$smooth[j,1]
+    }
+    x[,i]=y_sm
+  }
+  
+  return(x)
+  
+}
+
+res5_arima=fill_arima(res5,period = 24)
+res10_arima=fill_arima(res10,period = 24)
+res20_arima=fill_arima(res20,period = 24)
+
+# Plot
+zoom=(na_start[1]-50):(na_start[1]+na_len[1]+50)
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res5)){
+  plot(x=air_short$time[zoom],y=as.vector(unlist(res5_arima[,i]))[zoom],col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(res5)[i])
+  lines(x=air_short$time[zoom],y=as.vector(unlist(res5[,i]))[zoom],col="black")
+}
+mtext("Residuals - 5% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res10)){
+  plot(x=air_short$time,y=as.vector(unlist(res10_arima[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(res10)[i])
+  lines(x=air_short$time,y=as.vector(unlist(res10[,i])),col="black")
+}
+mtext("Residuals - 10% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(3,3),mar=c(2,2,6,2))
+for(i in 1:ncol(res20)){
+  plot(x=air_short$time,y=as.vector(unlist(res20_arima[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(res20)[i])
+  lines(x=air_short$time,y=as.vector(unlist(res20[,i])),col="black")
+}
+mtext("Residuals - 20% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
+
+
+
+
+# 3) Reconstruct the time series and evaluate the impact of decomp --------
+
+
 
 # Extract length of residuals for each element of the list
 unlist(lapply(air_data_wide_decomp,function(x) length(x$res)))
 
 plot(air_data_wide_decomp[[4]]$ts.stl)
 
-# Plot  residuals
-windows()
-par(mfrow=c(3,5),mar=c(2,2,6,2))
-for(i in 1:length(air_data_wide_decomp)){
-  plot(x=air_data_short$time,y=air_data_wide_decomp[[i]]$res,type="l",col="black",
-       xlab=" ",ylab=" ",
-       main=colnames(air_data_wide)[i+1])
-}
-mtext("Residuals", side = 3, line = - 2, outer = TRUE)
 
-windows()
-plot(air_data_wide_decomp[[1]]$ts.stl)
-plot(air_data_wide_decomp[[1]]$res,type='l')
+# Trend and seasonal components -------------------------------------------
 
-1-length(air_data_wide_decomp[[1]]$res)/dim(air_data_wide)[1]
+
+
+# # Shorter time window
+# Tnew=250
+# air_data_short=air_data_wide[1:250,]
+# 
+# 
+# # Plot  residuals
+# windows()
+# par(mfrow=c(3,5),mar=c(2,2,6,2))
+# for(i in 1:length(air_data_wide_decomp)){
+#   plot(x=air_data_short$time,y=air_data_wide_decomp[[i]]$res,type="l",col="black",
+#        xlab=" ",ylab=" ",
+#        main=colnames(air_data_wide)[i+1])
+# }
+# mtext("Residuals", side = 3, line = - 2, outer = TRUE)
+# 
+# windows()
+# plot(air_data_wide_decomp[[1]]$ts.stl)
+# plot(air_data_wide_decomp[[1]]$res,type='l')
+# 
+# 1-length(air_data_wide_decomp[[1]]$res)/dim(air_data_wide)[1]
