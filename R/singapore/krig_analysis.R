@@ -25,11 +25,12 @@ air_stfdf<- STFDF(stats, air_short$time, data.frame(air_temp = as.vector(tair)))
 str(air_stfdf)
 
 # Change time zone to UTC+8 (Singapore)
-Sys.setenv(TZ="UTC+8")
+Sys.setenv(TZ="Singapore")
 Sys.timezone()
 Sys.getenv(x="TZ", unset=NA)
 Sys.time()
 air_stfdf@endTime[1]
+options(xts_check_TZ = FALSE)
 
 head(air_stfdf[1,])
 
@@ -44,12 +45,14 @@ dstats=distm(stats, stats, fun = distHaversine)/1000
 diag(dstats)=NA
 mdstats=min(dstats,na.rm = T)
 Mdstats=max(dstats,na.rm = T)
+median(dstats,na.rm = T)
 
 st=Sys.time()
 vsta <- variogramST(air_temp ~ 1, air_stfdf1,
-                    cutoff = mdstats/2,
-                    width=3,
-                    cores=3,tlags = 0:11)
+                    #cutoff = Mdstats,
+                    #width=.01,
+                    cores=3,tlags = 0:11,
+                    na.omit = T)
 en=Sys.time()
 en-st
 
@@ -57,12 +60,13 @@ vsta
 
 # default space-time variogram plot is the 2.5D plot
 windows()
-plot(vsta, xlab="separation (km)", ylab="separation (+hours)",
+plot(vsta,
+     ylab="separation (+hours)",
      main="Semivariance, air temperature")
 
 # Second, parallel spatial variograms, one per time lag
 windows()
-plot(vsta, map = FALSE, xlab="separation (km)",
+plot(vsta, map = FALSE, 
      ylab = "Semivariance, air temperature")
 
 # Third, a 3D wireframe plot, showing both space and time
@@ -75,6 +79,80 @@ plot(vsta, wireframe=TRUE)
 # The two marginal variograms can be estimated by the variograms at lag
 # 0 in the remaining dimension
 
-(v.sp <- vsta[vsta$timelag==0,c("spacelag","gamma")])
-(v.t <- vsta[vsta$spacelag==0,c("timelag","gamma")])
+v.sp <- vsta[vsta$timelag==0,c("spacelag","gamma")]
+v.t <- vsta[vsta$spacelag==0,c("timelag","gamma")]
 
+# Since exponential models are used, the range parameter is specified as
+# 1/3 of the effective range as estimated from the marginal variogram, i.e.,
+# where the semivariance reaches 95% of the estimated sill.
+
+# In this case the variogram is not monotonic wrt space distance, so we take the maximum range possible
+s.sill=.9*max(v.sp$gamma,na.rm = T)
+s.range=max(v.sp$spacelag)
+t.sill=.9*max(v.t$gamma,na.rm = T)
+t.range=
+  as.numeric(
+    v.t$timelag[which(v.t$gamma>=.9*max(v.t$gamma,na.rm = T))[1]]
+  )/3
+
+#max(vsta$spacelag,na.rm = T)/as.numeric(max(vsta$timelag,na.rm = T))
+
+estiStAni(vsta,c(0,100))
+
+vgm.sum.metric <- vgmST(stModel="sumMetric",
+                        space=vgm(s.sill,
+                                  "Exp", s.range,0),
+                        time=vgm(t.sill,
+                                 "Exp", t.range, 0),
+                        joint=vgm(s.sill,
+                                  "Exp",s.range, 0),
+                        stAni=0.01)
+
+# We again bound the parameters;
+# these are in the order: spatial sill, range, nugget; temporal sill, range,
+# nugget; joint sill, range, nugget; joint anisotropy.
+
+# See page 50 of Rossiter
+(sp.sill.lb <- 0.7 * max(v.sp$gamma, na.rm=TRUE))
+#(sp.range.lb <- v.sp[which(v.sp > sp.sill.lb)[1]-1, "spacelag"])
+s.range.lb=min(v.sp$spacelag)
+(t.sill.lb <- 0.7 * max(v.t$gamma, na.rm=TRUE))
+#(t.range.lb <- v.t[which(v.t$gamma > t.sill.lb)[1]-1, "timelag"])
+t.range.lb=
+  as.numeric(
+    v.t$timelag[which(v.t$gamma>=.7*max(v.t$gamma,na.rm = T))[1]]
+  )/3
+
+
+st=Sys.time()
+vgmf.sum.metric <-
+  fit.StVariogram(vsta, vgm.sum.metric,
+                  method="L-BFGS-B",
+                  control=list(maxit=500),
+                  lower=c(sp.sill.lb, sp.range.lb,0,
+                          t.sill.lb, t.range.lb,0,
+                          0,1,0,
+                          1))
+en=Sys.time()
+elapsed_time=en-st; elapsed_time
+
+attr(vgmf.sum.metric, "optim.output")$par
+attr(vgmf.sum.metric, "optim.output")$value
+
+plot(vsta, vgmf.sum.metric)
+plot(vsta, vgmf.sum.metric, map=FALSE)
+
+# Prediction
+
+pred.grid=data.frame(latitude=mean(air_stfdf1@sp$latitude),
+                     longitude=mean(air_stfdf1@sp$longitude))
+
+x_gridded <- SpatialPoints(pred.grid)
+
+grid=STF(sp=x_gridded, time=air_stfdf1@time)
+
+stkgr.sum.metric <- krigeST(air_temp~1, data=air_stfdf1, newdata=grid,
+                           modelList=vgmf.sum.metric)
+gridded(stkgr.sum.metric@sp) <- TRUE
+
+# Wrap up in a function

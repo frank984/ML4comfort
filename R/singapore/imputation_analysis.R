@@ -416,6 +416,7 @@ mabe(air_short,air_20_tkr)
 
 # 1) Decompose data with missing values to estimate trend and seas --------
 
+# LOESS
 decompose_ts=function(tsx,sw,tw){
   # tsx is vector of observations
   
@@ -434,17 +435,29 @@ decompose_ts=function(tsx,sw,tw){
   return(list(ts.stl=ts.stl,res=res,trend=trend,seasonal=seasonal))
 }
 
+# Holt-Winters (better)
+HoltWintersDecomposition <- function(x,period=24) {
+  x=ts(x,frequency = period)
+  xhw=HoltWinters(x)
+  res=x-xhw$fitted[,"xhat"]
+  return(list(HW=xhw,
+              level=xhw$fitted[,"level"],
+              trend=xhw$fitted[,"trend"],
+              season=xhw$fitted[,"season"],
+              residuals=res))
+}
+
 # Apply to each station 
 sw=24
-tw=6
+# tw=6
 air_data_decomp5=list()
 air_data_decomp10=list()
 air_data_decomp20=list()
 
 for(i in 2:ncol(air_short)){
-  air_data_decomp5[[i-1]]=decompose_ts(air_5[,i],sw,tw)
-  air_data_decomp10[[i-1]]=decompose_ts(air_10[,i],sw,tw)
-  air_data_decomp20[[i-1]]=decompose_ts(air_20[,i],sw,tw)
+  air_data_decomp5[[i-1]]=HoltWintersDecomposition(air_5[,i],sw)
+  air_data_decomp10[[i-1]]=HoltWintersDecomposition(air_10[,i],sw)
+  air_data_decomp20[[i-1]]=HoltWintersDecomposition(air_20[,i],sw)
 }
 
 # Decomposition results fir station S50
