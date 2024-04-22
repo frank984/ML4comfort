@@ -3,6 +3,19 @@ library(xts)
 library(spacetime)
 library(gstat)
 
+# Change time zone to UTC+8 (Singapore)
+Sys.setenv(TZ="Singapore")
+Sys.timezone()
+Sys.getenv(x="TZ", unset=NA)
+Sys.time()
+options(xts_check_TZ = FALSE)
+
+# Load data
+load("air_short.Rdata")
+
+# NAs frequency for each col in air_short
+na_count=apply(air_short[,-1],2,function(x) sum(is.na(x))/length(x))
+na_count*10
 
 # Preliminary (technical) steps -------------------------------------------
 
@@ -24,13 +37,8 @@ air_stfdf<- STFDF(stats, air_short$time, data.frame(air_temp = as.vector(tair)))
 
 str(air_stfdf)
 
-# Change time zone to UTC+8 (Singapore)
-Sys.setenv(TZ="Singapore")
-Sys.timezone()
-Sys.getenv(x="TZ", unset=NA)
-Sys.time()
 air_stfdf@endTime[1]
-options(xts_check_TZ = FALSE)
+
 
 head(air_stfdf[1,])
 
@@ -41,11 +49,11 @@ air_stfdf1=air_stfdf[,1:200]
 dim(air_stfdf1)
 
 library(geosphere)
-dstats=distm(stats, stats, fun = distHaversine)/1000
-diag(dstats)=NA
-mdstats=min(dstats,na.rm = T)
-Mdstats=max(dstats,na.rm = T)
-median(dstats,na.rm = T)
+# dstats=distm(stats, stats, fun = distHaversine)/1000
+# diag(dstats)=NA
+# mdstats=min(dstats,na.rm = T)
+# Mdstats=max(dstats,na.rm = T)
+# median(dstats,na.rm = T)
 
 st=Sys.time()
 vsta <- variogramST(air_temp ~ 1, air_stfdf1,
@@ -115,7 +123,7 @@ vgm.sum.metric <- vgmST(stModel="sumMetric",
 # See page 50 of Rossiter
 (sp.sill.lb <- 0.7 * max(v.sp$gamma, na.rm=TRUE))
 #(sp.range.lb <- v.sp[which(v.sp > sp.sill.lb)[1]-1, "spacelag"])
-s.range.lb=min(v.sp$spacelag)
+sp.range.lb=min(v.sp$spacelag)
 (t.sill.lb <- 0.7 * max(v.t$gamma, na.rm=TRUE))
 #(t.range.lb <- v.t[which(v.t$gamma > t.sill.lb)[1]-1, "timelag"])
 t.range.lb=
@@ -136,10 +144,13 @@ vgmf.sum.metric <-
 en=Sys.time()
 elapsed_time=en-st; elapsed_time
 
-attr(vgmf.sum.metric, "optim.output")$par
+round(attr(vgmf.sum.metric, "optim.output")$par,3)
 attr(vgmf.sum.metric, "optim.output")$value
 
+windows()
 plot(vsta, vgmf.sum.metric)
+
+windows()
 plot(vsta, vgmf.sum.metric, map=FALSE)
 
 # Prediction
@@ -152,7 +163,41 @@ x_gridded <- SpatialPoints(pred.grid)
 grid=STF(sp=x_gridded, time=air_stfdf1@time)
 
 stkgr.sum.metric <- krigeST(air_temp~1, data=air_stfdf1, newdata=grid,
-                           modelList=vgmf.sum.metric)
-gridded(stkgr.sum.metric@sp) <- TRUE
+                           modelList=vgmf.sum.metric,
+                           computeVar = T)
+
+stkgr.sum.metric@data
+
+#gridded(stkgr.sum.metric@sp) <- TRUE
 
 # Wrap up in a function
+
+STkriging<-function(dat,vgm.mod,pred.grid){
+  # pred.grid=data.frame(latitude=mean(air_stfdf1@sp$latitude),
+  #                      longitude=mean(air_stfdf1@sp$longitude))
+  
+  names(dat@data)=c("z")
+
+  x_gridded <- SpatialPoints(pred.grid)
+  
+  grid=STF(sp=x_gridded, time=dat@time)
+  
+  stkgr <- krigeST(z~1, data=dat, newdata=grid,
+                              modelList=vgm.mod,
+                              computeVar = T)
+  
+  return(kgrST=stkgr)
+}
+
+# Test the function
+prv=STkriging(air_stfdf1,vgmf.sum.metric,pred.grid)
+
+# Function extracting all but one station
+extract_station<-function(dat,station){
+  dat1=dat[,!dat@sp$id %in% station]
+  return(dat1)
+}
+
+
+
+

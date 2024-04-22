@@ -70,11 +70,19 @@ lapply(NA_count[-1],function(x) round(x/dim(air_data_wide)[1]*100,1))
 # Save only few stations for a given time window --------------------------
 
 # Shorter time window
-Tnew=3409:6408
+tt=air_data_wide$time[2500];tt
+tt=2500
+tt_end=(tt+1414-1)
+air_data_wide$time[c(tt,tt_end)]
+Tnew=tt:(tt+1414-1)
 air_short=air_data_wide[Tnew,]
+
+na=apply(air_short,2,function(x) sum(is.na(x))/length(x));na*100
+
 TT=dim(air_short)[1]
-# Select only few stations, like S50, S60, S44, S43, S24, S104, S107, S111
-air_short=subset(air_short,select=c("time","S50","S60","S44","S43","S24","S104","S107","S111"))
+# Select only few stations, like S100, S104, S107, S108, S115, S116, S121, S43,S44, S50, S60
+air_short=air_short[,c(1,which(colnames(air_short) %in% c("S100","S104","S107","S108","S115","S116","S121","S43","S44","S50","S60")))]
+
 
 # NA 
 na=apply(air_short,2,function(x) sum(is.na(x))/length(x));na*100
@@ -111,7 +119,7 @@ air_short=fill_gaps(air_short,period = 24)
 
 # Plot
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_short)){
   plot(x=air_short$time,y=as.vector(unlist(air_short[,i])),type="l",col="black",
        xlab=" ",ylab=" ",
@@ -120,6 +128,7 @@ for(i in 2:ncol(air_short)){
 }
 
 #save(air_short,file="air_short.Rdata")
+load("air_short.Rdata")
 load("locations.Rdata")
 
 # Long format with dplyr
@@ -149,12 +158,14 @@ map
 TT=dim(air_short)[1]
 na_len=TT*c(.05,.1,.2)
 
+# na_start=rep(0,3)
+# set.seed(1994)
+# na_start[1]=sample(1:(TT-na_len[1]),1)
+# na_start[2]=sample(1:(TT-na_len[2]),1)
+# na_start[3]=sample(1:(TT-na_len[3]),1)
+# na_start
+
 na_start=rep(0,3)
-set.seed(1)
-na_start[1]=sample(1:(TT-na_len[1]),1)
-na_start[2]=sample(1:(TT-na_len[2]),1)
-na_start[3]=sample(1:(TT-na_len[3]),1)
-na_start
 
 air_5=air_short
 air_10=air_short
@@ -166,7 +177,7 @@ air_20[na_start[3]:(na_start[3]+na_len[3]),2:ncol(air_20)]=NA
 
 # Plot
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_5)){
   plot(x=air_5$time,y=as.vector(unlist(air_5[,i])),type="l",col="grey",
        xlab=" ",ylab=" ",
@@ -176,7 +187,7 @@ for(i in 2:ncol(air_5)){
 mtext("Air temperatures - 5% NAs", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_10)){
   plot(x=air_10$time,y=as.vector(unlist(air_10[,i])),type="l",col="grey40",
        xlab=" ",ylab=" ",
@@ -186,7 +197,7 @@ for(i in 2:ncol(air_10)){
 mtext("Air temperatures - 10% NAs", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_20)){
   plot(x=air_20$time,y=as.vector(unlist(air_20[,i])),type="l",col="grey20",
        xlab=" ",ylab=" ",
@@ -264,9 +275,11 @@ air_5_sarima=fill_sarima(air_5,period = 24)
 air_10_sarima=fill_sarima(air_10,period = 24)
 air_20_sarima=fill_sarima(air_20,period = 24)
 
+#save(air_5_sarima,air_10_sarima,air_20_sarima,file="air_NAs.Rdata")
+
 # Plot results in red, and overlap dataset with missings in black
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_5)){
   plot(x=air_5$time,y=as.vector(unlist(air_5_sarima[,i])),col="red"
     ,type="l",
@@ -278,7 +291,7 @@ for(i in 2:ncol(air_5)){
 mtext("Air temperatures - 5% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_10)){
   plot(x=air_10$time,y=as.vector(unlist(air_10_sarima[,i])),col="red"
     ,type="l",
@@ -290,7 +303,7 @@ for(i in 2:ncol(air_10)){
 mtext("Air temperatures - 10% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_20)){
   plot(x=air_20$time,y=as.vector(unlist(air_20_sarima[,i])),col="red"
     ,type="l",
@@ -350,7 +363,7 @@ air_20_tkr=temp_krige(air_20_tkr)
 
 # Plot as above
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_5)){
   plot(x=air_5$time,y=as.vector(unlist(air_5_tkr[,i])),col="red"
        ,type="l",
@@ -362,7 +375,7 @@ for(i in 2:ncol(air_5)){
 mtext("Air temperatures - 5% NAs - temporal kriging", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_10)){
   plot(x=air_10$time,y=as.vector(unlist(air_10_tkr[,i])),col="red"
        ,type="l",
@@ -374,7 +387,7 @@ for(i in 2:ncol(air_10)){
 mtext("Air temperatures - 10% NAs - temporal kriging", side = 3, line = - 2, outer = TRUE)
 
 windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
+par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_20)){
   plot(x=air_20$time,y=as.vector(unlist(air_20_tkr[,i])),col="red"
        ,type="l",
@@ -411,7 +424,7 @@ mabe(air_short,air_20_sarima)
 mabe(air_short,air_20_tkr)
 
 
-# The impact of preliminary trend and seasonal decomposition (MAYBE NOT) --------------
+# The impact of preliminary trend and seasonal decomposition --------------
 
 
 # 1) Decompose data with missing values to estimate trend and seas --------
@@ -454,13 +467,47 @@ air_data_decomp5=list()
 air_data_decomp10=list()
 air_data_decomp20=list()
 
-for(i in 2:ncol(air_short)){
-  air_data_decomp5[[i-1]]=HoltWintersDecomposition(air_5[,i],sw)
-  air_data_decomp10[[i-1]]=HoltWintersDecomposition(air_10[,i],sw)
-  air_data_decomp20[[i-1]]=HoltWintersDecomposition(air_20[,i],sw)
+# SARIMA 
+load("air_NAs.Rdata")
+
+for(i in 2:ncol(air_5_sarima)){
+  air_data_decomp5[[i-1]]=HoltWintersDecomposition(air_5_sarima[,i],sw)
+  air_data_decomp10[[i-1]]=HoltWintersDecomposition(air_10_sarima[,i],sw)
+  air_data_decomp20[[i-1]]=HoltWintersDecomposition(air_20_sarima[,i],sw)
 }
 
-# Decomposition results fir station S50
+# Function taking air_data_decomp as input and returning four datasets:
+# residuals, trend, seasonal, and level
+
+decomp_to_df=function(x,dat_full){
+  res=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
+  trend=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
+  seas=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
+  level=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
+  
+  for(i in 1:length(x)){
+    res[,i]=x[[i]]$residuals
+    trend[,i]=x[[i]]$trend
+    seas[,i]=x[[i]]$season
+    level[,i]=x[[i]]$level
+  }
+  
+  res=data.frame(time=dat_full$time,res)
+  trend=data.frame(time=dat_full$time,trend)
+  seas=data.frame(time=dat_full$time,seas)
+  level=data.frame(time=dat_full$time,level)
+  
+  colnames(res)=colnames(dat_full)
+  colnames(trend)=colnames(dat_full)
+  colnames(seas)=colnames(dat_full)
+  colnames(level)=colnames(dat_full)
+  
+  return(list(res=res,trend=trend,seas=seas,level=level))
+}
+
+decomp_dfs=decomp_to_df(air_data_decomp5,air_5_sarima)
+
+# Decomposition results for station S50
 plot(air_data_decomp5[[1]]$ts.stl,main="Air temperature - S50 - 5% NAs")
 plot(air_data_decomp10[[1]]$ts.stl,main="Air temperature - S50 - 10% NAs")
 plot(air_data_decomp20[[1]]$ts.stl,main="Air temperature - S50 - 20% NAs")
