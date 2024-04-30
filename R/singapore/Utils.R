@@ -1,11 +1,14 @@
 
 load("locations.Rdata")
-load("air_short.Rdata")
+#load("air_short.Rdata")
+#Desktop
+#load("20240430.Rdata")
 
-dat_temp=air_short[1:200,]
+#dat_temp=air_short[1:200,]
 
-# Function creating STFDF object and excluding station with index "stat_colt"
 cvobj_STFDF=function(dat,locations,stat_col){
+  
+  # This function creates a STFDF object from a data frame "dat" and excludes the station with index "stat_col"
   
   locations<- locations[,c("id","longitude","latitude")]
   loc_to_pred=locations[locations$id %in% colnames(dat)[stat_col],]
@@ -39,14 +42,19 @@ cvobj_STFDF=function(dat,locations,stat_col){
   
 }
 
-step1=cvobj_STFDF(dat_temp,locations,6)
-dat=step1$dat_stfdf
-loc_to_pred=step1$loc_to_pred
+# step1=cvobj_STFDF(dat_temp,locations,6)
+# dat=step1$dat_stfdf
+# loc_to_pred=step1$loc_to_pred
 
 # Wrap up in a function
 STkriging<-function(dat,
                     #vgm.mod,
                     loc_to_pred,ordinary=T){
+  
+  # This function performs spatio-temporal kriging
+  # dat is a STFDF object
+  # loc_to_pred is a data frame with columns "longitude" and "latitude", representing the location to predict
+  # ordinary is a boolean indicating whether to use ordinary kriging (default is TRUE)
   
   names(dat@data)=c("z","x","y")
   
@@ -138,7 +146,12 @@ STkriging<-function(dat,
               elapsed=elapsed))
 }
 
-step2=STkriging(step1$dat_stfdf,step1$loc_to_pred)
+
+step1=cvobj_STFDF(air5_naive,locations,6)
+step2=STkriging(step1$dat_stfdf,step1$loc_to_pred,ordinary = F)
+
+plot(air_short[,6],type='l',col='red',xlab='Time',ylab='Temperature')
+lines(step2$stkgr@data$var1.pred,col='blue')
 
 # Function computing RMSE and MAE for predicted station
 compute_errors=function(stkgr,cvobj){
@@ -152,18 +165,61 @@ compute_errors=function(stkgr,cvobj){
 }
 
 # CV (to be performed in parallel)
-CV_STkr=function(stat_ind,dat,locations){
-  step1=cvobj_STFDF(dat,locations,stat_ind) # Exclude station 2
+CV_STkr=function(stat_ind,dat,locations,ordinary=T){
+  step1=cvobj_STFDF(dat,locations,stat_ind) # Exclude stat_ind
   step2=STkriging(step1$dat_stfdf,
                   #vgm.model,
-                 step1$loc_to_pred)
+                 step1$loc_to_pred,ordinary = ordinary)
   step3=compute_errors(step2,step1)
   return(list(
+    step1=step1,
+    step2=step2,
     RMSE=step3$rmse,
     MAE=step3$mae))
 }
 
-prv=CV_STkr(5,dat_temp,locations)
+# a parita di metodo di imputazione, valutare krigin con e senza detrend-deseas
+sh.wi=1:200
+dat_temp=air5_naive[sh.wi,]
+res_temp=air5_loess_naive$residuals[sh.wi,]
+air5_naive_full=CV_STkr(5,dat_temp,locations)
+air5_naive_res=CV_STkr(5,res_temp,locations)
+kgr.ST.res=air5_naive_res$step2$stkgr@data$var1.pred
+#back to original series
+
+x=air5_loess_naive
+locations2<- locations[,c("id","longitude","latitude")]
+locations2=locations2[locations2$id %in% colnames(x$trend),]
+target="S115"
+
+library(geosphere)
+dstats=distm(x=locations2[,2:3], fun = distHaversine)
+colnames(dstats)=locations2$id
+rownames(dstats)=locations2$id
+
+get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
+  # x is an object obtained with function LOESS.df or HoltWint.df
+  # kgrST.res is the result of the spatio-temporal kriging, using function CV_STkr above
+  
+  # Compute weights
+  dstats=distm(x=locations2[which(locations2$id==target),2:3],
+               y=locations2[,2:3], fun = distHaversine)/1000
+  colnames(dstats)=locations2$id
+  rownames(dstats)=target
+  dstats[which(dstats==0)]=1
+  wstats=1/(dstats)
+  wstats[which(wstats==1)]=0
+  wstats=wstats/sum(wstats)
+  if(loess){
+    trend.w=apply(x$trend[,-1],1,function(y) sum(y*wstats))
+    seas.w=apply(x$season[,-1],1,function(y) sum(y*wstats))
+   # result=trend.w+seas.w+kgr.ST.res
+    result=trend.w[1:200]+seas.w[1:200]+kgr.ST.res
+    
+    sqrt(mean((result-air_short[1:200,target])^2))
+    
+  }
+}
 
 
 
