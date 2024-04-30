@@ -165,7 +165,7 @@ na_len=TT*c(.05,.1,.2)
 # na_start[3]=sample(1:(TT-na_len[3]),1)
 # na_start
 
-na_start=rep(0,3)
+na_start=rep(500,3)
 
 air_5=air_short
 air_10=air_short
@@ -278,41 +278,41 @@ air_20_sarima=fill_sarima(air_20,period = 24)
 #save(air_5_sarima,air_10_sarima,air_20_sarima,file="air_NAs.Rdata")
 
 # Plot results in red, and overlap dataset with missings in black
-windows()
-par(mfrow=c(4,3),mar=c(2,2,6,2))
-for(i in 2:ncol(air_5)){
-  plot(x=air_5$time,y=as.vector(unlist(air_5_sarima[,i])),col="red"
-    ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(air_5[,i]))
-  lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
-  title(main=colnames(air_5)[i])
-}
-mtext("Air temperatures - 5% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(4,3),mar=c(2,2,6,2))
-for(i in 2:ncol(air_10)){
-  plot(x=air_10$time,y=as.vector(unlist(air_10_sarima[,i])),col="red"
-    ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(air_10[,i]))
-  lines(x=air_10$time,y=as.vector(unlist(air_10[,i])),col="black")
-  title(main=colnames(air_10)[i])
-}
-mtext("Air temperatures - 10% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(4,3),mar=c(2,2,6,2))
-for(i in 2:ncol(air_20)){
-  plot(x=air_20$time,y=as.vector(unlist(air_20_sarima[,i])),col="red"
-    ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(air_20[,i]))
-  lines(x=air_20$time,y=as.vector(unlist(air_20[,i])),col="black")
-  title(main=colnames(air_20)[i])
-}
-mtext("Air temperatures - 20% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
+  windows()
+  par(mfrow=c(4,3),mar=c(2,2,6,2))
+  for(i in 2:ncol(air_5)){
+    plot(x=air_5$time,y=as.vector(unlist(air_5_sarima[,i])),col="red"
+      ,type="l",
+         xlab=" ",ylab=" ",
+         main=colnames(air_5[,i]))
+    lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
+    title(main=colnames(air_5)[i])
+  }
+  mtext("Air temperatures - 5% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
+  
+  windows()
+  par(mfrow=c(4,3),mar=c(2,2,6,2))
+  for(i in 2:ncol(air_10)){
+    plot(x=air_10$time,y=as.vector(unlist(air_10_sarima[,i])),col="red"
+      ,type="l",
+         xlab=" ",ylab=" ",
+         main=colnames(air_10[,i]))
+    lines(x=air_10$time,y=as.vector(unlist(air_10[,i])),col="black")
+    title(main=colnames(air_10)[i])
+  }
+  mtext("Air temperatures - 10% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
+  
+  windows()
+  par(mfrow=c(4,3),mar=c(2,2,6,2))
+  for(i in 2:ncol(air_20)){
+    plot(x=air_20$time,y=as.vector(unlist(air_20_sarima[,i])),col="red"
+      ,type="l",
+         xlab=" ",ylab=" ",
+         main=colnames(air_20[,i]))
+    lines(x=air_20$time,y=as.vector(unlist(air_20[,i])),col="black")
+    title(main=colnames(air_20)[i])
+  }
+  mtext("Air temperatures - 20% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
 
 
 # 1-dim kriging -----------------------------------------------------------
@@ -402,7 +402,57 @@ mtext("Air temperatures - 20% NAs - temporal kriging", side = 3, line = - 2, out
 
 # Not feasible cause we should do kriging on each imputed dataset
 
-# Other -------------------------------------------------------------------
+# SDEM -------------------------------------------------------------------
+
+SDEM_imp=function(x_data){
+  
+  # x_data is a data frame with time as first column. Each column is a station
+  
+  names(x_data)[1]="time"
+  overall_mean=mean(as.matrix(x_data[,-1]),na.rm=T)
+  
+  #as.factor(weekdays(x_data$time))
+  x_data$hour=as.factor(hour(x_data$time))
+  #week(x_data$time)
+  #month(x_data$time)
+  
+  xsw_bar=x_data%>%
+    group_by(hour)%>%
+    summarise_if(is.numeric,mean,na.rm=T)
+  colnames(xsw_bar)[-1]=paste0(colnames(xsw_bar)[-1],"mean")
+  xsw=(xsw_bar[,-1]-rowMeans(xsw_bar[,-1]))#/2
+  xsw$hour=xsw_bar$hour
+  
+  temp=merge(xsw,x_data[,c("time","hour")],by="hour")
+  
+  # sort by time
+  temp=temp[order(temp$time),]
+  
+  imputations=overall_mean+select(temp,-c(time,hour))
+  imputations=data.frame(time=temp$time,imputations)
+  
+  x_data=subset(x_data,select=-hour)
+  for(i in 2:ncol(x_data)){
+    indx=which(is.na(x_data[,i]))
+    x_data[indx,i]=imputations[indx,i]
+  }
+  return(x_data)
+  
+}
+
+air_sdem5=SDEM_imp(air_5)
+# Plot results in red, and overlap dataset with missings in black
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_5)){
+  plot(x=air_5$time,y=as.vector(unlist(air_sdem5[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_5[,i]))
+  lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
+  title(main=colnames(air_5)[i])
+}
+mtext("Air temperatures - 5% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
 
 
 # Comparison --------------------------------------------------------------
