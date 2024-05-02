@@ -318,6 +318,8 @@ air_20_sarima=fill_sarima(air_20,period = 24)
 # 1-dim kriging -----------------------------------------------------------
 
 temp_krige=function(x){
+  x$knot=1
+  x$indx=1:nrow(x)
   x_sp=x
   
   temp_grid=1:nrow(x)
@@ -402,9 +404,14 @@ mtext("Air temperatures - 20% NAs - temporal kriging", side = 3, line = - 2, out
 
 # Not feasible cause we should do kriging on each imputed dataset
 
-# SDEM -------------------------------------------------------------------
 
-SDEM_imp=function(x_data){
+# EM (Junger 2015) -------------------------------------------------------------
+
+
+
+# SDEM and naive MA -------------------------------------------------------------------
+
+MA_imp=function(x_data){
   
   # x_data is a data frame with time as first column. Each column is a station
   
@@ -420,50 +427,139 @@ SDEM_imp=function(x_data){
     group_by(hour)%>%
     summarise_if(is.numeric,mean,na.rm=T)
   colnames(xsw_bar)[-1]=paste0(colnames(xsw_bar)[-1],"mean")
-  xsw=(xsw_bar[,-1]-rowMeans(xsw_bar[,-1]))#/2
+  
+  xsw_bar2=merge(xsw_bar,x_data[,c("time","hour")],by="hour")
+  imput.naive=xsw_bar2[order(xsw_bar2$time),]
+  
+  xsw=(xsw_bar[,-1]-rowMeans(xsw_bar[,-1]))/2
   xsw$hour=xsw_bar$hour
   
-  temp=merge(xsw,x_data[,c("time","hour")],by="hour")
+  xsw=merge(xsw,x_data[,c("time","hour")],by="hour")
   
   # sort by time
-  temp=temp[order(temp$time),]
+  xsw=xsw[order(xsw$time),]
   
-  imputations=overall_mean+select(temp,-c(time,hour))
-  imputations=data.frame(time=temp$time,imputations)
+  imput.SDEM=overall_mean+select(xsw,-c(time,hour))
+  imput.SDEM=data.frame(time=xsw$time,imput.SDEM)
   
   x_data=subset(x_data,select=-hour)
+  x_data.SDEM=x_data
+  x_data.naive=x_data
   for(i in 2:ncol(x_data)){
     indx=which(is.na(x_data[,i]))
-    x_data[indx,i]=imputations[indx,i]
+    x_data.SDEM[indx,i]=imput.SDEM[indx,i]
+    x_data.naive[indx,i]=imput.naive[indx,i]
   }
-  return(x_data)
+  
+  return(list(SDEM=x_data.SDEM,naive=x_data.naive))
   
 }
 
-air_sdem5=SDEM_imp(air_5)
+
+air_sdem5=MA_imp(air_5)
+air5_SDEM=air_sdem5$SDEM
+air5_naive=air_sdem5$naive
 # Plot results in red, and overlap dataset with missings in black
 windows()
 par(mfrow=c(4,3),mar=c(2,2,6,2))
 for(i in 2:ncol(air_5)){
-  plot(x=air_5$time,y=as.vector(unlist(air_sdem5[,i])),col="red"
+  plot(x=air_5$time,y=as.vector(unlist(air5_SDEM[,i])),col="red"
        ,type="l",
        xlab=" ",ylab=" ",
        main=colnames(air_5[,i]))
   lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
   title(main=colnames(air_5)[i])
 }
-mtext("Air temperatures - 5% NAs - SARIMA", side = 3, line = - 2, outer = TRUE)
+mtext("Air temperatures - 5% NAs - SDEM", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_5)){
+  plot(x=air_5$time,y=as.vector(unlist(air5_naive[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_5[,i]))
+  lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
+  title(main=colnames(air_5)[i])
+}
+mtext("Air temperatures - 5% NAs - Naive", side = 3, line = - 2, outer = TRUE)
+
+air_sdem10=MA_imp(air_10)
+air10_SDEM=air_sdem10$SDEM
+air10_naive=air_sdem10$naive
+
+# Plot results in red, and overlap dataset with missings in black
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_10)){
+  plot(x=air_10$time,y=as.vector(unlist(air10_SDEM[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_10[,i]))
+  lines(x=air_10$time,y=as.vector(unlist(air_10[,i])),col="black")
+  title(main=colnames(air_10)[i])
+}
+mtext("Air temperatures - 10% NAs - SDEM", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_10)){
+  plot(x=air_10$time,y=as.vector(unlist(air10_naive[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_10[,i]))
+  lines(x=air_10$time,y=as.vector(unlist(air_10[,i])),col="black")
+  title(main=colnames(air_10)[i])
+}
+mtext("Air temperatures - 10% NAs - Naive", side = 3, line = - 2, outer = TRUE)
+
+air_sdem20=MA_imp(air_20)
+air20_SDEM=air_sdem20$SDEM
+air20_naive=air_sdem20$naive
+
+# Plot results in red, and overlap dataset with missings in black
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_20)){
+  plot(x=air_20$time,y=as.vector(unlist(air20_SDEM[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_20[,i]))
+  lines(x=air_20$time,y=as.vector(unlist(air_20[,i])),col="black")
+  title(main=colnames(air_20)[i])
+}
+mtext("Air temperatures - 20% NAs - SDEM", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_20)){
+  plot(x=air_20$time,y=as.vector(unlist(air20_naive[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_20[,i]))
+  lines(x=air_20$time,y=as.vector(unlist(air_20[,i])),col="black")
+  title(main=colnames(air_20)[i])
+}
+mtext("Air temperatures - 20% NAs - Naive", side = 3, line = - 2, outer = TRUE)
 
 
 # Comparison --------------------------------------------------------------
 
 # RMSE
-rmse(air_short,air_5_sarima)
-rmse(air_short,air_5_tkr)
-rmse(air_short,air_10_sarima)
-rmse(air_short,air_10_tkr)
-rmse(air_short,air_20_sarima)
-rmse(air_short,air_20_tkr)
+
+mean(unlist(as.vector(rmse(air_short,air_5_sarima))))
+mean(unlist(as.vector(rmse(air_short,air_5_tkr))))
+mean(unlist(as.vector(rmse(air_short,air_10_sarima))))
+mean(unlist(as.vector(rmse(air_short,air_10_tkr))))
+mean(unlist(as.vector(rmse(air_short,air_20_sarima))))
+mean(unlist(as.vector(rmse(air_short,air_20_tkr))),na.rm = T)
+
+mean(unlist(as.vector(rmse(air_short,air5_SDEM))))
+mean(unlist(as.vector(rmse(air_short,air5_naive))))
+mean(unlist(as.vector(rmse(air_short,air10_SDEM))))
+mean(unlist(as.vector(rmse(air_short,air10_naive))))
+mean(unlist(as.vector(rmse(air_short,air20_SDEM))))
+mean(unlist(as.vector(rmse(air_short,air20_naive))))
 
 # MABE
 mabe(air_short,air_5_sarima)
@@ -480,12 +576,11 @@ mabe(air_short,air_20_tkr)
 # 1) Decompose data with missing values to estimate trend and seas --------
 
 # LOESS
-decompose_ts=function(tsx,sw,tw){
+LOESS.Decomp=function(tsx,sw=24,tw=6){
   # tsx is vector of observations
   
   # Transform tsx in a ts object, first turing it into a matrix
-  tsx=ts(tsx,
-         frequency = sw)
+  tsx=ts(tsx,frequency = sw)
   
   ts.stl <- stl(tsx, 
                 s.window=sw,
@@ -498,8 +593,41 @@ decompose_ts=function(tsx,sw,tw){
   return(list(ts.stl=ts.stl,res=res,trend=trend,seasonal=seasonal))
 }
 
+LOESS.df=function(data,sw=24,tw=6){
+  
+  # This function takes a data frame "data" with time as first column and returns a list with three data frames:
+  # trend, level, and seasonal components
+  # sw is the window for seasonal decomposition (default 24 hours)
+  # tw is the window for trend decomposition (default 6 hours)
+  
+  colnames(data)[1]="time"
+  trend=matrix(0,ncol=ncol(data)-1,nrow=nrow(data))
+  #level=data.frame()
+  season=matrix(0,ncol=ncol(data)-1,nrow=nrow(data))
+  residuals=matrix(0,ncol=ncol(data)-1,nrow=nrow(data))
+  for(i in 2:ncol(data)){
+    loess=LOESS.Decomp(data[,i],sw,tw)
+    trend[,(i-1)]<-loess$trend
+    #level[,(i-1)]<-loess$seasonal
+    season[,(i-1)]<-loess$seasonal
+    residuals[,(i-1)]<-loess$res
+  }
+  trend=data.frame(time=data$time,trend)
+  #level=data.frame(time=data$time,level)
+  season=data.frame(time=data$time,season)
+  residuals=data.frame(time=data$time,residuals)
+  colnames(trend)=colnames(data)
+  #colnames(level)=colnames(data)
+  colnames(season)=colnames(data)
+  colnames(residuals)=colnames(data)
+  
+  return(list(trend=trend,season=season,residuals=residuals))
+}
+
 # Holt-Winters (better)
-HoltWintersDecomposition <- function(x,period=24) {
+HoltWintersDecomposition <- function(x
+                                     ,period=24
+                                     ) {
   x=ts(x,frequency = period)
   xhw=HoltWinters(x)
   res=x-xhw$fitted[,"xhat"]
@@ -510,241 +638,81 @@ HoltWintersDecomposition <- function(x,period=24) {
               residuals=res))
 }
 
-# Apply to each station 
-sw=24
-# tw=6
-air_data_decomp5=list()
-air_data_decomp10=list()
-air_data_decomp20=list()
 
-# SARIMA 
-load("air_NAs.Rdata")
-
-for(i in 2:ncol(air_5_sarima)){
-  air_data_decomp5[[i-1]]=HoltWintersDecomposition(air_5_sarima[,i],sw)
-  air_data_decomp10[[i-1]]=HoltWintersDecomposition(air_10_sarima[,i],sw)
-  air_data_decomp20[[i-1]]=HoltWintersDecomposition(air_20_sarima[,i],sw)
-}
-
-# Function taking air_data_decomp as input and returning four datasets:
-# residuals, trend, seasonal, and level
-
-decomp_to_df=function(x,dat_full){
-  res=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
-  trend=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
-  seas=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
-  level=matrix(0,ncol=dim(dat_full)[2]-1,nrow=dim(dat_full)[1])
+HoltWint.df=function(data,period=24){
   
-  for(i in 1:length(x)){
-    res[,i]=x[[i]]$residuals
-    trend[,i]=x[[i]]$trend
-    seas[,i]=x[[i]]$season
-    level[,i]=x[[i]]$level
+  # This function takes a data frame "data" with time as first column and returns a list with four data frames:
+  # trend, level, seasonal, and residuals components
+  # period is the frequency of the time series
+  
+  # Remember that using Holt-Winter method we loose the first "period" observations
+  
+  colnames(data)[1]="time"
+  time=data$time[-(1:period)]
+  trend=matrix(0,ncol=ncol(data)-1,nrow=nrow(data)-period)
+  level=matrix(0,ncol=ncol(data)-1,nrow=nrow(data)-period)
+  season=matrix(0,ncol=ncol(data)-1,nrow=nrow(data)-period)
+  residuals=matrix(0,ncol=ncol(data)-1,nrow=nrow(data)-period)
+  for(i in 2:ncol(data)){
+    hw=HoltWintersDecomposition(data[,i],period)
+    trend[,(i-1)]<-hw$trend
+    level[,(i-1)]<-hw$level
+    season[,(i-1)]<-hw$season
+    residuals[,(i-1)]<-hw$residuals
   }
+  trend=data.frame(time=time,trend)
+  level=data.frame(time=time,level)
+  season=data.frame(time=time,season)
+  residuals=data.frame(time=time,residuals)
+  colnames(trend)=colnames(data)
+  colnames(level)=colnames(data)
+  colnames(season)=colnames(data)
+  colnames(residuals)=colnames(data)
   
-  res=data.frame(time=dat_full$time,res)
-  trend=data.frame(time=dat_full$time,trend)
-  seas=data.frame(time=dat_full$time,seas)
-  level=data.frame(time=dat_full$time,level)
-  
-  colnames(res)=colnames(dat_full)
-  colnames(trend)=colnames(dat_full)
-  colnames(seas)=colnames(dat_full)
-  colnames(level)=colnames(dat_full)
-  
-  return(list(res=res,trend=trend,seas=seas,level=level))
+  return(list(trend=trend,level=level,season=season,residuals=residuals))
 }
 
-decomp_dfs=decomp_to_df(air_data_decomp5,air_5_sarima)
+# 2) Apply LOESS and Holt-Winters decomposition to imputed data --------------
 
-# Decomposition results for station S50
-plot(air_data_decomp5[[1]]$ts.stl,main="Air temperature - S50 - 5% NAs")
-plot(air_data_decomp10[[1]]$ts.stl,main="Air temperature - S50 - 10% NAs")
-plot(air_data_decomp20[[1]]$ts.stl,main="Air temperature - S50 - 20% NAs")
+## LOESS
+# air 5%
+air5_loess_sarima=LOESS.df(air_5_sarima)
+air5_loess_tkr=LOESS.df(air_5_tkr)
+air5_loess_SDEM=LOESS.df(air5_SDEM)
+air5_loess_naive=LOESS.df(air5_naive)
+# air 10%
+air10_loess_sarima=LOESS.df(air_10_sarima)
+air10_loess_tkr=LOESS.df(air_10_tkr)
+air10_loess_SDEM=LOESS.df(air10_SDEM)
+air10_loess_naive=LOESS.df(air10_naive)
+# air 20%
+air20_loess_sarima=LOESS.df(air_20_sarima)
+air20_loess_tkr=LOESS.df(air_20_tkr)
+air20_loess_SDEM=LOESS.df(air20_SDEM)
+air20_loess_naive=LOESS.df(air20_naive)
 
-res5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-res10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-res20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
+## HW
+# air 5%
+air5_hw_sarima=HoltWint.df(air_5_sarima,24)
+air5_hw_tkr=HoltWint.df(air_5_tkr,24)
+air5_hw_SDEM=HoltWint.df(air5_SDEM,24)
+air5_hw_naive=HoltWint.df(air5_naive,24)
+# air 10%
+air10_hw_sarima=HoltWint.df(air_10_sarima,24)
+air10_hw_tkr=HoltWint.df(air_10_tkr,24)
+air10_hw_SDEM=HoltWint.df(air10_SDEM,24)
+air10_hw_naive=HoltWint.df(air10_naive,24)
+# air 20%
+air20_hw_sarima=HoltWint.df(air_20_sarima,24)
+####
+#FAILED
+air20_hw_tkr=HoltWint.df(air_20_tkr,24)
+####
+####
+air20_hw_SDEM=HoltWint.df(air20_SDEM,24)
+air20_hw_naive=HoltWint.df(air20_naive,24)
 
-trend5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-trend10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-trend20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-
-seas5=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-seas10=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-seas20=matrix(0,ncol=dim(air_short)[2]-1,nrow=dim(air_short)[1])
-
-# Construct a dataset for residuals, trens and seasonal components
-for(i in 1:length(air_data_decomp5)){
-  res5[,i]=air_data_decomp5[[i]]$res
-  res10[,i]=air_data_decomp10[[i]]$res
-  res20[,i]=air_data_decomp20[[i]]$res
-  
-  trend5[,i]=air_data_decomp5[[i]]$trend
-  trend10[,i]=air_data_decomp10[[i]]$trend
-  trend20[,i]=air_data_decomp20[[i]]$trend 
-  
-  seas5[,i]=air_data_decomp5[[i]]$seasonal
-  seas10[,i]=air_data_decomp10[[i]]$seasonal
-  seas20[,i]=air_data_decomp20[[i]]$seasonal
-  
-}
-
-# Fill with NAs where needed
-res5[na_start[1]:(na_start[1]+na_len[1]),]=NA
-res10[na_start[2]:(na_start[2]+na_len[2]),]=NA
-res20[na_start[3]:(na_start[3]+na_len[3]),]=NA
-
-res5=as.data.frame(res5)
-res10=as.data.frame(res10)
-res20=as.data.frame(res20)
-colnames(res5)=colnames(air_short)[-1]
-colnames(res10)=colnames(air_short)[-1]
-colnames(res20)=colnames(air_short)[-1]
-
-trend5=as.data.frame(trend5)
-trend10=as.data.frame(trend10)
-trend20=as.data.frame(trend20)
-colnames(trend5)=colnames(air_short)[-1]
-colnames(trend10)=colnames(air_short)[-1]
-colnames(trend20)=colnames(air_short)[-1]
-
-seas5=as.data.frame(seas5)
-seas10=as.data.frame(seas10)
-seas20=as.data.frame(seas20)
-colnames(seas5)=colnames(air_short)[-1]
-colnames(seas10)=colnames(air_short)[-1]
-colnames(seas20)=colnames(air_short)[-1]
-
-# Plot
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res5)){
-  plot(x=air_short$time,y=as.vector(unlist(res5[,i])),type="l",col="black",
-       xlab=" ",ylab=" ",
-       main=colnames(res5)[i])
-}
-mtext("Residuals - 5% NAs", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res10)){
-  plot(x=air_short$time,y=as.vector(unlist(res10[,i])),type="l",col="black",
-       xlab=" ",ylab=" ",
-       main=colnames(res10)[i])
-}
-mtext("Residuals - 10% NAs", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res20)){
-  plot(x=air_short$time,y=as.vector(unlist(res20[,i])),type="l",col="black",
-       xlab=" ",ylab=" ",
-       main=colnames(res20)[i])
-}
-mtext("Residuals - 20% NAs", side = 3, line = - 2, outer = TRUE)
-
-
-# 2) Apply imputation to residuals ----------------------------------------
-
-# ARIMA
-
-fill_arima=function(x,period){
-  for(i in 1:ncol(x)){
-    fit_air=arima(x=x[,i], order=c(1,0,1)
-                  # ,
-                  # seasonal = list(order=c(1,0,1)
-                  #                 ,period=period
-                  #                 ,include.mean =T
-                  #                 ,method="ML")
-                  )
-    kr_sm=KalmanSmooth(as.numeric(unlist(x[,i])),
-                       fit_air$model)
-    id.na <- which(is.na(x[,i]))
-    y_sm=as.numeric(unlist(x[,i]))
-    for (j in id.na){
-      y_sm[j] <- kr_sm$smooth[j,1]
-    }
-    x[,i]=y_sm
-  }
-  
-  return(x)
-  
-}
-
-res5_arima=fill_arima(res5,period = 24)
-res10_arima=fill_arima(res10,period = 24)
-res20_arima=fill_arima(res20,period = 24)
-
-# Plot
-zoom=(na_start[1]-50):(na_start[1]+na_len[1]+50)
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res5)){
-  plot(x=air_short$time[zoom],y=as.vector(unlist(res5_arima[,i]))[zoom],col="red"
-       ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(res5)[i])
-  lines(x=air_short$time[zoom],y=as.vector(unlist(res5[,i]))[zoom],col="black")
-}
-mtext("Residuals - 5% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res10)){
-  plot(x=air_short$time,y=as.vector(unlist(res10_arima[,i])),col="red"
-       ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(res10)[i])
-  lines(x=air_short$time,y=as.vector(unlist(res10[,i])),col="black")
-}
-mtext("Residuals - 10% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
-
-windows()
-par(mfrow=c(3,3),mar=c(2,2,6,2))
-for(i in 1:ncol(res20)){
-  plot(x=air_short$time,y=as.vector(unlist(res20_arima[,i])),col="red"
-       ,type="l",
-       xlab=" ",ylab=" ",
-       main=colnames(res20)[i])
-  lines(x=air_short$time,y=as.vector(unlist(res20[,i])),col="black")
-}
-mtext("Residuals - 20% NAs - ARIMA", side = 3, line = - 2, outer = TRUE)
-
-
-
-
-# 3) Reconstruct the time series and evaluate the impact of decomp --------
-
-
-
-# Extract length of residuals for each element of the list
-unlist(lapply(air_data_wide_decomp,function(x) length(x$res)))
-
-plot(air_data_wide_decomp[[4]]$ts.stl)
-
-
-# Trend and seasonal components -------------------------------------------
-
-
-
-# # Shorter time window
-# Tnew=250
-# air_data_short=air_data_wide[1:250,]
-# 
-# 
-# # Plot  residuals
-# windows()
-# par(mfrow=c(3,5),mar=c(2,2,6,2))
-# for(i in 1:length(air_data_wide_decomp)){
-#   plot(x=air_data_short$time,y=air_data_wide_decomp[[i]]$res,type="l",col="black",
-#        xlab=" ",ylab=" ",
-#        main=colnames(air_data_wide)[i+1])
-# }
-# mtext("Residuals", side = 3, line = - 2, outer = TRUE)
-# 
-# windows()
-# plot(air_data_wide_decomp[[1]]$ts.stl)
-# plot(air_data_wide_decomp[[1]]$res,type='l')
-# 
-# 1-length(air_data_wide_decomp[[1]]$res)/dim(air_data_wide)[1]
+# Plot 
+plot(air10_hw_tkr$level$S100,type='l')
+plot(air20_hw_naive$level$S100,type='l')
+plot(air20_hw_naive$residuals$S100,type='l')
