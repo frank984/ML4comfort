@@ -1,10 +1,32 @@
 
-load("locations.Rdata")
+#load("locations.Rdata")
 #load("air_short.Rdata")
 #Desktop
 #load("20240430.Rdata")
 
 #dat_temp=air_short[1:200,]
+Sys.setenv(LANG = "en")
+Sys.setlocale("LC_ALL", "English")
+library(scales)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(ggpubr)
+library(geojsonio)
+library(leaflet)
+library(leaflet.extras)
+library(htmltools)
+library(sp)
+library(spacetime)
+# library(ozmaps)
+library(sf)
+library(ggmap)
+library(gstat)
+library(automap)
+library(xts)
+library(geosphere)
 
 
 # Imputation --------------------------------------------------------------
@@ -379,64 +401,126 @@ compute_errors=function(stkgr,cvobj){
   return(list(rmse=rmse,mae=mae))
 }
 
+CV_STkr(5,air_5_sarima,locations,ordinary=F)
+stat_ind=5
+dat=air_5_sarima
+
 # CV (to be performed in parallel)
-CV_STkr=function(stat_ind,dat,locations,ordinary=T){
-  step1=cvobj_STFDF(dat,locations,stat_ind) # Exclude stat_ind
+CV_STkr=function(stat_ind,dat,locations,ordinary=T,plot=F){
+  step1=cvobj_STFDF(dat,locations,stat_ind) # It automatically excludes stat_ind
+  stat_id=step1$stat_id
   step2=STkriging(step1$dat_stfdf,
                   #vgm.model,
                  step1$loc_to_pred,ordinary = ordinary)
   step3=compute_errors(step2,step1)
-  return(list(
-    step1=step1,
-    step2=step2,
-    RMSE=step3$rmse,
-    MAE=step3$mae))
+  
+  if(plot){
+    df=data.frame(time=dat$time,
+                  result=step2$stkgr@data$var1.pred,
+                  true=step1$dat_orig[,step1$stat_id])
+    P=ggplot(df)+
+      geom_line(aes(x=time,y=result,col="blue"))+
+      geom_line(aes(x=time,y=true,col="red"))+
+      theme_bw()+labs(x='Time',y='Temperature')+
+      scale_colour_manual(name = ' ', 
+                          values =c('blue'='blue','red'='red'), labels = c('Fitted','True'))
+    return(list(
+      stat_id=stat_id,
+      step1=step1,
+      step2=step2,
+      RMSE=step3$rmse,
+      MAE=step3$mae,
+      plot=P))
+  }
+  
+  else{
+    return(list(
+      stat_id=stat_id,
+      step1=step1,
+      step2=step2,
+      RMSE=step3$rmse,
+      MAE=step3$mae))
+  }
+
 }
 
-# # a parita di metodo di imputazione, valutare krigin con e senza detrend-deseas
-# sh.wi=1:200
-# dat_temp=air5_naive[sh.wi,]
-# res_temp=air5_loess_naive$residuals[sh.wi,]
-# air5_naive_full=CV_STkr(5,dat_temp,locations)
-# air5_naive_res=CV_STkr(5,res_temp,locations)
-# kgr.ST.res=air5_naive_res$step2$stkgr@data$var1.pred
-# #back to original series
 # 
-# x=air5_loess_naive
-# locations2<- locations[,c("id","longitude","latitude")]
-# locations2=locations2[locations2$id %in% colnames(x$trend),]
-# target="S115"
-# 
-# library(geosphere)
-# dstats=distm(x=locations2[,2:3], fun = distHaversine)
-# colnames(dstats)=locations2$id
-# rownames(dstats)=locations2$id
-# 
-
-# TBF
 get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
+  
+  # Arguments:
   # x is an object obtained with function LOESS.df or HoltWint.df
   # kgrST.res is the result of the spatio-temporal kriging, using function CV_STkr above
-
+  # locations2 is a data frame with columns "id", "longitude", and "latitude"
+  # target is a character specifying the station to predict
+  # loess is a boolean indicating whether to use LOESS decomposition (default is TRUE)
+  
+  # Value:
+  # A vector with the original series (trens, seasonal, level components plus residuals from kriging)
+  
   # Compute weights
   dstats=distm(x=locations2[which(locations2$id==target),2:3],
                y=locations2[,2:3], fun = distHaversine)/1000
   colnames(dstats)=locations2$id
   rownames(dstats)=target
-  dstats[which(dstats==0)]=1
+  dstats[which(dstats==0)]=NA
   wstats=1/(dstats)
-  wstats[which(wstats==1)]=0
-  wstats=wstats/sum(wstats)
+  wstats[which(is.na(wstats))]=0
+  wstats=wstats/sum(wstats,na.rm = T)
+  
+  trend.w=apply(x$trend[,-1],1,function(y) sum(y*wstats))
+  seas.w=apply(x$season[,-1],1,function(y) sum(y*wstats))
+  
   if(loess){
-    trend.w=apply(x$trend[,-1],1,function(y) sum(y*wstats))
-    seas.w=apply(x$season[,-1],1,function(y) sum(y*wstats))
    # result=trend.w+seas.w+kgr.ST.res
-    result=trend.w[1:200]+seas.w[1:200]+kgr.ST.res
-
-    sqrt(mean((result-air_short[1:200,target])^2))
-
+    result=trend.w+seas.w+kgrST.res
   }
+  else{
+    level.w=apply(x$level[,-1],1,function(y) sum(y*wstats))
+    result=level.w+trend.w+seas.w+kgrST.res
+  }
+  return(list(result=result,
+              target=target))
 }
 
 
+# S108=get_orig_series(air10_hw_SDEM,
+#                 kgrST.res=air10_SDEM_hw_res$step2$stkgr@data$var1.pred,
+#                 locations2,
+#                 target=air10_SDEM_hw_res$stat_id,
+#                 loess=F)
+
+
+
+rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T){
+  
+  # This function computes the RMSE between the reconstructed series and the true series
+  
+  # Arguments:
+  # reconstr_series is a vector with the reconstructed series, output of the function get_orig_series
+  # true_series is a vector with the true series
+  # time is a vector with the time
+
+  # Value:
+  # A numeric value with the RMSE
+  # An optional plot with the fitted and true series
+  
+  RMSE=sqrt(mean((reconstr_series-true_series)^2))
+  if(plot){
+    df=data.frame(time=time,
+                  result=reconstr_series,
+                  true=true_series)
+    P=ggplot(df)+
+      geom_line(aes(x=time,y=result,col="blue"))+
+      geom_line(aes(x=time,y=true,col="red"))+
+      theme_bw()+labs(x='Time',y='Temperature')+
+      scale_colour_manual(name = ' ', 
+                          values =c('blue'='blue','red'='red'), labels = c('Fitted','True'))
+    return(list(RMSE=RMSE,
+                plot=P))
+  }
+  else{
+    return(RMSE) 
+  }
+  
+}
 

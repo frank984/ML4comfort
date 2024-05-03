@@ -1,9 +1,8 @@
-
 # 1) Load short window ---------------------------------------------------------
 
 source("Utils.R")
 load("air_short.Rdata")
-air_short=air_short[251:750,]
+#air_short=air_short[251:750,]
 
 load("locations.Rdata")
 locations2<- locations[,c("id","longitude","latitude")]
@@ -254,165 +253,147 @@ mean(unlist(as.vector(rmse(air_short,air20_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air20_naive))))
 
 
-# 3) Universal kriging --------------------------------------------------
+# 3) Universal kriging (parallel) -----------------------------------------
 
-air5_sarima_full=CV_STkr(5,air_5_sarima,locations,ordinary=F)
-air5_tkr_full=CV_STkr(5,air_5_tkr,locations,ordinary=F)
-air5_SDEM_full=CV_STkr(5,air5_SDEM,locations,ordinary=F)
-air5_naive_full=CV_STkr(5,air5_naive,locations,ordinary=F)
+indx=2:ncol(air_short)
+#indx_list=expand.grid(indx=indx)
+
+air5_sarima_full=CV_STkr(5,air_5_sarima,locations2,ordinary=F)
+air5_tkr_full=CV_STkr(5,air_5_tkr,locations2,ordinary=F)
+air5_SDEM_full=CV_STkr(5,air5_SDEM,locations2,ordinary=F)
+air5_naive_full=CV_STkr(5,air5_naive,locations2,ordinary=F)
+
+start = Sys.time()
+air5_sarima_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_5_sarima,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_sarima_full=end-start
+
+start = Sys.time()
+air5_tkr_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_5_tkr,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_tkr_full=end-start
+
+start = Sys.time()
+air5_SDEM_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air5_SDEM,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_SDEM_full=end-start
+
+start = Sys.time()
+air5_naive_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air5_naive,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_naive_full=end-start
 
 air10_sarima_full=CV_STkr(5,air_10_sarima,locations,ordinary=F)
 air10_tkr_full=CV_STkr(5,air_10_tkr,locations,ordinary=F)
 air10_SDEM_full=CV_STkr(5,air10_SDEM,locations,ordinary=F)
 air10_naive_full=CV_STkr(5,air10_naive,locations,ordinary=F)
 
+start = Sys.time()
+air10_sarima_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_10_sarima,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_sarima_full=end-start
+
+start = Sys.time()
+air10_tkr_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_10_tkr,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_tkr_full=end-start
+
+start = Sys.time()
+air10_SDEM_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air10_SDEM,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_SDEM_full=end-start
+
+start = Sys.time()
+air10_naive_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air10_naive,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_naive_full=end-start
+
 air20_sarima_full=CV_STkr(5,air_20_sarima,locations,ordinary=F)
 air20_tkr_full=CV_STkr(5,air_20_tkr,locations,ordinary=F)
 air20_SDEM_full=CV_STkr(5,air20_SDEM,locations,ordinary=F)
 air20_naive_full=CV_STkr(5,air20_naive,locations,ordinary=F)
 
-# step1=cvobj_STFDF(air5_naive,locations,6)
-# step2=STkriging(step1$dat_stfdf,step1$loc_to_pred,ordinary = F)
+start = Sys.time()
+air20_sarima_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_20_sarima,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_sarima_full=end-start
+
+start = Sys.time()
+air20_tkr_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air_20_tkr,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_tkr_full=end-start
+
+start = Sys.time()
+air20_SDEM_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air20_SDEM,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_SDEM_full=end-start
+
+start = Sys.time()
+air20_naive_full <- parallel::mclapply(indx,
+                              function(x)CV_STkr(x,
+                                                 air20_naive,
+                                                 locations2,
+                                                 ordinary=F),
+                              mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_naive_full=end-start
 
 
 
-# 3.1) RMSE ---------------------------------------------------------------
-
-air5_sarima_full$RMSE
-air5_tkr_full$RMSE
-air5_SDEM_full$RMSE
-plot(air5_SDEM_full$step2$stkgr@data$var1.pred,type='l',xlab="Time",ylab="Temperature")
-stat=air5_SDEM_full$step1$stat_id
-lines(unlist(as.vector(air_short[stat])),col='red')
-legend("topright",legend=c("SDEM","True"),col=c("black","red"),lty=1:1,cex=.5)
-air5_naive_full$RMSE
-
-air10_sarima_full$RMSE
-air10_tkr_full$RMSE
-air10_SDEM_full$RMSE
-plot(air10_SDEM_full$step2$stkgr@data$var1.pred,type='l',xlab="Time",ylab="Temperature")
-stat=air10_SDEM_full$step1$stat_id
-lines(unlist(as.vector(air_short[stat])),col='red')
-legend("topright",legend=c("SDEM","True"),col=c("black","red"),lty=1:1,cex=.5)
-air10_naive_full$RMSE
-
-air20_sarima_full$RMSE
-air20_tkr_full$RMSE
-air20_SDEM_full$RMSE
-air20_naive_full$RMSE
-
-
-
-# 4) Preliminary detrend-deseas -------------------------------------------
-
-
-## LOESS
-# air 5%
-air5_loess_sarima=LOESS.df(air_5_sarima)
-air5_loess_tkr=LOESS.df(air_5_tkr)
-air5_loess_SDEM=LOESS.df(air5_SDEM)
-air5_loess_naive=LOESS.df(air5_naive)
-# air 10%
-air10_loess_sarima=LOESS.df(air_10_sarima)
-air10_loess_tkr=LOESS.df(air_10_tkr)
-air10_loess_SDEM=LOESS.df(air10_SDEM)
-air10_loess_naive=LOESS.df(air10_naive)
-# air 20%
-air20_loess_sarima=LOESS.df(air_20_sarima)
-air20_loess_tkr=LOESS.df(air_20_tkr)
-air20_loess_SDEM=LOESS.df(air20_SDEM)
-air20_loess_naive=LOESS.df(air20_naive)
-
-## HW
-# air 5%
-air5_hw_sarima=HoltWint.df(air_5_sarima,24)
-air5_hw_tkr=HoltWint.df(air_5_tkr,24)
-air5_hw_SDEM=HoltWint.df(air5_SDEM,24)
-air5_hw_naive=HoltWint.df(air5_naive,24)
-# air 10%
-air10_hw_sarima=HoltWint.df(air_10_sarima,24)
-air10_hw_tkr=HoltWint.df(air_10_tkr,24)
-air10_hw_SDEM=HoltWint.df(air10_SDEM,24)
-air10_hw_naive=HoltWint.df(air10_naive,24)
-# air 20%
-air20_hw_sarima=HoltWint.df(air_20_sarima,24)
-air20_hw_tkr=HoltWint.df(air_20_tkr,24)
-air20_hw_SDEM=HoltWint.df(air20_SDEM,24)
-air20_hw_naive=HoltWint.df(air20_naive,24)
-
-# 5) Ordinary kriging --------------------------------------------------------
-
-#hw
-air5_sarima_hw_res=CV_STkr(5,air5_hw_sarima$residual,locations)
-
-#air5_hw_tkr$residuals=select(air5_hw_tkr$residuals,subset=-c(knot,indx))
-air5_tkr_hw_res=CV_STkr(5,air5_hw_tkr$residuals,locations)
-
-air5_SDEM_hw_res=CV_STkr(5,air5_hw_SDEM$residuals,locations)
-air5_naive_hw_res=CV_STkr(5,air5_hw_naive$residuals,locations)
-
-air10_sarima_hw_res=CV_STkr(5,air10_hw_sarima$residuals,locations)
-
-#air10_hw_tkr$residuals=select(air10_hw_tkr$residuals,subset=-c(knot,indx))
-air10_tkr_hw_res=CV_STkr(5,air10_hw_tkr$residuals,locations)
-
-air10_SDEM_hw_res=CV_STkr(5,air10_hw_SDEM$residuals,locations)
-air10_naive_hw_res=CV_STkr(5,air10_hw_naive$residuals,locations)
-
-air20_sarima_hw_res=CV_STkr(5,air20_hw_sarima$residuals,locations)
-
-#air20_hw_tkr$residuals=select(air20_hw_tkr$residuals,subset=-c(knot,indx))
-air20_tkr_hw_res=CV_STkr(5,air20_hw_tkr$residuals,locations)
-
-air20_SDEM_hw_res=CV_STkr(5,air20_hw_SDEM$residuals,locations)
-air20_naive_hw_res=CV_STkr(5,air20_hw_naive$residuals,locations)
-
-#loess
-air5_sarima_loess_res=CV_STkr(5,air5_loess_sarima$residual,locations)
-
-air5_loess_tkr$residuals=select(air5_loess_tkr$residuals,subset=-c(knot,indx))
-air5_tkr_loess_res=CV_STkr(5,air5_loess_tkr$residuals,locations)
-
-air5_SDEM_loess_res=CV_STkr(5,air5_loess_SDEM$residual,locations)
-air5_naive_loess_res=CV_STkr(5,air5_loess_naive$residual,locations)
-
-air10_sarima_loess_res=CV_STkr(5,air10_loess_sarima$residual,locations)
-
-air10_loess_tkr$residuals=select(air10_loess_tkr$residuals,subset=-c(knot,indx))
-air10_tkr_loess_res=CV_STkr(5,air10_loess_tkr$residuals,locations)
-
-air10_SDEM_loess_res=CV_STkr(5,air10_loess_SDEM$residual,locations)
-air10_naive_loess_res=CV_STkr(5,air10_loess_naive$residual,locations)
-
-air20_sarima_loess_res=CV_STkr(5,air20_loess_sarima$residual,locations)
-
-air20_loess_tkr$residuals=select(air20_loess_tkr$residuals,subset=-c(knot,indx))
-air20_tkr_loess_res=CV_STkr(5,air20_loess_tkr$residuals,locations)
-
-air20_SDEM_loess_res=CV_STkr(5,air20_loess_SDEM$residual,locations)
-air20_naive_loess_res=CV_STkr(5,air20_loess_naive$residual,locations)
-
-# 5.1) Recover original structure ---------------------------------------------------------------
-
-time=air_short$time
-
-S108_10_hw_SDEM=get_orig_series(air10_hw_SDEM,
-                     kgrST.res=air10_SDEM_hw_res$step2$stkgr@data$var1.pred,
-                     locations2,
-                     target=air10_SDEM_hw_res$stat_id,
-                     loess=F)
-
-rmse_detrdeseas(reconstr_series=S108_10_hw_SDEM$result,
-                true_series=air_short$S108[-(1:24)],
-                time=time[-(1:24)],plot=T)
-
-S108_10_loess_SDEM=get_orig_series(air10_loess_SDEM,
-                                kgrST.res=air10_SDEM_loess_res$step2$stkgr@data$var1.pred,
-                                locations2,
-                                target=air10_SDEM_loess_res$stat_id,
-                                loess=T)
-rmse_detrdeseas(reconstr_series=S108_10_loess_SDEM$result,
-                true_series=air_short$S108,
-                time=time,plot=T)
 
 
