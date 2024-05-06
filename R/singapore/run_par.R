@@ -421,7 +421,43 @@ save.image("~/Documents/git/ML4comfort/R/singapore/run_parallel.RData")
 
 # 3.1) RMSE ---------------------------------------------------------------
 
-# Function extracting RMSE from each element of lists above
+stat_names=unlist(lapply(air5_sarima_full,function(x)x$stat_id)); stat_names
+
+RMSE_air5_sarima_full=unlist(lapply(air5_sarima_full,function(x)x$RMSE))
+RMSE_air5_tkr_full=unlist(lapply(air5_tkr_full,function(x)x$RMSE))
+RMSE_air5_SDEM_full=unlist(lapply(air5_SDEM_full,function(x)x$RMSE))
+RMSE_air5_naive_full=unlist(lapply(air5_naive_full,function(x)x$RMSE))
+
+RMSE_air10_sarima_full=unlist(lapply(air10_sarima_full,function(x)x$RMSE))
+RMSE_air10_tkr_full=unlist(lapply(air10_tkr_full,function(x)x$RMSE))
+RMSE_air10_SDEM_full=unlist(lapply(air10_SDEM_full,function(x)x$RMSE))
+RMSE_air10_naive_full=unlist(lapply(air10_naive_full,function(x)x$RMSE))
+
+RMSE_air20_sarima_full=unlist(lapply(air20_sarima_full,function(x)x$RMSE))
+RMSE_air20_tkr_full=unlist(lapply(air20_tkr_full,function(x)x$RMSE))
+RMSE_air20_SDEM_full=unlist(lapply(air20_SDEM_full,function(x)x$RMSE))
+RMSE_air20_naive_full=unlist(lapply(air20_naive_full,function(x)x$RMSE))
+
+# Collect all results in one data frame
+RMSE_full=data.frame(stat_names,
+                     RMSE_air5_sarima_full,
+                     RMSE_air5_tkr_full,
+                     RMSE_air5_SDEM_full,
+                     RMSE_air5_naive_full,
+                     RMSE_air10_sarima_full,
+                     RMSE_air10_tkr_full,
+                     RMSE_air10_SDEM_full,
+                     RMSE_air10_naive_full,
+                     RMSE_air20_sarima_full,
+                     RMSE_air20_tkr_full,
+                     RMSE_air20_SDEM_full,
+                     RMSE_air20_naive_full)
+
+colMeans(RMSE_full[,-1],na.rm = T)
+
+# Plot
+
+
 
 # 4) Preliminary detrend-deseas -------------------------------------------
 
@@ -692,3 +728,173 @@ end = Sys.time()
 elapsed_air20_naive_loess_res=end-start
 
 save.image("~/Documents/git/ML4comfort/R/singapore/run_parallel.RData")
+
+
+# 6) Recover original structure ----------------------------------------------
+
+# 5 HW
+time=air_short$time[-(1:24)]
+air5_sarima_hw_res_recover=df_recover(air5_sarima_hw_res,air5_hw_sarima,loess=F,locations2,time)
+air5_tkr_hw_res_recover=df_recover(air5_tkr_hw_res,air5_hw_tkr,loess=F,locations2,time)
+air5_SDEM_hw_res_recover=df_recover(air5_SDEM_hw_res,air5_hw_SDEM,loess=F,locations2,time)
+air5_naive_hw_res_recover=df_recover(air5_naive_hw_res,air5_hw_naive,loess=F,locations2,time)
+
+miss5=c(na_start[1],(na_start[1]+na_len[1]))
+plot_air5_sarima_hw_res_recover=rmse_detrdeseas(air5_sarima_hw_res_recover$S100,
+                air_short[-(1:24),]$S100,
+                air_short$time[-(1:24)],type="SARIMA - HW",
+                miss=miss5)
+plot_air5_tkr_hw_res_recover=rmse_detrdeseas(air5_tkr_hw_res_recover$S100,
+                air_short[-(1:24),]$S100,
+                air_short$time[-(1:24)],type="TKR - HW",
+                miss=miss5)
+plot_air5_SDEM_hw_res_recover=rmse_detrdeseas(air5_SDEM_hw_res_recover$S100,
+                air_short[-(1:24),]$S100,
+                air_short$time[-(1:24)],type="SDEM - HW",
+                miss=miss5)
+plot_air5_naive_hw_res_recover=rmse_detrdeseas(air5_naive_hw_res_recover$S100,
+                air_short[-(1:24),]$S100,
+                air_short$time[-(1:24)],type="Naive - HW",
+                miss=miss5)
+
+
+PG_5HW<- ggarrange(plot_air5_sarima_hw_res_recover$plot,
+               plot_air5_tkr_hw_res_recover$plot,
+               plot_air5_SDEM_hw_res_recover$plot,
+               plot_air5_naive_hw_res_recover$plot,
+               ncol=2,nrow=2,
+               common.legend = T,
+               legend="bottom")
+
+windows()
+annotate_figure(PG_5HW, top = text_grob("S100", 
+                                      color = "Black", face = "bold", size = 14))
+
+
+# 5 loess
+time=air_short$time
+air5_sarima_loess_res_recover=df_recover(air5_sarima_loess_res,air5_loess_sarima,loess=T,locations2,time)
+air5_tkr_loess_res_recover=df_recover(air5_tkr_loess_res,air5_loess_tkr,loess=T,locations2,time)
+air5_SDEM_loess_res_recover=df_recover(air5_SDEM_loess_res,air5_loess_SDEM,loess=T,locations2,time)
+air5_naive_loess_res_recover=df_recover(air5_naive_loess_res,air5_loess_naive,loess=T,locations2,time)
+
+miss5=c(na_start[1],(na_start[1]+na_len[1]))
+plot_air5_sarima_loess_res_recover=rmse_detrdeseas(air5_sarima_loess_res_recover$S100,
+                air_short$S100,
+                air_short$time,type="SARIMA - LOESS",
+                miss=miss5)
+plot_air5_tkr_loess_res_recover=rmse_detrdeseas(air5_tkr_loess_res_recover$S100,
+                air_short$S100,
+                air_short$time,type="TKR - LOESS",
+                miss=miss5)
+plot_air5_SDEM_loess_res_recover=rmse_detrdeseas(air5_SDEM_loess_res_recover$S100,
+                air_short$S100,
+                air_short$time,type="SDEM - LOESS",
+                miss=miss5)
+plot_air5_naive_loess_res_recover=rmse_detrdeseas(air5_naive_loess_res_recover$S100,
+                air_short$S100,
+                air_short$time,type="Naive - LOESS",
+                miss=miss5)
+
+
+PG_5LOESS<- ggarrange(plot_air5_sarima_loess_res_recover$plot,
+               plot_air5_tkr_loess_res_recover$plot,
+               plot_air5_SDEM_loess_res_recover$plot,
+               plot_air5_naive_loess_res_recover$plot,
+               ncol=2,nrow=2,
+               common.legend = T,
+               legend="bottom")
+
+windows()
+annotate_figure(PG_5LOESS, top = text_grob("S100", 
+                                      color = "Black", face = "bold", size = 14))
+
+  
+
+# RMSE HW
+RMSE_air5_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_sarima_hw_res_recover[,-1])^2)
+RMSE_air5_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_tkr_hw_res_recover[,-1])^2)
+RMSE_air5_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_SDEM_hw_res_recover[,-1])^2)
+RMSE_air5_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_naive_hw_res_recover[,-1])^2)
+
+# RMSE LOESS
+RMSE_air5_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air5_sarima_loess_res_recover[,-1])^2)
+RMSE_air5_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air5_tkr_loess_res_recover[,-1])^2)
+RMSE_air5_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air5_SDEM_loess_res_recover[,-1])^2)
+RMSE_air5_naive_loess_res=sqrt(colMeans(air_short[,-1]-air5_naive_loess_res_recover[,-1])^2)
+
+# arrange in dataframe
+RMSE_air5_res=data.frame(RMSE_air5_sarima_hw_res,
+                     RMSE_air5_tkr_hw_res,
+                     RMSE_air5_SDEM_hw_res,
+                     RMSE_air5_naive_hw_res,
+                     RMSE_air5_sarima_loess_res,
+                     RMSE_air5_tkr_loess_res,
+                     RMSE_air5_SDEM_loess_res,
+                     RMSE_air5_naive_loess_res)
+
+colMeans(RMSE_air5_res)
+
+# 10 HW
+air10_sarima_hw_res_recover=df_recover(air10_sarima_hw_res,air10_hw_sarima,loess=F,locations2,time)
+air10_tkr_hw_res_recover=df_recover(air10_tkr_hw_res,air10_hw_tkr,loess=F,locations2,time)
+air10_SDEM_hw_res_recover=df_recover(air10_SDEM_hw_res,air10_hw_SDEM,loess=F,locations2,time)
+air10_naive_hw_res_recover=df_recover(air10_naive_hw_res,air10_hw_naive,loess=F,locations2,time)
+
+# RMSE
+RMSE_air10_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_sarima_hw_res_recover[,-1])^2)
+RMSE_air10_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_tkr_hw_res_recover[,-1])^2)
+RMSE_air10_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_SDEM_hw_res_recover[,-1])^2)
+RMSE_air10_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_naive_hw_res_recover[,-1])^2)
+
+# 20 HW
+air20_sarima_hw_res_recover=df_recover(air20_sarima_hw_res,air20_hw_sarima,loess=F,locations2,time)
+air20_tkr_hw_res_recover=df_recover(air20_tkr_hw_res,air20_hw_tkr,loess=F,locations2,time)
+air20_SDEM_hw_res_recover=df_recover(air20_SDEM_hw_res,air20_hw_SDEM,loess=F,locations2,time)
+air20_naive_hw_res_recover=df_recover(air20_naive_hw_res,air20_hw_naive,loess=F,locations2,time)
+
+# RMSE
+RMSE_air20_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_sarima_hw_res_recover[,-1])^2)
+RMSE_air20_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_tkr_hw_res_recover[,-1])^2)
+RMSE_air20_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_SDEM_hw_res_recover[,-1])^2)
+RMSE_air20_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_naive_hw_res_recover[,-1])^2)
+
+
+# 5 LOESS
+time=air_short$time
+air5_sarima_loess_res_recover=df_recover(air5_sarima_loess_res,air5_loess_sarima,loess=T,locations2,time)
+air5_tkr_loess_res_recover=df_recover(air5_tkr_loess_res,air5_loess_tkr,loess=T,locations2,time)
+air5_SDEM_loess_res_recover=df_recover(air5_SDEM_loess_res,air5_loess_SDEM,loess=T,locations2,time)
+air5_naive_loess_res_recover=df_recover(air5_naive_loess_res,air5_loess_naive,loess=T,locations2,time)
+
+# RMSE
+RMSE_air5_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air5_sarima_loess_res_recover[,-1])^2)
+RMSE_air5_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air5_tkr_loess_res_recover[,-1])^2)
+RMSE_air5_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air5_SDEM_loess_res_recover[,-1])^2)
+RMSE_air5_naive_loess_res=sqrt(colMeans(air_short[,-1]-air5_naive_loess_res_recover[,-1])^2)
+
+# 10 LOESS
+air10_sarima_loess_res_recover=df_recover(air10_sarima_loess_res,air10_loess_sarima,loess=T,locations2,time)
+air10_tkr_loess_res_recover=df_recover(air10_tkr_loess_res,air10_loess_tkr,loess=T,locations2,time)
+air10_SDEM_loess_res_recover=df_recover(air10_SDEM_loess_res,air10_loess_SDEM,loess=T,locations2,time)
+air10_naive_loess_res_recover=df_recover(air10_naive_loess_res,air10_loess_naive,loess=T,locations2,time)
+
+# RMSE
+RMSE_air10_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air10_sarima_loess_res_recover[,-1])^2)
+RMSE_air10_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air10_tkr_loess_res_recover[,-1])^2)
+RMSE_air10_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air10_SDEM_loess_res_recover[,-1])^2)
+RMSE_air10_naive_loess_res=sqrt(colMeans(air_short[,-1]-air10_naive_loess_res_recover[,-1])^2)
+
+# 20 LOESS
+air20_sarima_loess_res_recover=df_recover(air20_sarima_loess_res,air20_loess_sarima,loess=T,locations2,time)
+air20_tkr_loess_res_recover=df_recover(air20_tkr_loess_res,air20_loess_tkr,loess=T,locations2,time)
+air20_SDEM_loess_res_recover=df_recover(air20_SDEM_loess_res,air20_loess_SDEM,loess=T,locations2,time)
+air20_naive_loess_res_recover=df_recover(air20_naive_loess_res,air20_loess_naive,loess=T,locations2,time)
+
+# RMSE
+RMSE_air20_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air20_sarima_loess_res_recover[,-1])^2)
+RMSE_air20_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air20_tkr_loess_res_recover[,-1])^2)
+RMSE_air20_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air20_SDEM_loess_res_recover[,-1])^2)
+RMSE_air20_naive_loess_res=sqrt(colMeans(air_short[,-1]-air20_naive_loess_res_recover[,-1])^2)
+
+

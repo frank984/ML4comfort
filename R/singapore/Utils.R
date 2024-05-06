@@ -485,17 +485,32 @@ get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
 #                 target=air10_SDEM_hw_res$stat_id,
 #                 loess=F)
 
+df_recover=function(x,x_trend_seas,loess=T,locations2,time){
+  df=NULL
+  for(i in 1:length(x)){
+    temp=get_orig_series(
+      x_trend_seas,
+      x[[i]]$step2$stkgr@data$var1.pred,
+      locations2,
+      target=x[[i]]$stat_id,
+      loess=loess)
+    df=cbind(df,temp$result)
+    colnames(df)[i]=temp$target
+  }
+  df=data.frame(time,df)
+  
+  return(df)
+}
 
-
-rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T){
+rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - HW",legend=T,miss){
   
   # This function computes the RMSE between the reconstructed series and the true series
   
   # Arguments:
   # reconstr_series is a vector with the reconstructed series, output of the function get_orig_series
   # true_series is a vector with the true series
-  # time is a vector with the time
-
+  # miss is a vector specifying first and last indexes of missing data
+  
   # Value:
   # A numeric value with the RMSE
   # An optional plot with the fitted and true series
@@ -505,12 +520,21 @@ rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T){
     df=data.frame(time=time,
                   result=reconstr_series,
                   true=true_series)
+    col
     P=ggplot(df)+
-      geom_line(aes(x=time,y=result,col="blue"))+
-      geom_line(aes(x=time,y=true,col="red"))+
-      theme_bw()+labs(x='Time',y='Temperature')+
-      scale_colour_manual(name = ' ', 
-                          values =c('blue'='blue','red'='red'), labels = c('Fitted','True'))
+      geom_rect(aes(xmin = time[miss[1]], xmax = time[miss[2]], 
+                    ymin = min(c(min(result),min(true))), 
+                    ymax = max(c(max(result),max(true)))), alpha = 0.1,fill="grey")+
+      geom_line(aes(x=time,y=result,col="blue"),size=.7)+
+      geom_line(aes(x=time,y=true,col="red"),size=.7)+
+      theme_bw()+labs(x=' ',y=type)
+    
+      if(legend){
+        P=P+scale_colour_manual(name = ' ', 
+                                values =c('blue'='blue','red'='red'), 
+                                labels = c('Fitted','True'))
+      }
+      
     return(list(RMSE=RMSE,
                 plot=P))
   }
