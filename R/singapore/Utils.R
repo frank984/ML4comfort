@@ -14,7 +14,7 @@ library(tidyverse)
 library(lubridate)
 library(ggplot2)
 library(ggpubr)
-library(geojsonio)
+#library(geojsonio)
 library(leaflet)
 library(leaflet.extras)
 library(htmltools)
@@ -400,10 +400,6 @@ compute_errors=function(stkgr,cvobj){
   mae=mean(abs(pred-obs))
   return(list(rmse=rmse,mae=mae))
 }
-
-CV_STkr(5,air_5_sarima,locations,ordinary=F)
-stat_ind=5
-dat=air_5_sarima
 
 # CV (to be performed in parallel)
 CV_STkr=function(stat_ind,dat,locations,ordinary=T,plot=F){
