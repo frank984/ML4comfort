@@ -485,20 +485,34 @@ get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
 #                 target=air10_SDEM_hw_res$stat_id,
 #                 loess=F)
 
-df_recover=function(x,x_trend_seas,loess=T,locations2,time){
+df_recover=function(x,x_trend_seas=NULL,loess=T,locations2,time,residuals=T){
   df=NULL
-  for(i in 1:length(x)){
-    temp=get_orig_series(
-      x_trend_seas,
-      x[[i]]$step2$stkgr@data$var1.pred,
-      locations2,
-      target=x[[i]]$stat_id,
-      loess=loess)
-    df=cbind(df,temp$result)
-    colnames(df)[i]=temp$target
+  if(residuals){
+    if(!is.null(x_trend_seas)){
+      for(i in 1:length(x)){
+        temp=get_orig_series(
+          x_trend_seas,
+          x[[i]]$step2$stkgr@data$var1.pred,
+          locations2,
+          target=x[[i]]$stat_id,
+          loess=loess)
+        df=cbind(df,temp$result)
+        colnames(df)[i]=temp$target
+      }
+      df=data.frame(time,df)
+    }
+    else{
+      stop("x_trend_seas must be provided")
+    }
   }
-  df=data.frame(time,df)
-  
+  else{
+    for(i in 1:length(x)){
+      temp=x[[i]]$step2$stkgr@data$var1.pred
+      df=cbind(df,temp)
+      colnames(df)[i]=x[[i]]$stat_id
+    }
+    df=data.frame(time,df)
+  }
   return(df)
 }
 
