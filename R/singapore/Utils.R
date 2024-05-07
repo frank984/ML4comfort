@@ -539,14 +539,17 @@ rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - 
       geom_rect(aes(xmin = time[miss[1]], xmax = time[miss[2]], 
                     ymin = min(c(min(result),min(true))), 
                     ymax = max(c(max(result),max(true)))), alpha = 0.1,fill="grey")+
-      geom_line(aes(x=time,y=result,col="blue"),size=.7)+
-      geom_line(aes(x=time,y=true,col="red"),size=.7)+
-      theme_bw()+labs(x=' ',y=type)
+      geom_line(aes(x=time,y=true,col="blue"),size=1)+
+      geom_line(aes(x=time,y=result,col="red"),size=.8)+
+      theme_bw()+labs(x=' ',y=type)+
+      theme(text = element_text(size = 12),
+            legend.text=element_text(size=12),
+            axis.text = element_text(size=12))
     
       if(legend){
         P=P+scale_colour_manual(name = ' ', 
                                 values =c('blue'='blue','red'='red'), 
-                                labels = c('Fitted','True'))
+                                labels = c('True','Fitted'))
       }
       
     return(list(RMSE=RMSE,
