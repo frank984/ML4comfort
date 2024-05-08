@@ -276,21 +276,68 @@ for(i in 2:ncol(air_20)){
 mtext("Air temperatures - 20% NAs - Naive", side = 3, line = - 2, outer = TRUE)
 
 
+# Linear regression -------------------------------------------------------
+
+air5_lr=lin_reg_imp(air_5,rh_short)
+air10_lr=lin_reg_imp(air_10,rh_short)
+air20_lr=lin_reg_imp(air_20,rh_short)
+
+#Plot
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_5)){
+  plot(x=air_5$time,y=as.vector(unlist(air5_lr[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_5[,i]))
+  lines(x=air_5$time,y=as.vector(unlist(air_5[,i])),col="black")
+  
+  title(main=colnames(air_5)[i])
+}
+mtext("Air temperatures - 5% NAs - Linear regression", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_10)){
+  plot(x=air_10$time,y=as.vector(unlist(air10_lr[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_10[,i]))
+  lines(x=air_10$time,y=as.vector(unlist(air_10[,i])),col="black")
+  title(main=colnames(air_10)[i])
+}
+mtext("Air temperatures - 10% NAs - Linear regression", side = 3, line = - 2, outer = TRUE)
+
+windows()
+par(mfrow=c(4,3),mar=c(2,2,6,2))
+for(i in 2:ncol(air_20)){
+  plot(x=air_20$time,y=as.vector(unlist(air20_lr[,i])),col="red"
+       ,type="l",
+       xlab=" ",ylab=" ",
+       main=colnames(air_20[,i]))
+  lines(x=air_20$time,y=as.vector(unlist(air_20[,i])),col="black")
+  title(main=colnames(air_20)[i])
+}
+mtext("Air temperatures - 20% NAs - Linear regression", side = 3, line = - 2, outer = TRUE)
+
 # Comparison
 mean(unlist(as.vector(rmse(air_short,air_5_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_5_tkr))))
 mean(unlist(as.vector(rmse(air_short,air5_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air5_naive))))
+mean(unlist(as.vector(rmse(air_short,air5_lr))))
 
 mean(unlist(as.vector(rmse(air_short,air_10_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_10_tkr))))
 mean(unlist(as.vector(rmse(air_short,air10_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air10_naive))))
+mean(unlist(as.vector(rmse(air_short,air10_lr))))
 
 mean(unlist(as.vector(rmse(air_short,air_20_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_20_tkr))),na.rm = T)
 mean(unlist(as.vector(rmse(air_short,air20_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air20_naive))))
+mean(unlist(as.vector(rmse(air_short,air20_lr))))
 
 
 # 3) Universal kriging (parallel) -----------------------------------------

@@ -127,6 +127,35 @@ MA_imp=function(x_data){
   
 }
 
+# y_data=air_5
+# x_data=rh_short
+
+lin_reg_imp=function(y_data,x_data){
+  
+  # y_data is a data frame with variable to predict with time as first column. Each column is a station
+  # x_data is a data framr with the covariates to be used in the linear regression
+  
+  names(x_data)[1]="time"
+  names(y_data)[1]="time"
+  y_data_pred=y_data
+  x_data_reg=x_data
+  for(i in 2:ncol(x_data)){
+    indx=which(is.na(y_data[,i]))
+    df=data.frame(y=y_data[,i],x=x_data_reg[,i])
+    df_pred=df[indx,]
+    df_pred=df$x
+    df[indx,]=NA
+    y_pred=lm(y~x,data=df)
+    y_pred=predict(y_pred,newdata=data.frame(x=df_pred[indx]))
+    y_data_pred[indx,i]=y_pred
+    plot(y_data_pred[,i],type='l',col='red')
+    lines(y_data[,i],col='blue')
+  }
+  
+  return(y_data_pred)
+  
+}
+
 rmse=function(x,y){
   # x is the true data, y is the imputed data
   # For both, the first column is time
