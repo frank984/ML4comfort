@@ -133,7 +133,7 @@ MA_imp=function(x_data){
 lin_reg_imp=function(y_data,x_data){
   
   # y_data is a data frame with variable to predict with time as first column. Each column is a station
-  # x_data is a data framr with the covariates to be used in the linear regression
+  # x_data is a data frame with the covariates to be used in the linear regression
   
   names(x_data)[1]="time"
   names(y_data)[1]="time"
@@ -148,8 +148,8 @@ lin_reg_imp=function(y_data,x_data){
     y_pred=lm(y~x,data=df)
     y_pred=predict(y_pred,newdata=data.frame(x=df_pred[indx]))
     y_data_pred[indx,i]=y_pred
-    plot(y_data_pred[,i],type='l',col='red')
-    lines(y_data[,i],col='blue')
+    # plot(y_data_pred[,i],type='l',col='red')
+    # lines(y_data[,i],col='blue')
   }
   
   return(y_data_pred)

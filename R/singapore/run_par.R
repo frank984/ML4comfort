@@ -2,6 +2,7 @@
 
 source("Utils.R")
 load("air_short.Rdata")
+load("rh_short.Rdata")
 #air_short=air_short[251:750,]
 
 load("locations.Rdata")
@@ -276,7 +277,7 @@ for(i in 2:ncol(air_20)){
 mtext("Air temperatures - 20% NAs - Naive", side = 3, line = - 2, outer = TRUE)
 
 
-# Linear regression -------------------------------------------------------
+# 2.4) Linear regression -------------------------------------------------------
 
 air5_lr=lin_reg_imp(air_5,rh_short)
 air10_lr=lin_reg_imp(air_10,rh_short)
@@ -466,6 +467,39 @@ elapsed_air20_naive_full=end-start
 
 save.image("~/Documents/git/ML4comfort/R/singapore/run_parallel.RData")
 
+
+# 3) NEW Universal kriging ------------------------------------------------
+
+start = Sys.time()
+air5_linreg_full <- parallel::mclapply(indx,
+                                       function(x)CV_STkr(x,
+                                                          air5_lr,
+                                                          locations2,
+                                                          ordinary=F),
+                                       mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_lr_full=end-start
+
+start = Sys.time()
+air10_linreg_full <- parallel::mclapply(indx,
+                                        function(x)CV_STkr(x,
+                                                           air10_lr,
+                                                           locations2,
+                                                           ordinary=F),
+                                        mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_lr_full=end-start
+
+start = Sys.time()
+air20_linreg_full <- parallel::mclapply(indx,
+                                        function(x)CV_STkr(x,
+                                                           air20_lr,
+                                                           locations2,
+                                                           ordinary=F),
+                                        mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_lr_full=end-start
+
 # 3.1) RMSE ---------------------------------------------------------------
 
 # 5
@@ -641,19 +675,25 @@ air_5_tkr=select(air_5_tkr,subset=-c(indx,knot))
 air5_loess_tkr=LOESS.df(air_5_tkr)
 air5_loess_SDEM=LOESS.df(air5_SDEM)
 air5_loess_naive=LOESS.df(air5_naive)
+
 # air 10%
 air10_loess_sarima=LOESS.df(air_10_sarima)
-
 air_10_tkr=select(air_10_tkr,subset=-c(indx,knot))
 air10_loess_tkr=LOESS.df(air_10_tkr)
 air10_loess_SDEM=LOESS.df(air10_SDEM)
 air10_loess_naive=LOESS.df(air10_naive)
+
 # air 20%
 air20_loess_sarima=LOESS.df(air_20_sarima)
 air_20_tkr=select(air_20_tkr,subset=-c(indx,knot))
 air20_loess_tkr=LOESS.df(air_20_tkr)
 air20_loess_SDEM=LOESS.df(air20_SDEM)
 air20_loess_naive=LOESS.df(air20_naive)
+
+# NEW linreg
+air5_loess_lr=LOESS.df(air5_lr)
+air10_loess_lr=LOESS.df(air10_lr)
+air20_loess_lr=LOESS.df(air20_lr)
 
 ## HW
 # air 5%
@@ -671,6 +711,11 @@ air20_hw_sarima=HoltWint.df(air_20_sarima,24)
 air20_hw_tkr=HoltWint.df(air_20_tkr,24)
 air20_hw_SDEM=HoltWint.df(air20_SDEM,24)
 air20_hw_naive=HoltWint.df(air20_naive,24)
+
+#NEW linreg
+air5_hw_lr=HoltWint.df(air5_lr,24)
+air10_hw_lr=HoltWint.df(air10_lr,24)
+air20_hw_lr=HoltWint.df(air20_lr,24)
 
 # 5) Ordinary kriging --------------------------------------------------------
 
@@ -898,7 +943,70 @@ air20_naive_loess_res <- parallel::mclapply(indx,
 end = Sys.time()
 elapsed_air20_naive_loess_res=end-start
 
-save.image("~/Documents/git/ML4comfort/R/singapore/run_parallel.RData")
+# save.image("~/Documents/git/ML4comfort/R/singapore/run_parallel.RData")
+
+save.image("run_parallel2.RData")
+
+
+# 5) NEW Ordinary kriging lin reg -----------------------------------------
+
+indx=2:ncol(air_short)
+
+# HW
+start = Sys.time()
+air5_lr_hw_res <- parallel::mclapply(indx,
+                                         function(x)CV_STkr(x,
+                                                            air5_hw_lr$residuals,
+                                                            locations),
+                                         mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_lr_hw_res=end-start
+
+start = Sys.time()
+air10_lr_hw_res <- parallel::mclapply(indx,
+                                          function(x)CV_STkr(x,
+                                                             air10_hw_lr$residuals,
+                                                             locations),
+                                          mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_lr_hw_res=end-start
+
+start = Sys.time()
+air20_lr_hw_res <- parallel::mclapply(indx,
+                                          function(x)CV_STkr(x,
+                                                             air20_hw_lr$residuals,
+                                                             locations),
+                                          mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_lr_hw_res=end-start
+
+#LOESS
+start = Sys.time()
+air5_lr_loess_res <- parallel::mclapply(indx,
+                                          function(x)CV_STkr(x,
+                                                             air5_loess_lr$residuals,
+                                                             locations),
+                                          mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air5_lr_loess_res=end-start
+
+start = Sys.time()
+air10_lr_loess_res <- parallel::mclapply(indx,
+                                           function(x)CV_STkr(x,
+                                                              air10_loess_lr$residuals,
+                                                              locations),
+                                           mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air10_lr_loess_res=end-start
+
+start = Sys.time()
+air20_lr_loess_res <- parallel::mclapply(indx,
+                                           function(x)CV_STkr(x,
+                                                              air20_loess_lr$residuals,
+                                                              locations),
+                                           mc.cores = parallel::detectCores())
+end = Sys.time()
+elapsed_air20_lr_loess_res=end-start
 
 
 # 6) Plots (station S100) ----------------------------------------------
