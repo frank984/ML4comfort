@@ -472,6 +472,8 @@ CV_STkr=function(stat_ind,dat,locations,ordinary=T,plot=F){
 # 
 get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
   
+  # This function recovers the original series from the trend, seasonal, and residuals components
+  
   # Arguments:
   # x is an object obtained with function LOESS.df or HoltWint.df
   # kgrST.res is the result of the spatio-temporal kriging, using function CV_STkr above
@@ -508,13 +510,8 @@ get_orig_series=function(x,kgrST.res,locations2,target,loess=T){
 }
 
 
-# S108=get_orig_series(air10_hw_SDEM,
-#                 kgrST.res=air10_SDEM_hw_res$step2$stkgr@data$var1.pred,
-#                 locations2,
-#                 target=air10_SDEM_hw_res$stat_id,
-#                 loess=F)
-
 df_recover=function(x,x_trend_seas=NULL,loess=T,locations2,time,residuals=T){
+  
   df=NULL
   if(residuals){
     if(!is.null(x_trend_seas)){
@@ -545,7 +542,13 @@ df_recover=function(x,x_trend_seas=NULL,loess=T,locations2,time,residuals=T){
   return(df)
 }
 
-rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - HW",legend=T,miss){
+reconstr_series=air5_sarima_full_recover$S100
+true_series=air_short$S100
+time=air_short$time
+type="SARIMA - Full"
+miss=miss5
+
+rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - HW",legend=T,miss,z=60){
   
   # This function computes the RMSE between the reconstructed series and the true series
   
@@ -553,19 +556,28 @@ rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - 
   # reconstr_series is a vector with the reconstructed series, output of the function get_orig_series
   # true_series is a vector with the true series
   # miss is a vector specifying first and last indexes of missing data
+  # time is a vector with the time
+  # plot is a boolean indicating whether to plot the series
+  # type is a character specifying the type of reconstruction
+  # legend is a boolean indicating whether to include a legend in the plot
+  # z is a numeric value specifying the zoom in the plot
   
   # Value:
   # A numeric value with the RMSE
   # An optional plot with the fitted and true series
   
-  RMSE=sqrt(mean((reconstr_series-true_series)^2))
+  RMSE=sqrt(mean((reconstr_series[miss]-true_series[miss])^2))
+  zoom=miss
+  zoom[1]=zoom[1]-z
+  zoom[2]=zoom[2]+z
   if(plot){
-    df=data.frame(time=time,
-                  result=reconstr_series,
-                  true=true_series)
-    col
+    df=data.frame(time=time[zoom[1]:zoom[2]],
+                  result=reconstr_series[zoom[1]:zoom[2]],
+                  true=true_series[zoom[1]:zoom[2]])
     P=ggplot(df)+
-      geom_rect(aes(xmin = time[miss[1]], xmax = time[miss[2]], 
+      geom_rect(aes(
+        #xmin = time[miss[1]], xmax = time[miss[2]], 
+        xmin = time[z], xmax = time[z+miss[2]-miss[1]], 
                     ymin = min(c(min(result),min(true))), 
                     ymax = max(c(max(result),max(true)))), alpha = 0.1,fill="grey")+
       geom_line(aes(x=time,y=true,col="blue"),size=1)+
@@ -590,3 +602,23 @@ rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - 
   
 }
 
+rmse_st=function(reconstr,true,miss){
+  
+  # This function computes the RMSE between the reconstructed series and the true series
+  
+  # Arguments:
+  # reconstr is a data frame with the reconstructed series. First column is time, the others are stations
+  # true is a data frame with the true series. First column is time, the others are stations
+  # miss is a vector specifying first and last indexes of missing data
+  
+  # Value:
+  # A numeric vector with the RMSE for each station
+  
+  reconstr=reconstr[miss[1]:miss[2],]
+  true=true[miss[1]:miss[2],]
+  RMSE=rep(0,ncol(true)-1)
+  for (i in 2:ncol(true)){
+    RMSE[i-1]=sqrt(mean((reconstr[,i]-true[,i])^2,na.rm=T))
+  }
+  return(RMSE)
+}

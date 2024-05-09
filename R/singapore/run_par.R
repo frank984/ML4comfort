@@ -324,21 +324,23 @@ mtext("Air temperatures - 20% NAs - Linear regression", side = 3, line = - 2, ou
 # Comparison
 mean(unlist(as.vector(rmse(air_short,air_5_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_5_tkr))))
-mean(unlist(as.vector(rmse(air_short,air5_SDEM))))
-mean(unlist(as.vector(rmse(air_short,air5_naive))))
+#mean(unlist(as.vector(rmse(air_short,air5_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air5_lr))))
+mean(unlist(as.vector(rmse(air_short,air5_naive))))
 
 mean(unlist(as.vector(rmse(air_short,air_10_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_10_tkr))))
-mean(unlist(as.vector(rmse(air_short,air10_SDEM))))
-mean(unlist(as.vector(rmse(air_short,air10_naive))))
+#mean(unlist(as.vector(rmse(air_short,air10_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air10_lr))))
+mean(unlist(as.vector(rmse(air_short,air10_naive))))
+
 
 mean(unlist(as.vector(rmse(air_short,air_20_sarima))))
 mean(unlist(as.vector(rmse(air_short,air_20_tkr))),na.rm = T)
-mean(unlist(as.vector(rmse(air_short,air20_SDEM))))
-mean(unlist(as.vector(rmse(air_short,air20_naive))))
+#mean(unlist(as.vector(rmse(air_short,air20_SDEM))))
 mean(unlist(as.vector(rmse(air_short,air20_lr))))
+mean(unlist(as.vector(rmse(air_short,air20_naive))))
+
 
 
 # 3) Universal kriging (parallel) -----------------------------------------
@@ -500,168 +502,168 @@ air20_linreg_full <- parallel::mclapply(indx,
 end = Sys.time()
 elapsed_air20_lr_full=end-start
 
-# 3.1) RMSE ---------------------------------------------------------------
-
-# 5
-time=air_short$time
-air5_sarima_full_recover=df_recover(x=air5_sarima_full,
-                                       locations2=locations2,time=time,residuals=F)
-air5_tkr_full_recover=df_recover(x=air5_tkr_full,
-                                    locations2=locations2,time=time,residuals=F)
-air5_SDEM_full_recover=df_recover(x=air5_SDEM_full,
-                                     locations2=locations2,time=time,residuals=F)
-air5_naive_full_recover=df_recover(x=air5_naive_full,
-                                      locations2=locations2,time=time,residuals=F)
-
-miss5=c(na_start[1],(na_start[1]+na_len[1]))
-plot_air5_sarima_full_recover=rmse_detrdeseas(air5_sarima_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="SARIMA - Full",
-                                                miss=miss5)
-plot_air5_tkr_full_recover=rmse_detrdeseas(air5_tkr_full_recover$S100,
-                                              air_short$S100,
-                                              air_short$time,type="TKR - Full",
-                                              miss=miss5)
-plot_air5_SDEM_full_recover=rmse_detrdeseas(air5_SDEM_full_recover$S100,
-                                               air_short$S100,
-                                               air_short$time,type="SDEM - Full",
-                                               miss=miss5)
-plot_air5_naive_full_recover=rmse_detrdeseas(air5_naive_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="Naive - Full",
-                                                miss=miss5)
-
-
-
-PG_5full<- ggarrange(plot_air5_sarima_full_recover$plot,
-                     plot_air5_tkr_full_recover$plot,
-                     plot_air5_SDEM_full_recover$plot,
-                     plot_air5_naive_full_recover$plot,
-                      ncol=2,nrow=2,
-          common.legend = T,
-          legend="bottom")
-
-windows()
-annotate_figure(PG_5full, top = text_grob("S100", 
-                                        color = "Black", face = "bold", size = 14))
-
-# 10
-air10_sarima_full_recover=df_recover(x=air10_sarima_full,
-                                       locations2=locations2,time=time,residuals=F)
-air10_tkr_full_recover=df_recover(x=air10_tkr_full,
-                                    locations2=locations2,time=time,residuals=F)
-air10_SDEM_full_recover=df_recover(x=air10_SDEM_full,
-                                     locations2=locations2,time=time,residuals=F)
-air10_naive_full_recover=df_recover(x=air10_naive_full,
-                                      locations2=locations2,time=time,residuals=F)
-
-miss10=c(na_start[2],(na_start[2]+na_len[2]))
-plot_air10_sarima_full_recover=rmse_detrdeseas(air10_sarima_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="SARIMA - Full",
-                                                miss=miss10)
-plot_air10_tkr_full_recover=rmse_detrdeseas(air10_tkr_full_recover$S100,
-                                              air_short$S100,
-                                              air_short$time,type="TKR - Full",
-                                              miss=miss10)
-plot_air10_SDEM_full_recover=rmse_detrdeseas(air10_SDEM_full_recover$S100,
-                                               air_short$S100,
-                                               air_short$time,type="SDEM - Full",
-                                               miss=miss10)
-plot_air10_naive_full_recover=rmse_detrdeseas(air10_naive_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="Naive - Full",
-                                                miss=miss10)
-
-PG_10full<- ggarrange(plot_air10_sarima_full_recover$plot,
-                     plot_air10_tkr_full_recover$plot,
-                     plot_air10_SDEM_full_recover$plot,
-                     plot_air10_naive_full_recover$plot,
-                      ncol=2,nrow=2,
-          common.legend = T,
-          legend="bottom")
-
-windows()
-annotate_figure(PG_10full, top = text_grob("S100", 
-                                        color = "Black", face = "bold", size = 14))
-
-# 20
-air20_sarima_full_recover=df_recover(x=air20_sarima_full,
-                                       locations2=locations2,time=time,residuals=F)
-air20_tkr_full_recover=df_recover(x=air20_tkr_full,
-                                    locations2=locations2,time=time,residuals=F)
-air20_SDEM_full_recover=df_recover(x=air20_SDEM_full,
-                                     locations2=locations2,time=time,residuals=F)
-air20_naive_full_recover=df_recover(x=air20_naive_full,
-                                      locations2=locations2,time=time,residuals=F)
-
-miss20=c(na_start[3],(na_start[3]+na_len[3]))
-plot_air20_sarima_full_recover=rmse_detrdeseas(air20_sarima_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="SARIMA - Full",
-                                                miss=miss20)
-plot_air20_tkr_full_recover=rmse_detrdeseas(air20_tkr_full_recover$S100,
-                                              air_short$S100,
-                                              air_short$time,type="TKR - Full",
-                                              miss=miss20)
-plot_air20_SDEM_full_recover=rmse_detrdeseas(air20_SDEM_full_recover$S100,
-                                               air_short$S100,
-                                               air_short$time,type="SDEM - Full",
-                                               miss=miss20)
-plot_air20_naive_full_recover=rmse_detrdeseas(air20_naive_full_recover$S100,
-                                                air_short$S100,
-                                                air_short$time,type="Naive - Full",
-                                                miss=miss20)
-
-PG_20full<- ggarrange(plot_air20_sarima_full_recover$plot,
-                     plot_air20_tkr_full_recover$plot,
-                     plot_air20_SDEM_full_recover$plot,
-                     plot_air20_naive_full_recover$plot,
-                      ncol=2,nrow=2,
-          common.legend = T,
-          legend="bottom")
-
-windows()
-annotate_figure(PG_20full, top = text_grob("S100", 
-                                        color = "Black", face = "bold", size = 14))
-
-
-stat_names=unlist(lapply(air5_sarima_full,function(x)x$stat_id)); stat_names
-
-RMSE_air5_sarima_full=unlist(lapply(air5_sarima_full,function(x)x$RMSE))
-RMSE_air5_tkr_full=unlist(lapply(air5_tkr_full,function(x)x$RMSE))
-RMSE_air5_SDEM_full=unlist(lapply(air5_SDEM_full,function(x)x$RMSE))
-RMSE_air5_naive_full=unlist(lapply(air5_naive_full,function(x)x$RMSE))
-
-RMSE_air10_sarima_full=unlist(lapply(air10_sarima_full,function(x)x$RMSE))
-RMSE_air10_tkr_full=unlist(lapply(air10_tkr_full,function(x)x$RMSE))
-RMSE_air10_SDEM_full=unlist(lapply(air10_SDEM_full,function(x)x$RMSE))
-RMSE_air10_naive_full=unlist(lapply(air10_naive_full,function(x)x$RMSE))
-
-RMSE_air20_sarima_full=unlist(lapply(air20_sarima_full,function(x)x$RMSE))
-RMSE_air20_tkr_full=unlist(lapply(air20_tkr_full,function(x)x$RMSE))
-RMSE_air20_SDEM_full=unlist(lapply(air20_SDEM_full,function(x)x$RMSE))
-RMSE_air20_naive_full=unlist(lapply(air20_naive_full,function(x)x$RMSE))
-
-# Collect all results in one data frame
-RMSE_full=data.frame(stat_names,
-                     RMSE_air5_sarima_full,
-                     RMSE_air5_tkr_full,
-                     RMSE_air5_SDEM_full,
-                     RMSE_air5_naive_full,
-                     RMSE_air10_sarima_full,
-                     RMSE_air10_tkr_full,
-                     RMSE_air10_SDEM_full,
-                     RMSE_air10_naive_full,
-                     RMSE_air20_sarima_full,
-                     RMSE_air20_tkr_full,
-                     RMSE_air20_SDEM_full,
-                     RMSE_air20_naive_full)
-
-colMeans(RMSE_full[,-1],na.rm = T)
-
-# Plot
-
+# 3.1) RMSE 
+# 
+# # 5
+# time=air_short$time
+# air5_sarima_full_recover=df_recover(x=air5_sarima_full,
+#                                        locations2=locations2,time=time,residuals=F)
+# air5_tkr_full_recover=df_recover(x=air5_tkr_full,
+#                                     locations2=locations2,time=time,residuals=F)
+# air5_SDEM_full_recover=df_recover(x=air5_SDEM_full,
+#                                      locations2=locations2,time=time,residuals=F)
+# air5_naive_full_recover=df_recover(x=air5_naive_full,
+#                                       locations2=locations2,time=time,residuals=F)
+# 
+# miss5=c(na_start[1],(na_start[1]+na_len[1]))
+# plot_air5_sarima_full_recover=rmse_detrdeseas(air5_sarima_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="SARIMA - Full",
+#                                                 miss=miss5)
+# plot_air5_tkr_full_recover=rmse_detrdeseas(air5_tkr_full_recover$S100,
+#                                               air_short$S100,
+#                                               air_short$time,type="TKR - Full",
+#                                               miss=miss5)
+# plot_air5_SDEM_full_recover=rmse_detrdeseas(air5_SDEM_full_recover$S100,
+#                                                air_short$S100,
+#                                                air_short$time,type="SDEM - Full",
+#                                                miss=miss5)
+# plot_air5_naive_full_recover=rmse_detrdeseas(air5_naive_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="Naive - Full",
+#                                                 miss=miss5)
+# 
+# 
+# 
+# PG_5full<- ggarrange(plot_air5_sarima_full_recover$plot,
+#                      plot_air5_tkr_full_recover$plot,
+#                      plot_air5_SDEM_full_recover$plot,
+#                      plot_air5_naive_full_recover$plot,
+#                       ncol=2,nrow=2,
+#           common.legend = T,
+#           legend="bottom")
+# 
+# windows()
+# annotate_figure(PG_5full, top = text_grob("S100", 
+#                                         color = "Black", face = "bold", size = 14))
+# 
+# # 10
+# air10_sarima_full_recover=df_recover(x=air10_sarima_full,
+#                                        locations2=locations2,time=time,residuals=F)
+# air10_tkr_full_recover=df_recover(x=air10_tkr_full,
+#                                     locations2=locations2,time=time,residuals=F)
+# air10_SDEM_full_recover=df_recover(x=air10_SDEM_full,
+#                                      locations2=locations2,time=time,residuals=F)
+# air10_naive_full_recover=df_recover(x=air10_naive_full,
+#                                       locations2=locations2,time=time,residuals=F)
+# 
+# miss10=c(na_start[2],(na_start[2]+na_len[2]))
+# plot_air10_sarima_full_recover=rmse_detrdeseas(air10_sarima_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="SARIMA - Full",
+#                                                 miss=miss10)
+# plot_air10_tkr_full_recover=rmse_detrdeseas(air10_tkr_full_recover$S100,
+#                                               air_short$S100,
+#                                               air_short$time,type="TKR - Full",
+#                                               miss=miss10)
+# plot_air10_SDEM_full_recover=rmse_detrdeseas(air10_SDEM_full_recover$S100,
+#                                                air_short$S100,
+#                                                air_short$time,type="SDEM - Full",
+#                                                miss=miss10)
+# plot_air10_naive_full_recover=rmse_detrdeseas(air10_naive_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="Naive - Full",
+#                                                 miss=miss10)
+# 
+# PG_10full<- ggarrange(plot_air10_sarima_full_recover$plot,
+#                      plot_air10_tkr_full_recover$plot,
+#                      plot_air10_SDEM_full_recover$plot,
+#                      plot_air10_naive_full_recover$plot,
+#                       ncol=2,nrow=2,
+#           common.legend = T,
+#           legend="bottom")
+# 
+# windows()
+# annotate_figure(PG_10full, top = text_grob("S100", 
+#                                         color = "Black", face = "bold", size = 14))
+# 
+# # 20
+# air20_sarima_full_recover=df_recover(x=air20_sarima_full,
+#                                        locations2=locations2,time=time,residuals=F)
+# air20_tkr_full_recover=df_recover(x=air20_tkr_full,
+#                                     locations2=locations2,time=time,residuals=F)
+# air20_SDEM_full_recover=df_recover(x=air20_SDEM_full,
+#                                      locations2=locations2,time=time,residuals=F)
+# air20_naive_full_recover=df_recover(x=air20_naive_full,
+#                                       locations2=locations2,time=time,residuals=F)
+# 
+# miss20=c(na_start[3],(na_start[3]+na_len[3]))
+# plot_air20_sarima_full_recover=rmse_detrdeseas(air20_sarima_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="SARIMA - Full",
+#                                                 miss=miss20)
+# plot_air20_tkr_full_recover=rmse_detrdeseas(air20_tkr_full_recover$S100,
+#                                               air_short$S100,
+#                                               air_short$time,type="TKR - Full",
+#                                               miss=miss20)
+# plot_air20_SDEM_full_recover=rmse_detrdeseas(air20_SDEM_full_recover$S100,
+#                                                air_short$S100,
+#                                                air_short$time,type="SDEM - Full",
+#                                                miss=miss20)
+# plot_air20_naive_full_recover=rmse_detrdeseas(air20_naive_full_recover$S100,
+#                                                 air_short$S100,
+#                                                 air_short$time,type="Naive - Full",
+#                                                 miss=miss20)
+# 
+# PG_20full<- ggarrange(plot_air20_sarima_full_recover$plot,
+#                      plot_air20_tkr_full_recover$plot,
+#                      plot_air20_SDEM_full_recover$plot,
+#                      plot_air20_naive_full_recover$plot,
+#                       ncol=2,nrow=2,
+#           common.legend = T,
+#           legend="bottom")
+# 
+# windows()
+# annotate_figure(PG_20full, top = text_grob("S100", 
+#                                         color = "Black", face = "bold", size = 14))
+# 
+# 
+# stat_names=unlist(lapply(air5_sarima_full,function(x)x$stat_id)); stat_names
+# 
+# RMSE_air5_sarima_full=unlist(lapply(air5_sarima_full,function(x)x$RMSE))
+# RMSE_air5_tkr_full=unlist(lapply(air5_tkr_full,function(x)x$RMSE))
+# RMSE_air5_SDEM_full=unlist(lapply(air5_SDEM_full,function(x)x$RMSE))
+# RMSE_air5_naive_full=unlist(lapply(air5_naive_full,function(x)x$RMSE))
+# 
+# RMSE_air10_sarima_full=unlist(lapply(air10_sarima_full,function(x)x$RMSE))
+# RMSE_air10_tkr_full=unlist(lapply(air10_tkr_full,function(x)x$RMSE))
+# RMSE_air10_SDEM_full=unlist(lapply(air10_SDEM_full,function(x)x$RMSE))
+# RMSE_air10_naive_full=unlist(lapply(air10_naive_full,function(x)x$RMSE))
+# 
+# RMSE_air20_sarima_full=unlist(lapply(air20_sarima_full,function(x)x$RMSE))
+# RMSE_air20_tkr_full=unlist(lapply(air20_tkr_full,function(x)x$RMSE))
+# RMSE_air20_SDEM_full=unlist(lapply(air20_SDEM_full,function(x)x$RMSE))
+# RMSE_air20_naive_full=unlist(lapply(air20_naive_full,function(x)x$RMSE))
+# 
+# # Collect all results in one data frame
+# RMSE_full=data.frame(stat_names,
+#                      RMSE_air5_sarima_full,
+#                      RMSE_air5_tkr_full,
+#                      RMSE_air5_SDEM_full,
+#                      RMSE_air5_naive_full,
+#                      RMSE_air10_sarima_full,
+#                      RMSE_air10_tkr_full,
+#                      RMSE_air10_SDEM_full,
+#                      RMSE_air10_naive_full,
+#                      RMSE_air20_sarima_full,
+#                      RMSE_air20_tkr_full,
+#                      RMSE_air20_SDEM_full,
+#                      RMSE_air20_naive_full)
+# 
+# colMeans(RMSE_full[,-1],na.rm = T)
+# 
+# # Plot
+# 
 
 
 # 4) Preliminary detrend-deseas -------------------------------------------
@@ -1018,10 +1020,12 @@ air5_sarima_full_recover=df_recover(x=air5_sarima_full,
                                     locations2=locations2,time=time,residuals=F)
 air5_tkr_full_recover=df_recover(x=air5_tkr_full,
                                  locations2=locations2,time=time,residuals=F)
-air5_SDEM_full_recover=df_recover(x=air5_SDEM_full,
-                                  locations2=locations2,time=time,residuals=F)
+# air5_SDEM_full_recover=df_recover(x=air5_SDEM_full,
+#                                   locations2=locations2,time=time,residuals=F)
 air5_naive_full_recover=df_recover(x=air5_naive_full,
                                    locations2=locations2,time=time,residuals=F)
+air5_lr_full_recover=df_recover(x=air5_linreg_full,
+                             locations2=locations2,time=time,residuals=F)
 
 miss5=c(na_start[1],(na_start[1]+na_len[1]))
 plot_air5_sarima_full_recover=rmse_detrdeseas(air5_sarima_full_recover$S100,
@@ -1032,20 +1036,31 @@ plot_air5_tkr_full_recover=rmse_detrdeseas(air5_tkr_full_recover$S100,
                                            air_short$S100,
                                            air_short$time,type="TKR - Full",
                                            miss=miss5)
-plot_air5_SDEM_full_recover=rmse_detrdeseas(air5_SDEM_full_recover$S100,
-                                            air_short$S100,
-                                            air_short$time,type="SDEM - Full",
-                                            miss=miss5)
+# plot_air5_SDEM_full_recover=rmse_detrdeseas(air5_SDEM_full_recover$S100,
+#                                             air_short$S100,
+#                                             air_short$time,type="SDEM - Full",
+#                                             miss=miss5)
 plot_air5_naive_full_recover=rmse_detrdeseas(air5_naive_full_recover$S100,
                                              air_short$S100,
                                              air_short$time,type="Naive - Full",
                                              miss=miss5)
+plot_air5_lr_full_recover=rmse_detrdeseas(air5_lr_full_recover$S100,
+                                          air_short$S100,
+                                          air_short$time,type="LinReg - Full",
+                                          miss=miss5)
+
+rmse_detrdeseas(air5_sarima_full_recover$S100,
+                air_short$S100,
+                air_short$time,
+                miss=miss5,
+                plot=F)
 
 
 
 PG_5full<- ggarrange(plot_air5_sarima_full_recover$plot,
                      plot_air5_tkr_full_recover$plot,
-                     plot_air5_SDEM_full_recover$plot,
+                     #plot_air5_SDEM_full_recover$plot,
+                     plot_air5_lr_full_recover$plot,
                      plot_air5_naive_full_recover$plot,
                      ncol=2,nrow=2,
                      common.legend = T,
@@ -1053,6 +1068,7 @@ PG_5full<- ggarrange(plot_air5_sarima_full_recover$plot,
 
 pdf("S100_5NA_full.pdf",paper="a4r",
     width = 11, height = 8)
+windows()
 annotate_figure(PG_5full, top = text_grob("S100", 
                                           color = "Black", face = "bold", size = 14))
 dev.off()
@@ -1062,10 +1078,13 @@ air10_sarima_full_recover=df_recover(x=air10_sarima_full,
                                      locations2=locations2,time=time,residuals=F)
 air10_tkr_full_recover=df_recover(x=air10_tkr_full,
                                   locations2=locations2,time=time,residuals=F)
-air10_SDEM_full_recover=df_recover(x=air10_SDEM_full,
-                                   locations2=locations2,time=time,residuals=F)
+# air10_SDEM_full_recover=df_recover(x=air10_SDEM_full,
+#                                    locations2=locations2,time=time,residuals=F)
+air10_lr_full_recover=df_recover(x=air10_linreg_full,
+                                 locations2=locations2,time=time,residuals=F)
 air10_naive_full_recover=df_recover(x=air10_naive_full,
                                     locations2=locations2,time=time,residuals=F)
+
 
 miss10=c(na_start[2],(na_start[2]+na_len[2]))
 plot_air10_sarima_full_recover=rmse_detrdeseas(air10_sarima_full_recover$S100,
@@ -1076,18 +1095,23 @@ plot_air10_tkr_full_recover=rmse_detrdeseas(air10_tkr_full_recover$S100,
                                             air_short$S100,
                                             air_short$time,type="TKR - Full",
                                             miss=miss10)
-plot_air10_SDEM_full_recover=rmse_detrdeseas(air10_SDEM_full_recover$S100,
-                                             air_short$S100,
-                                             air_short$time,type="SDEM - Full",
-                                             miss=miss10)
+# plot_air10_SDEM_full_recover=rmse_detrdeseas(air10_SDEM_full_recover$S100,
+#                                              air_short$S100,
+#                                              air_short$time,type="SDEM - Full",
+#                                              miss=miss10)
 plot_air10_naive_full_recover=rmse_detrdeseas(air10_naive_full_recover$S100,
                                               air_short$S100,
                                               air_short$time,type="Naive - Full",
                                               miss=miss10)
+plot_air10_lr_full_recover=rmse_detrdeseas(air10_lr_full_recover$S100,
+                                          air_short$S100,
+                                          air_short$time,type="LinReg - Full",
+                                          miss=miss10)
 
 PG_10full<- ggarrange(plot_air10_sarima_full_recover$plot,
                       plot_air10_tkr_full_recover$plot,
-                      plot_air10_SDEM_full_recover$plot,
+                      #plot_air10_SDEM_full_recover$plot,
+                      plot_air10_lr_full_recover$plot,
                       plot_air10_naive_full_recover$plot,
                       ncol=2,nrow=2,
                       common.legend = T,
@@ -1104,8 +1128,10 @@ air20_sarima_full_recover=df_recover(x=air20_sarima_full,
                                      locations2=locations2,time=time,residuals=F)
 air20_tkr_full_recover=df_recover(x=air20_tkr_full,
                                   locations2=locations2,time=time,residuals=F)
-air20_SDEM_full_recover=df_recover(x=air20_SDEM_full,
-                                   locations2=locations2,time=time,residuals=F)
+# air20_SDEM_full_recover=df_recover(x=air20_SDEM_full,
+#                                    locations2=locations2,time=time,residuals=F)
+air20_lr_full_recover=df_recover(x=air20_linreg_full,
+                                 locations2=locations2,time=time,residuals=F)
 air20_naive_full_recover=df_recover(x=air20_naive_full,
                                     locations2=locations2,time=time,residuals=F)
 
@@ -1118,10 +1144,14 @@ plot_air20_tkr_full_recover=rmse_detrdeseas(air20_tkr_full_recover$S100,
                                             air_short$S100,
                                             air_short$time,type="TKR - Full",
                                             miss=miss20)
-plot_air20_SDEM_full_recover=rmse_detrdeseas(air20_SDEM_full_recover$S100,
-                                             air_short$S100,
-                                             air_short$time,type="SDEM - Full",
-                                             miss=miss20)
+# plot_air20_SDEM_full_recover=rmse_detrdeseas(air20_SDEM_full_recover$S100,
+#                                              air_short$S100,
+#                                              air_short$time,type="SDEM - Full",
+#                                              miss=miss20)
+plot_air20_lr_full_recover=rmse_detrdeseas(air20_lr_full_recover$S100,
+                                          air_short$S100,
+                                          air_short$time,type="LinReg - Full",
+                                          miss=miss20)
 plot_air20_naive_full_recover=rmse_detrdeseas(air20_naive_full_recover$S100,
                                               air_short$S100,
                                               air_short$time,type="Naive - Full",
@@ -1129,7 +1159,8 @@ plot_air20_naive_full_recover=rmse_detrdeseas(air20_naive_full_recover$S100,
 
 PG_20full<- ggarrange(plot_air20_sarima_full_recover$plot,
                       plot_air20_tkr_full_recover$plot,
-                      plot_air20_SDEM_full_recover$plot,
+                      #plot_air20_SDEM_full_recover$plot,
+                      plot_air20_lr_full_recover$plot,
                       plot_air20_naive_full_recover$plot,
                       ncol=2,nrow=2,
                       common.legend = T,
@@ -1146,7 +1177,8 @@ dev.off()
 time=air_short$time[-(1:24)]
 air5_sarima_hw_res_recover=df_recover(air5_sarima_hw_res,air5_hw_sarima,loess=F,locations2,time)
 air5_tkr_hw_res_recover=df_recover(air5_tkr_hw_res,air5_hw_tkr,loess=F,locations2,time)
-air5_SDEM_hw_res_recover=df_recover(air5_SDEM_hw_res,air5_hw_SDEM,loess=F,locations2,time)
+#air5_SDEM_hw_res_recover=df_recover(air5_SDEM_hw_res,air5_hw_SDEM,loess=F,locations2,time)
+air5_lr_hw_res_recover=df_recover(air5_lr_hw_res,air5_hw_lr,loess=F,locations2,time)
 air5_naive_hw_res_recover=df_recover(air5_naive_hw_res,air5_hw_naive,loess=F,locations2,time)
 
 miss5=c(na_start[1],(na_start[1]+na_len[1]))
@@ -1158,10 +1190,14 @@ plot_air5_tkr_hw_res_recover=rmse_detrdeseas(air5_tkr_hw_res_recover$S100,
                                              air_short[-(1:24),]$S100,
                                              air_short$time[-(1:24)],type="TKR - HW",
                                              miss=miss5)
-plot_air5_SDEM_hw_res_recover=rmse_detrdeseas(air5_SDEM_hw_res_recover$S100,
-                                              air_short[-(1:24),]$S100,
-                                              air_short$time[-(1:24)],type="SDEM - HW",
-                                              miss=miss5)
+# plot_air5_SDEM_hw_res_recover=rmse_detrdeseas(air5_SDEM_hw_res_recover$S100,
+#                                               air_short[-(1:24),]$S100,
+#                                               air_short$time[-(1:24)],type="SDEM - HW",
+#                                               miss=miss5)
+plot_air5_lr_hw_res_recover=rmse_detrdeseas(air5_lr_hw_res_recover$S100,
+                                           air_short[-(1:24),]$S100,
+                                           air_short$time[-(1:24)],type="LinReg - HW",
+                                           miss=miss5)
 plot_air5_naive_hw_res_recover=rmse_detrdeseas(air5_naive_hw_res_recover$S100,
                                                air_short[-(1:24),]$S100,
                                                air_short$time[-(1:24)],type="Naive - HW",
@@ -1170,7 +1206,8 @@ plot_air5_naive_hw_res_recover=rmse_detrdeseas(air5_naive_hw_res_recover$S100,
 
 PG_5HW<- ggarrange(plot_air5_sarima_hw_res_recover$plot,
                    plot_air5_tkr_hw_res_recover$plot,
-                   plot_air5_SDEM_hw_res_recover$plot,
+                   #plot_air5_SDEM_hw_res_recover$plot,
+                   plot_air5_lr_hw_res_recover$plot,
                    plot_air5_naive_hw_res_recover$plot,
                    ncol=2,nrow=2,
                    common.legend = T,
@@ -1187,7 +1224,8 @@ dev.off()
 time=air_short$time
 air5_sarima_loess_res_recover=df_recover(air5_sarima_loess_res,air5_loess_sarima,loess=T,locations2,time)
 air5_tkr_loess_res_recover=df_recover(air5_tkr_loess_res,air5_loess_tkr,loess=T,locations2,time)
-air5_SDEM_loess_res_recover=df_recover(air5_SDEM_loess_res,air5_loess_SDEM,loess=T,locations2,time)
+#air5_SDEM_loess_res_recover=df_recover(air5_SDEM_loess_res,air5_loess_SDEM,loess=T,locations2,time)
+air5_lr_loess_res_recover=df_recover(air5_lr_loess_res,air5_loess_lr,loess=T,locations2,time)
 air5_naive_loess_res_recover=df_recover(air5_naive_loess_res,air5_loess_naive,loess=T,locations2,time)
 
 miss5=c(na_start[1],(na_start[1]+na_len[1]))
@@ -1199,10 +1237,14 @@ plot_air5_tkr_loess_res_recover=rmse_detrdeseas(air5_tkr_loess_res_recover$S100,
                                                 air_short$S100,
                                                 air_short$time,type="TKR - LOESS",
                                                 miss=miss5)
-plot_air5_SDEM_loess_res_recover=rmse_detrdeseas(air5_SDEM_loess_res_recover$S100,
-                                                 air_short$S100,
-                                                 air_short$time,type="SDEM - LOESS",
-                                                 miss=miss5)
+# plot_air5_SDEM_loess_res_recover=rmse_detrdeseas(air5_SDEM_loess_res_recover$S100,
+#                                                  air_short$S100,
+#                                                  air_short$time,type="SDEM - LOESS",
+#                                                  miss=miss5)
+plot_air5_lr_loess_res_recover=rmse_detrdeseas(air5_lr_loess_res_recover$S100,
+                                              air_short$S100,
+                                              air_short$time,type="LinReg - LOESS",
+                                              miss=miss5)
 plot_air5_naive_loess_res_recover=rmse_detrdeseas(air5_naive_loess_res_recover$S100,
                                                   air_short$S100,
                                                   air_short$time,type="Naive - LOESS",
@@ -1211,7 +1253,8 @@ plot_air5_naive_loess_res_recover=rmse_detrdeseas(air5_naive_loess_res_recover$S
 
 PG_5LOESS<- ggarrange(plot_air5_sarima_loess_res_recover$plot,
                       plot_air5_tkr_loess_res_recover$plot,
-                      plot_air5_SDEM_loess_res_recover$plot,
+                      #plot_air5_SDEM_loess_res_recover$plot,
+                      plot_air5_lr_loess_res_recover$plot,
                       plot_air5_naive_loess_res_recover$plot,
                       ncol=2,nrow=2,
                       common.legend = T,
@@ -1228,7 +1271,8 @@ dev.off()
 time=air_short$time[-(1:24)]
 air10_sarima_hw_res_recover=df_recover(air10_sarima_hw_res,air10_hw_sarima,loess=F,locations2,time)
 air10_tkr_hw_res_recover=df_recover(air10_tkr_hw_res,air10_hw_tkr,loess=F,locations2,time)
-air10_SDEM_hw_res_recover=df_recover(air10_SDEM_hw_res,air10_hw_SDEM,loess=F,locations2,time)
+#air10_SDEM_hw_res_recover=df_recover(air10_SDEM_hw_res,air10_hw_SDEM,loess=F,locations2,time)
+air10_lr_hw_res_recover=df_recover(air10_lr_hw_res,air10_hw_lr,loess=F,locations2,time)
 air10_naive_hw_res_recover=df_recover(air10_naive_hw_res,air10_hw_naive,loess=F,locations2,time)
 
 miss10=c(na_start[2],(na_start[2]+na_len[2]))
@@ -1241,10 +1285,14 @@ plot_air10_tkr_hw_res_recover=rmse_detrdeseas(air10_tkr_hw_res_recover$S100,
                                               air_short[-(1:24),]$S100,
                                               air_short$time[-(1:24)],type="TKR - HW",
                                               miss=miss10)
-plot_air10_SDEM_hw_res_recover=rmse_detrdeseas(air10_SDEM_hw_res_recover$S100,
-                                               air_short[-(1:24),]$S100,
-                                               air_short$time[-(1:24)],type="SDEM - HW",
-                                               miss=miss10)
+# plot_air10_SDEM_hw_res_recover=rmse_detrdeseas(air10_SDEM_hw_res_recover$S100,
+#                                                air_short[-(1:24),]$S100,
+#                                                air_short$time[-(1:24)],type="SDEM - HW",
+#                                                miss=miss10)
+plot_air10_lr_hw_res_recover=rmse_detrdeseas(air10_lr_hw_res_recover$S100,
+                                             air_short[-(1:24),]$S100,
+                                             air_short$time[-(1:24)],type="LinReg - HW",
+                                             miss=miss10)
 plot_air10_naive_hw_res_recover=rmse_detrdeseas(air10_naive_hw_res_recover$S100,
                                                 air_short[-(1:24),]$S100,
                                                 air_short$time[-(1:24)],type="Naive - HW",
@@ -1252,7 +1300,8 @@ plot_air10_naive_hw_res_recover=rmse_detrdeseas(air10_naive_hw_res_recover$S100,
 
 PG_10HW<- ggarrange(plot_air10_sarima_hw_res_recover$plot,
                     plot_air10_tkr_hw_res_recover$plot,
-                    plot_air10_SDEM_hw_res_recover$plot,
+                    #plot_air10_SDEM_hw_res_recover$plot,
+                    plot_air10_lr_hw_res_recover$plot,
                     plot_air10_naive_hw_res_recover$plot,
                     ncol=2,nrow=2,
                     common.legend = T,
@@ -1268,7 +1317,8 @@ dev.off()
 time=air_short$time
 air10_sarima_loess_res_recover=df_recover(air10_sarima_loess_res,air10_loess_sarima,loess=T,locations2,time)
 air10_tkr_loess_res_recover=df_recover(air10_tkr_loess_res,air10_loess_tkr,loess=T,locations2,time)
-air10_SDEM_loess_res_recover=df_recover(air10_SDEM_loess_res,air10_loess_SDEM,loess=T,locations2,time)
+#air10_SDEM_loess_res_recover=df_recover(air10_SDEM_loess_res,air10_loess_SDEM,loess=T,locations2,time)
+air10_lr_loess_res_recover=df_recover(air10_lr_loess_res,air10_loess_lr,loess=T,locations2,time)
 air10_naive_loess_res_recover=df_recover(air10_naive_loess_res,air10_loess_naive,loess=T,locations2,time)
 
 miss10=c(na_start[2],(na_start[2]+na_len[2]))
@@ -1280,10 +1330,14 @@ plot_air10_tkr_loess_res_recover=rmse_detrdeseas(air10_tkr_loess_res_recover$S10
                                                  air_short$S100,
                                                  air_short$time,type="TKR - LOESS",
                                                  miss=miss10)
-plot_air10_SDEM_loess_res_recover=rmse_detrdeseas(air10_SDEM_loess_res_recover$S100,
-                                                  air_short$S100,
-                                                  air_short$time,type="SDEM - LOESS",
-                                                  miss=miss10)
+# plot_air10_SDEM_loess_res_recover=rmse_detrdeseas(air10_SDEM_loess_res_recover$S100,
+#                                                   air_short$S100,
+#                                                   air_short$time,type="SDEM - LOESS",
+#                                                   miss=miss10)
+plot_air10_lr_loess_res_recover=rmse_detrdeseas(air10_lr_loess_res_recover$S100,
+                                                air_short$S100,
+                                                air_short$time,type="LinReg - LOESS",
+                                                miss=miss10)
 plot_air10_naive_loess_res_recover=rmse_detrdeseas(air10_naive_loess_res_recover$S100,
                                                    air_short$S100,
                                                    air_short$time,type="Naive - LOESS",
@@ -1291,7 +1345,8 @@ plot_air10_naive_loess_res_recover=rmse_detrdeseas(air10_naive_loess_res_recover
 
 PG_10LOESS<- ggarrange(plot_air10_sarima_loess_res_recover$plot,
                        plot_air10_tkr_loess_res_recover$plot,
-                       plot_air10_SDEM_loess_res_recover$plot,
+                       #plot_air10_SDEM_loess_res_recover$plot,
+                       plot_air10_lr_loess_res_recover$plot,
                        plot_air10_naive_loess_res_recover$plot,
                        ncol=2,nrow=2,
                        common.legend = T,
@@ -1307,7 +1362,8 @@ dev.off()
 time=air_short$time[-(1:24)]
 air20_sarima_hw_res_recover=df_recover(air20_sarima_hw_res,air20_hw_sarima,loess=F,locations2,time)
 air20_tkr_hw_res_recover=df_recover(air20_tkr_hw_res,air20_hw_tkr,loess=F,locations2,time)
-air20_SDEM_hw_res_recover=df_recover(air20_SDEM_hw_res,air20_hw_SDEM,loess=F,locations2,time)
+#air20_SDEM_hw_res_recover=df_recover(air20_SDEM_hw_res,air20_hw_SDEM,loess=F,locations2,time)
+air20_lr_hw_res_recover=df_recover(air20_lr_hw_res,air20_hw_lr,loess=F,locations2,time)
 air20_naive_hw_res_recover=df_recover(air20_naive_hw_res,air20_hw_naive,loess=F,locations2,time)
 
 miss20=c(na_start[3],(na_start[3]+na_len[3]))
@@ -1320,10 +1376,14 @@ plot_air20_tkr_hw_res_recover=rmse_detrdeseas(air20_tkr_hw_res_recover$S100,
                                               air_short[-(1:24),]$S100,
                                               air_short$time[-(1:24)],type="TKR - HW",
                                               miss=miss20)
-plot_air20_SDEM_hw_res_recover=rmse_detrdeseas(air20_SDEM_hw_res_recover$S100,
-                                               air_short[-(1:24),]$S100,
-                                               air_short$time[-(1:24)],type="SDEM - HW",
-                                               miss=miss20)
+# plot_air20_SDEM_hw_res_recover=rmse_detrdeseas(air20_SDEM_hw_res_recover$S100,
+#                                                air_short[-(1:24),]$S100,
+#                                                air_short$time[-(1:24)],type="SDEM - HW",
+#                                                miss=miss20)
+plot_air20_lr_hw_res_recover=rmse_detrdeseas(air20_lr_hw_res_recover$S100,
+                                             air_short[-(1:24),]$S100,
+                                             air_short$time[-(1:24)],type="LinReg - HW",
+                                             miss=miss20)
 plot_air20_naive_hw_res_recover=rmse_detrdeseas(air20_naive_hw_res_recover$S100,
                                                 air_short[-(1:24),]$S100,
                                                 air_short$time[-(1:24)],type="Naive - HW",
@@ -1331,7 +1391,8 @@ plot_air20_naive_hw_res_recover=rmse_detrdeseas(air20_naive_hw_res_recover$S100,
 
 PG_20HW<- ggarrange(plot_air20_sarima_hw_res_recover$plot,
                     plot_air20_tkr_hw_res_recover$plot,
-                    plot_air20_SDEM_hw_res_recover$plot,
+                    #plot_air20_SDEM_hw_res_recover$plot,
+                    plot_air20_lr_hw_res_recover$plot,
                     plot_air20_naive_hw_res_recover$plot,
                     ncol=2,nrow=2,
                     common.legend = T,
@@ -1347,7 +1408,8 @@ dev.off()
 time=air_short$time
 air20_sarima_loess_res_recover=df_recover(air20_sarima_loess_res,air20_loess_sarima,loess=T,locations2,time)
 air20_tkr_loess_res_recover=df_recover(air20_tkr_loess_res,air20_loess_tkr,loess=T,locations2,time)
-air20_SDEM_loess_res_recover=df_recover(air20_SDEM_loess_res,air20_loess_SDEM,loess=T,locations2,time)
+#air20_SDEM_loess_res_recover=df_recover(air20_SDEM_loess_res,air20_loess_SDEM,loess=T,locations2,time)
+air20_lr_loess_res_recover=df_recover(air20_lr_loess_res,air20_loess_lr,loess=T,locations2,time)
 air20_naive_loess_res_recover=df_recover(air20_naive_loess_res,air20_loess_naive,loess=T,locations2,time)
 
 miss20=c(na_start[3],(na_start[3]+na_len[3]))
@@ -1360,10 +1422,14 @@ plot_air20_tkr_loess_res_recover=rmse_detrdeseas(air20_tkr_loess_res_recover$S10
                                                  air_short$S100,
                                                  air_short$time,type="TKR - LOESS",
                                                  miss=miss20)
-plot_air20_SDEM_loess_res_recover=rmse_detrdeseas(air20_SDEM_loess_res_recover$S100,
-                                                  air_short$S100,
-                                                  air_short$time,type="SDEM - LOESS",
-                                                  miss=miss20)
+# plot_air20_SDEM_loess_res_recover=rmse_detrdeseas(air20_SDEM_loess_res_recover$S100,
+#                                                   air_short$S100,
+#                                                   air_short$time,type="SDEM - LOESS",
+#                                                   miss=miss20)
+plot_air20_lr_loess_res_recover=rmse_detrdeseas(air20_lr_loess_res_recover$S100,
+                                                air_short$S100,
+                                                air_short$time,type="LinReg - LOESS",
+                                                miss=miss20)
 plot_air20_naive_loess_res_recover=rmse_detrdeseas(air20_naive_loess_res_recover$S100,
                                                    air_short$S100,
                                                    air_short$time,type="Naive - LOESS",
@@ -1371,7 +1437,8 @@ plot_air20_naive_loess_res_recover=rmse_detrdeseas(air20_naive_loess_res_recover
 
 PG_20LOESS<- ggarrange(plot_air20_sarima_loess_res_recover$plot,
                        plot_air20_tkr_loess_res_recover$plot,
-                       plot_air20_SDEM_loess_res_recover$plot,
+                       #plot_air20_SDEM_loess_res_recover$plot,
+                       plot_air20_lr_loess_res_recover$plot,
                        plot_air20_naive_loess_res_recover$plot,
                        ncol=2,nrow=2,
                        common.legend = T,
@@ -1388,283 +1455,514 @@ dev.off()
 # 6.1) RMSE --------------------------------------------------------------------
 
 # FULL
-stat_names=unlist(lapply(air5_sarima_full,function(x)x$stat_id)); stat_names
+RMSE_air5_sarima_full=rmse_st(air5_sarima_full_recover,air_short,miss5)
+RMSE_air5_tkr_full=rmse_st(air5_tkr_full_recover,air_short,miss5)
+#RMSE_air5_SDEM_full=rmse_st(air5_SDEM_full_recover,air_short,miss5)
+RMSE_air5_lr_full=rmse_st(air5_lr_full_recover,air_short,miss5)
+RMSE_air5_naive_full=rmse_st(air5_naive_full_recover,air_short,miss5)
 
-RMSE_air5_sarima_full=unlist(lapply(air5_sarima_full,function(x)x$RMSE))
-RMSE_air5_tkr_full=unlist(lapply(air5_tkr_full,function(x)x$RMSE))
-RMSE_air5_SDEM_full=unlist(lapply(air5_SDEM_full,function(x)x$RMSE))
-RMSE_air5_naive_full=unlist(lapply(air5_naive_full,function(x)x$RMSE))
+RMSE_air10_sarima_full=rmse_st(air10_sarima_full_recover,air_short,miss10)
+RMSE_air10_tkr_full=rmse_st(air10_tkr_full_recover,air_short,miss10)
+#RMSE_air10_SDEM_full=rmse_st(air10_SDEM_full_recover,air_short,miss10)
+RMSE_air10_lr_full=rmse_st(air10_lr_full_recover,air_short,miss10)
+RMSE_air10_naive_full=rmse_st(air10_naive_full_recover,air_short,miss10)
 
-RMSE_air10_sarima_full=unlist(lapply(air10_sarima_full,function(x)x$RMSE))
-RMSE_air10_tkr_full=unlist(lapply(air10_tkr_full,function(x)x$RMSE))
-RMSE_air10_SDEM_full=unlist(lapply(air10_SDEM_full,function(x)x$RMSE))
-RMSE_air10_naive_full=unlist(lapply(air10_naive_full,function(x)x$RMSE))
+RMSE_air20_sarima_full=rmse_st(air20_sarima_full_recover,air_short,miss20)
+RMSE_air20_tkr_full=rmse_st(air20_tkr_full_recover,air_short,miss20)
+#RMSE_air20_SDEM_full=rmse_st(air20_SDEM_full_recover,air_short,miss20)
+RMSE_air20_lr_full=rmse_st(air20_lr_full_recover,air_short,miss20)
+RMSE_air20_naive_full=rmse_st(air20_naive_full_recover,air_short,miss20)
 
-RMSE_air20_sarima_full=unlist(lapply(air20_sarima_full,function(x)x$RMSE))
-RMSE_air20_tkr_full=unlist(lapply(air20_tkr_full,function(x)x$RMSE))
-RMSE_air20_SDEM_full=unlist(lapply(air20_SDEM_full,function(x)x$RMSE))
-RMSE_air20_naive_full=unlist(lapply(air20_naive_full,function(x)x$RMSE))
+# stat_names=unlist(lapply(air5_sarima_full,function(x)x$stat_id)); stat_names
+# 
+# RMSE_air5_sarima_full=unlist(lapply(air5_sarima_full,function(x)x$RMSE))
+# RMSE_air5_tkr_full=unlist(lapply(air5_tkr_full,function(x)x$RMSE))
+# #RMSE_air5_SDEM_full=unlist(lapply(air5_SDEM_full,function(x)x$RMSE))
+# RMSE_air5_lr_full=unlist(lapply(air5_linreg_full,function(x)x$RMSE))
+# RMSE_air5_naive_full=unlist(lapply(air5_naive_full,function(x)x$RMSE))
+# 
+# RMSE_air10_sarima_full=unlist(lapply(air10_sarima_full,function(x)x$RMSE))
+# RMSE_air10_tkr_full=unlist(lapply(air10_tkr_full,function(x)x$RMSE))
+# #RMSE_air10_SDEM_full=unlist(lapply(air10_SDEM_full,function(x)x$RMSE))
+# RMSE_air10_lr_full=unlist(lapply(air10_linreg_full,function(x)x$RMSE))
+# RMSE_air10_naive_full=unlist(lapply(air10_naive_full,function(x)x$RMSE))
+# 
+# RMSE_air20_sarima_full=unlist(lapply(air20_sarima_full,function(x)x$RMSE))
+# RMSE_air20_tkr_full=unlist(lapply(air20_tkr_full,function(x)x$RMSE))
+# #RMSE_air20_SDEM_full=unlist(lapply(air20_SDEM_full,function(x)x$RMSE))
+# RMSE_air20_lr_full=unlist(lapply(air20_linreg_full,function(x)x$RMSE))
+# RMSE_air20_naive_full=unlist(lapply(air20_naive_full,function(x)x$RMSE))
 
 # Collect all results in one data frame
 RMSE_full=data.frame(stat_names,
                      RMSE_air5_sarima_full,
                      RMSE_air5_tkr_full,
-                     RMSE_air5_SDEM_full,
+                     #RMSE_air5_SDEM_full,
+                     RMSE_air5_lr_full,
                      RMSE_air5_naive_full,
                      RMSE_air10_sarima_full,
                      RMSE_air10_tkr_full,
-                     RMSE_air10_SDEM_full,
+                     #RMSE_air10_SDEM_full,
+                     RMSE_air10_lr_full,
                      RMSE_air10_naive_full,
                      RMSE_air20_sarima_full,
                      RMSE_air20_tkr_full,
-                     RMSE_air20_SDEM_full,
+                     #RMSE_air20_SDEM_full,
+                     RMSE_air20_lr_full,
                      RMSE_air20_naive_full)
 
-colMeans(RMSE_full[,-1],na.rm = T)
+# Long format with tidyverse
+RMSE_full_long=RMSE_full %>% gather(key="model",value="RMSE",2:13)
+RMSE_full_long$Method=rep(rep(c("SARIMA","TKR","LinReg","Naive"),each=11),3)
+RMSE_full_long$Type=rep("FULL",dim(RMSE_full_long)[1])
+RMSE_full_long$NNA=rep(c(5,10,20),each=44)
 
-# RMSE 5 HW
-RMSE_air5_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_sarima_hw_res_recover[,-1])^2)
-RMSE_air5_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_tkr_hw_res_recover[,-1])^2)
-RMSE_air5_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_SDEM_hw_res_recover[,-1])^2)
-RMSE_air5_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_naive_hw_res_recover[,-1])^2)
+#colMeans(RMSE_full[,-1],na.rm = T)
 
-# RMSE 5 LOESS
-RMSE_air5_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air5_sarima_loess_res_recover[,-1])^2)
-RMSE_air5_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air5_tkr_loess_res_recover[,-1])^2)
-RMSE_air5_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air5_SDEM_loess_res_recover[,-1])^2)
-RMSE_air5_naive_loess_res=sqrt(colMeans(air_short[,-1]-air5_naive_loess_res_recover[,-1])^2)
+#HW
+RMSE_air5_sarima_hw_res=rmse_st(air5_sarima_hw_res_recover,air_short,miss5)
+RMSE_air5_tkr_hw_res=rmse_st(air5_tkr_hw_res_recover,air_short,miss5)
+#RMSE_air5_SDEM_hw_res=rmse_st(air5_SDEM_hw_res_recover,air_short,miss5)
+RMSE_air5_lr_hw_res=rmse_st(air5_lr_hw_res_recover,air_short,miss5)
+RMSE_air5_naive_hw_res=rmse_st(air5_naive_hw_res_recover,air_short,miss5)
 
-# arrange in dataframe
-RMSE_air5_res=data.frame(RMSE_air5_sarima_hw_res,
-                         RMSE_air5_tkr_hw_res,
-                         RMSE_air5_SDEM_hw_res,
-                         RMSE_air5_naive_hw_res,
-                         RMSE_air5_sarima_loess_res,
-                         RMSE_air5_tkr_loess_res,
-                         RMSE_air5_SDEM_loess_res,
-                         RMSE_air5_naive_loess_res)
+RMSE_air10_sarima_hw_res=rmse_st(air10_sarima_hw_res_recover,air_short,miss10)
+RMSE_air10_tkr_hw_res=rmse_st(air10_tkr_hw_res_recover,air_short,miss10)
+#RMSE_air10_SDEM_hw_res=rmse_st(air10_SDEM_hw_res_recover,air_short,miss10)
+RMSE_air10_lr_hw_res=rmse_st(air10_lr_hw_res_recover,air_short,miss10)
+RMSE_air10_naive_hw_res=rmse_st(air10_naive_hw_res_recover,air_short,miss10)
+
+RMSE_air20_sarima_hw_res=rmse_st(air20_sarima_hw_res_recover,air_short,miss20)
+RMSE_air20_tkr_hw_res=rmse_st(air20_tkr_hw_res_recover,air_short,miss20)
+#RMSE_air20_SDEM_hw_res=rmse_st(air20_SDEM_hw_res_recover,air_short,miss20)
+RMSE_air20_lr_hw_res=rmse_st(air20_lr_hw_res_recover,air_short,miss20)
+RMSE_air20_naive_hw_res=rmse_st(air20_naive_hw_res_recover,air_short,miss20)
+
+#LOESS
+RMSE_air5_sarima_loess_res=rmse_st(air5_sarima_loess_res_recover,air_short,miss5)
+RMSE_air5_tkr_loess_res=rmse_st(air5_tkr_loess_res_recover,air_short,miss5)
+#RMSE_air5_SDEM_loess_res=rmse_st(air5_SDEM_loess_res_recover,air_short,miss5)
+RMSE_air5_lr_loess_res=rmse_st(air5_lr_loess_res_recover,air_short,miss5)
+RMSE_air5_naive_loess_res=rmse_st(air5_naive_loess_res_recover,air_short,miss5)
+
+RMSE_air10_sarima_loess_res=rmse_st(air10_sarima_loess_res_recover,air_short,miss10)
+RMSE_air10_tkr_loess_res=rmse_st(air10_tkr_loess_res_recover,air_short,miss10)
+#RMSE_air10_SDEM_loess_res=rmse_st(air10_SDEM_loess_res_recover,air_short,miss10)
+RMSE_air10_lr_loess_res=rmse_st(air10_lr_loess_res_recover,air_short,miss10)
+RMSE_air10_naive_loess_res=rmse_st(air10_naive_loess_res_recover,air_short,miss10)
+
+RMSE_air20_sarima_loess_res=rmse_st(air20_sarima_loess_res_recover,air_short,miss20)
+RMSE_air20_tkr_loess_res=rmse_st(air20_tkr_loess_res_recover,air_short,miss20)
+#RMSE_air20_SDEM_loess_res=rmse_st(air20_SDEM_loess_res_recover,air_short,miss20)
+RMSE_air20_lr_loess_res=rmse_st(air20_lr_loess_res_recover,air_short,miss20)
+RMSE_air20_naive_loess_res=rmse_st(air20_naive_loess_res_recover,air_short,miss20)
+
+# RMSE_air5_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_sarima_hw_res_recover[,-1])^2)
+# RMSE_air5_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_tkr_hw_res_recover[,-1])^2)
+# #RMSE_air5_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_SDEM_hw_res_recover[,-1])^2)
+# RMSE_air5_lr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_lr_hw_res_recover[,-1])^2)
+# RMSE_air5_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air5_naive_hw_res_recover[,-1])^2)
+# 
+# # RMSE 5 LOESS
+# RMSE_air5_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air5_sarima_loess_res_recover[,-1])^2)
+# RMSE_air5_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air5_tkr_loess_res_recover[,-1])^2)
+# #RMSE_air5_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air5_SDEM_loess_res_recover[,-1])^2)
+# RMSE_air5_lr_loess_res=sqrt(colMeans(air_short[,-1]-air5_lr_loess_res_recover[,-1])^2)
+# RMSE_air5_naive_loess_res=sqrt(colMeans(air_short[,-1]-air5_naive_loess_res_recover[,-1])^2)
+# 
+# # arrange in dataframe
+# # RMSE_air5_res=data.frame(stat_names,
+# #   RMSE_air5_sarima_hw_res,
+# #                          RMSE_air5_tkr_hw_res,
+# #                          #RMSE_air5_SDEM_hw_res,
+# #                          RMSE_air5_lr_hw_res,
+# #                          RMSE_air5_naive_hw_res,
+# #                          RMSE_air5_sarima_loess_res,
+# #                          RMSE_air5_tkr_loess_res,
+# #                          #RMSE_air5_SDEM_loess_res,
+# #                          RMSE_air5_lr_loess_res,
+# #                          RMSE_air5_naive_loess_res)
+# 
+# 
+# # RMSE 10 HW
+# RMSE_air10_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_sarima_hw_res_recover[,-1])^2)
+# RMSE_air10_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_tkr_hw_res_recover[,-1])^2)
+# #RMSE_air10_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_SDEM_hw_res_recover[,-1])^2)
+# RMSE_air10_lr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_lr_hw_res_recover[,-1])^2)
+# RMSE_air10_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_naive_hw_res_recover[,-1])^2)
+# 
+# # RMSE 10 LOESS
+# RMSE_air10_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air10_sarima_loess_res_recover[,-1])^2)
+# RMSE_air10_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air10_tkr_loess_res_recover[,-1])^2)
+# #RMSE_air10_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air10_SDEM_loess_res_recover[,-1])^2)
+# RMSE_air10_lr_loess_res=sqrt(colMeans(air_short[,-1]-air10_lr_loess_res_recover[,-1])^2)
+# RMSE_air10_naive_loess_res=sqrt(colMeans(air_short[,-1]-air10_naive_loess_res_recover[,-1])^2)
+# 
+# # arrange in dataframe
+# # RMSE_air10_res=data.frame(RMSE_air10_sarima_hw_res,
+# #                           RMSE_air10_tkr_hw_res,
+# #                           #RMSE_air10_SDEM_hw_res,
+# #                           RMSE_air10_lr_hw_res,
+# #                           RMSE_air10_naive_hw_res,
+# #                           RMSE_air10_sarima_loess_res,
+# #                           RMSE_air10_tkr_loess_res,
+# #                           #RMSE_air10_SDEM_loess_res,
+# #                           RMSE_air10_lr_loess_res,
+# #                           RMSE_air10_naive_loess_res)
+# 
+# 
+# 
+# # RMSE 20 hw
+# RMSE_air20_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_sarima_hw_res_recover[,-1])^2)
+# RMSE_air20_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_tkr_hw_res_recover[,-1])^2)
+# #RMSE_air20_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_SDEM_hw_res_recover[,-1])^2)
+# RMSE_air20_lr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_lr_hw_res_recover[,-1])^2)
+# RMSE_air20_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_naive_hw_res_recover[,-1])^2)
+# 
+# # RMSE 20 LOESS
+# RMSE_air20_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air20_sarima_loess_res_recover[,-1])^2)
+# RMSE_air20_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air20_tkr_loess_res_recover[,-1])^2)
+# #RMSE_air20_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air20_SDEM_loess_res_recover[,-1])^2)
+# RMSE_air20_lr_loess_res=sqrt(colMeans(air_short[,-1]-air20_lr_loess_res_recover[,-1])^2)
+# RMSE_air20_naive_loess_res=sqrt(colMeans(air_short[,-1]-air20_naive_loess_res_recover[,-1])^2)
+# 
+# # arrange in dataframe
+# # RMSE_air20_res=data.frame(RMSE_air20_sarima_hw_res,
+# #                           RMSE_air20_tkr_hw_res,
+# #                           #RMSE_air20_SDEM_hw_res,
+# #                           RMSE_air20_lr_hw_res,
+# #                           RMSE_air20_naive_hw_res,
+# #                           RMSE_air20_sarima_loess_res,
+# #                           RMSE_air20_tkr_loess_res,
+# #                           #RMSE_air20_SDEM_loess_res,
+# #                           RMSE_air20_lr_loess_res,
+# #                           RMSE_air20_naive_loess_res)
+
+#HW
+RMSE_HW=data.frame(stat_names,
+                   RMSE_air5_sarima_hw_res,
+                   RMSE_air5_tkr_hw_res,
+                   #RMSE_air5_SDEM_hw_res,
+                   RMSE_air5_lr_hw_res,
+                   RMSE_air5_naive_hw_res,
+                   RMSE_air10_sarima_hw_res,
+                   RMSE_air10_tkr_hw_res,
+                   #RMSE_air10_SDEM_hw_res,
+                   RMSE_air10_lr_hw_res,
+                   RMSE_air10_naive_hw_res,
+                   RMSE_air20_sarima_hw_res,
+                   RMSE_air20_tkr_hw_res,
+                   #RMSE_air20_SDEM_hw_res,
+                   RMSE_air20_lr_hw_res,
+                   RMSE_air20_naive_hw_res)
+
+# Long format with tidyverse
+RMSE_HW_long=RMSE_HW %>% gather(key="model",value="RMSE",2:13)
+RMSE_HW_long$Method=rep(rep(c("SARIMA","TKR","LinReg","Naive"),each=11),3)
+RMSE_HW_long$Type=rep("HW",dim(RMSE_HW_long)[1])
+RMSE_HW_long$NNA=rep(c(5,10,20),each=44)
 
 
-# RMSE 10 HW
-RMSE_air10_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_sarima_hw_res_recover[,-1])^2)
-RMSE_air10_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_tkr_hw_res_recover[,-1])^2)
-RMSE_air10_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_SDEM_hw_res_recover[,-1])^2)
-RMSE_air10_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air10_naive_hw_res_recover[,-1])^2)
+RMSE_LOESS=data.frame(stat_names,
+                      RMSE_air5_sarima_loess_res,
+                      RMSE_air5_tkr_loess_res,
+                      #RMSE_air5_SDEM_loess_res,
+                      RMSE_air5_lr_loess_res,
+                      RMSE_air5_naive_loess_res,
+                      RMSE_air10_sarima_loess_res,
+                      RMSE_air10_tkr_loess_res,
+                      #RMSE_air10_SDEM_loess_res,
+                      RMSE_air10_lr_loess_res,
+                      RMSE_air10_naive_loess_res,
+                      RMSE_air20_sarima_loess_res,
+                      RMSE_air20_tkr_loess_res,
+                      #RMSE_air20_SDEM_loess_res,
+                      RMSE_air20_lr_loess_res,
+                      RMSE_air20_naive_loess_res)
 
-# RMSE 10 LOESS
-RMSE_air10_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air10_sarima_loess_res_recover[,-1])^2)
-RMSE_air10_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air10_tkr_loess_res_recover[,-1])^2)
-RMSE_air10_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air10_SDEM_loess_res_recover[,-1])^2)
-RMSE_air10_naive_loess_res=sqrt(colMeans(air_short[,-1]-air10_naive_loess_res_recover[,-1])^2)
+#Long format with tidyverse
+RMSE_LOESS_long=RMSE_LOESS %>% gather(key="model",value="RMSE",2:13)
+RMSE_LOESS_long$Method=rep(rep(c("SARIMA","TKR","LinReg","Naive"),each=11),3)
+RMSE_LOESS_long$Type=rep("LOESS",dim(RMSE_LOESS_long)[1])
+RMSE_LOESS_long$NNA=rep(c(5,10,20),each=44)
 
-# arrange in dataframe
-RMSE_air10_res=data.frame(RMSE_air10_sarima_hw_res,
-                          RMSE_air10_tkr_hw_res,
-                          RMSE_air10_SDEM_hw_res,
-                          RMSE_air10_naive_hw_res,
-                          RMSE_air10_sarima_loess_res,
-                          RMSE_air10_tkr_loess_res,
-                          RMSE_air10_SDEM_loess_res,
-                          RMSE_air10_naive_loess_res)
+# # CV averages
+# colMeans(RMSE_full[,-1],na.rm = T)
+# colMeans(RMSE_air5_res,na.rm = T)
+# colMeans(RMSE_air10_res,na.rm = T)
+# colMeans(RMSE_air20_res,na.rm = T)
 
+# rbind RMSE_FULL_long and RMSE_HW_long and RMSE_LOESS_long
+RMSE_long=rbind(RMSE_full_long,RMSE_HW_long,RMSE_LOESS_long)
 
+# Transform character to factor
+RMSE_long$Method=factor(RMSE_long$Method,levels = c("SARIMA","TKR","LinReg","Naive"),ordered = F)
+RMSE_long$Type=factor(RMSE_long$Type,levels = c("FULL","HW","LOESS"),ordered = F)
+RMSE_long$stat_names=factor(RMSE_long$stat_names)
 
-# RMSE 20 hw
-RMSE_air20_sarima_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_sarima_hw_res_recover[,-1])^2)
-RMSE_air20_tkr_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_tkr_hw_res_recover[,-1])^2)
-RMSE_air20_SDEM_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_SDEM_hw_res_recover[,-1])^2)
-RMSE_air20_naive_hw_res=sqrt(colMeans(air_short[-(1:24),-1]-air20_naive_hw_res_recover[,-1])^2)
+# 6.1.1) Summary stats of RMSEs --------------------------------------------------
 
-# RMSE 20 LOESS
-RMSE_air20_sarima_loess_res=sqrt(colMeans(air_short[,-1]-air20_sarima_loess_res_recover[,-1])^2)
-RMSE_air20_tkr_loess_res=sqrt(colMeans(air_short[,-1]-air20_tkr_loess_res_recover[,-1])^2)
-RMSE_air20_SDEM_loess_res=sqrt(colMeans(air_short[,-1]-air20_SDEM_loess_res_recover[,-1])^2)
-RMSE_air20_naive_loess_res=sqrt(colMeans(air_short[,-1]-air20_naive_loess_res_recover[,-1])^2)
+# Extract RMSEs for type=5
+RMSE_5=RMSE_long[RMSE_long$NNA==5,]
 
-# arrange in dataframe
-RMSE_air20_res=data.frame(RMSE_air20_sarima_hw_res,
-                          RMSE_air20_tkr_hw_res,
-                          RMSE_air20_SDEM_hw_res,
-                          RMSE_air20_naive_hw_res,
-                          RMSE_air20_sarima_loess_res,
-                          RMSE_air20_tkr_loess_res,
-                          RMSE_air20_SDEM_loess_res,
-                          RMSE_air20_naive_loess_res)
+# Compute median values for each Type and method 
+RMSE_5 %>% group_by(Type,Method) %>% summarise(Median=median(RMSE,na.rm = T))
 
-# CV averages
-colMeans(RMSE_full[,-1],na.rm = T)
-colMeans(RMSE_air5_res,na.rm = T)
-colMeans(RMSE_air10_res,na.rm = T)
-colMeans(RMSE_air20_res,na.rm = T)
+# Remove FULL
+# RMSE_5_nofull=RMSE_5[RMSE_5$Type!="FULL",]
 
-# Put the above colmeans in a dataframe
-RMSE_means=data.frame(Method=c("SARIMA-FULL-5","TKR-FULL-5","SDEM-FULL-5","Naive-FULL-5",
-                               "SARIMA-FULL-10","TKR-FULL-10","SDEM-FULL-10","Naive-FULL-10",
-                               "SARIMA-FULL-20","TKR-FULL-20","SDEM-FULL-20","Naive-FULL-20",
-                               "SARIMA-HW-5","TKR-HW-5","SDEM-HW-5","Naive-HW-5",
-                               "SARIMA-HW-10","TKR-HW-10","SDEM-HW-10","Naive-HW-10",
-                               "SARIMA-HW-20","TKR-HW-20","SDEM-HW-20","Naive-HW-20",
-                               "SARIMA-LOESS-5","TKR-LOESS-5","SDEM-LOESS-5","Naive-LOESS-5",
-                               "SARIMA-LOESS-10","TKR-LOESS-10","SDEM-LOESS-10","Naive-LOESS-10",
-                               "SARIMA-LOESS-20","TKR-LOESS-20","SDEM-LOESS-20","Naive-LOESS-20"),
-                      RMSE=c(colMeans(RMSE_full[,-1],na.rm = T),
-                             colMeans(RMSE_air5_res,na.rm = T),
-                             colMeans(RMSE_air10_res,na.rm = T),
-                             colMeans(RMSE_air20_res,na.rm = T)))
-
-# Add column 5 10 or 20 according to the % of missings
-RMSE_means$Type=rep(c("5","10","20"),each=4)
-
-RMSE_means
-
-# 6.2) Boxplots -----------------------------------------------------------------
-
-### 5% NAs###
-# dataframe with results for 5% NAs
-RMSE_5=data.frame(stat_names,
-                  SARIMA_FULL=RMSE_air5_sarima_full,
-                  TKR_FULL=RMSE_air5_tkr_full,
-                  SDEM_FULL=RMSE_air5_SDEM_full,
-                  Naive_FULL=RMSE_air5_naive_full,
-                  ARIMA_HW=RMSE_air5_sarima_hw_res,
-                  TKR_HW=RMSE_air5_tkr_hw_res,
-                  SDEM_HW=RMSE_air5_SDEM_hw_res,
-                  Naive_HW=RMSE_air5_naive_hw_res,
-                  ARIMA_LOESS=RMSE_air5_sarima_loess_res,
-                  TKR_LOESS=RMSE_air5_tkr_loess_res,
-                  SDEM_LOESS=RMSE_air5_SDEM_loess_res,
-                  Naive_LOESS=RMSE_air5_naive_loess_res)
-
-# Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
-RMSE_5_long=RMSE_5 %>% gather(Method, RMSE, -stat_names)
-
-# Recode method column substituting "_" with "-"
-RMSE_5_long$Method=gsub("_","-",RMSE_5_long$Method)
-
-# Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
-RMSE_5_long$Type=ifelse(grepl("FULL",RMSE_5_long$Method),"Full","Residuals")
-RMSE_5_long$Type=factor(RMSE_5_long$Type,
-                        levels = c('Full','Residuals'),ordered = TRUE)
-
-
-bxplt5=ggplot(RMSE_5_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
-                                                       "TKR-FULL","TKR-HW","TKR-LOESS",
-                                                       "SDEM-FULL","SDEM-HW","SDEM-LOESS",
-                                                       "Naive-FULL",
-                                                       "Naive-HW",
-                                                       "Naive-LOESS")),
-                               y=RMSE,fill=Type)) + 
+# Boxplot by Type and Method
+bxplt5=ggplot(RMSE_5, aes(x=factor(Method),y=RMSE,fill=Type)) + 
   geom_boxplot()+
   theme_bw()+
-  labs(y="RMSE",x=" ")+
-  theme(text = element_text(size = 12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size=12),
-        axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5),legend.position = "none")+
-  scale_fill_manual(values=c("grey70", "grey40"))
+  facet_grid(. ~ Method, scales = "free", space = "free")+
+  labs(y=" ",x=" ",title="5% NAs")+
+  theme(
+    #axis.text.x = element_text(angle = 45, hjust = 1),
+    title =element_text(face="bold",hjust = .5),
+    axis.text.x=element_blank())+ 
+  scale_fill_discrete(name = " ")+
+  scale_fill_brewer(palette="PuRd")
 
-pdf("boxplot_5.pdf",paper="a4r",
-    width = 11, height = 8)
-annotate_figure(bxplt5, top = text_grob("5% missing", 
-                                        color = "Black", face = "bold", size = 14))
-dev.off()
+# Extract RMSEs for type=10
+RMSE_10=RMSE_long[RMSE_long$NNA==10,]
 
+# Compute median values for each Type and method
+RMSE_10 %>% group_by(Type,Method) %>% summarise(Median=median(RMSE,na.rm = T))
 
-### 10% NAs
-# dataframe with results for 10% NAs
-RMSE_10=data.frame(stat_names,
-                   SARIMA_FULL=RMSE_air10_sarima_full,
-                   TKR_FULL=RMSE_air10_tkr_full,
-                   SDEM_FULL=RMSE_air10_SDEM_full,
-                   Naive_FULL=RMSE_air10_naive_full,
-                   ARIMA_HW=RMSE_air10_sarima_hw_res,
-                   TKR_HW=RMSE_air10_tkr_hw_res,
-                   SDEM_HW=RMSE_air10_SDEM_hw_res,
-                   Naive_HW=RMSE_air10_naive_hw_res,
-                   ARIMA_LOESS=RMSE_air10_sarima_loess_res,
-                   TKR_LOESS=RMSE_air10_tkr_loess_res,
-                   SDEM_LOESS=RMSE_air10_SDEM_loess_res,
-                   Naive_LOESS=RMSE_air10_naive_loess_res)
+# Remove FULL
+# RMSE_10_nofull=RMSE_10[RMSE_10$Type!="FULL",]
 
-# Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
-RMSE_10_long=RMSE_10 %>% gather(Method, RMSE, -stat_names)
-
-# Recode method column substituting "_" with "-"
-RMSE_10_long$Method=gsub("_","-",RMSE_10_long$Method)
-
-# Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
-RMSE_10_long$Type=ifelse(grepl("FULL",RMSE_10_long$Method),"Full","Residuals")
-RMSE_10_long$Type=factor(RMSE_10_long$Type,
-                         levels = c('Full','Residuals'),ordered = TRUE)
-
-bxplt10=ggplot(RMSE_10_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
-                                                         "TKR-FULL","TKR-HW","TKR-LOESS",
-                                                         "SDEM-FULL","SDEM-HW","SDEM-LOESS",
-                                                         "Naive-FULL",
-                                                         "Naive-HW",
-                                                         "Naive-LOESS")),
-                                 y=RMSE,fill=Type)) +
+# Boxplot by Type and Method
+bxplt10=ggplot(RMSE_10, aes(x=factor(Method),y=RMSE,fill=Type)) + 
   geom_boxplot()+
   theme_bw()+
-  labs(y="RMSE",x=" ")+
-  theme(text = element_text(size = 12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size=12),
-        axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5),legend.position = "none")+
-  scale_fill_manual(values=c("grey70", "grey40"))
+  facet_grid(. ~ Method, scales = "free", space = "free")+
+  labs(y=" ",x=" ",title="10% NAs")+
+  theme(
+    #axis.text.x = element_text(angle = 45, hjust = 1),
+    title =element_text(face="bold",hjust = .5),
+    axis.text.x=element_blank())+ 
+  scale_fill_discrete(name = " ")+
+  scale_fill_brewer(palette="PuRd")
 
-pdf("boxplot_10.pdf",paper="a4r",
-    width = 11, height = 8)
-annotate_figure(bxplt10, top = text_grob("10% missing", 
-                                         color = "Black", face = "bold", size = 14))
-dev.off()
+# Extract RMSEs for type=20
+RMSE_20=RMSE_long[RMSE_long$NNA==20,]
 
-### 20% NAs
-# dataframe with results for 20% NAs
-RMSE_20=data.frame(stat_names,
-                   SARIMA_FULL=RMSE_air20_sarima_full,
-                   TKR_FULL=RMSE_air20_tkr_full,
-                   SDEM_FULL=RMSE_air20_SDEM_full,
-                   Naive_FULL=RMSE_air20_naive_full,
-                   ARIMA_HW=RMSE_air20_sarima_hw_res,
-                   TKR_HW=RMSE_air20_tkr_hw_res,
-                   SDEM_HW=RMSE_air20_SDEM_hw_res,
-                   Naive_HW=RMSE_air20_naive_hw_res,
-                   ARIMA_LOESS=RMSE_air20_sarima_loess_res,
-                   TKR_LOESS=RMSE_air20_tkr_loess_res,
-                   SDEM_LOESS=RMSE_air20_SDEM_loess_res,
-                   Naive_LOESS=RMSE_air20_naive_loess_res)
+# Compute median values for each Type and method
+RMSE_20 %>% group_by(Type,Method) %>% summarise(Median=median(RMSE,na.rm = T))
 
-# Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
-RMSE_20_long=RMSE_20 %>% gather(Method, RMSE, -stat_names)
+# Remove FULL
+# RMSE_20_nofull=RMSE_20[RMSE_20$Type!="FULL",]
 
-# Recode method column substituting "_" with "-"
-RMSE_20_long$Method=gsub("_","-",RMSE_20_long$Method)
-
-# Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
-RMSE_20_long$Type=ifelse(grepl("FULL",RMSE_20_long$Method),"Full","Residuals")
-RMSE_20_long$Type=factor(RMSE_20_long$Type,
-                         levels = c('Full','Residuals'),ordered = TRUE)
-
-bxplt20=ggplot(RMSE_20_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
-                                                         "TKR-FULL","TKR-HW","TKR-LOESS",
-                                                         "SDEM-FULL","SDEM-HW","SDEM-LOESS",
-                                                         "Naive-FULL",
-                                                         "Naive-HW",
-                                                         "Naive-LOESS")),
-                                 y=RMSE,fill=Type)) +
+# Boxplot by Type and Method
+bxplt20=ggplot(RMSE_20, aes(x=factor(Method),y=RMSE,fill=Type)) + 
   geom_boxplot()+
   theme_bw()+
-  labs(y="RMSE",x=" ")+
-  theme(text = element_text(size = 12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size=12),
-        axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5)
-        ,legend.position = "none")+
-  scale_fill_manual(values=c("grey70", "grey40"))
+  facet_grid(. ~ Method, scales = "free", space = "free")+
+  labs(y=" ",x=" ",title="20% NAs")+
+  theme(
+    #axis.text.x = element_text(angle = 45, hjust = 1),
+        title =element_text(face="bold",hjust = .5),
+        axis.text.x=element_blank())+ 
+  scale_fill_discrete(name = " ")+
+  scale_fill_brewer(palette="PuRd")
 
-pdf("boxplot_20.pdf",paper="a4r",
+
+#  6.1.2) Boxplots --------------------------------------------------------
+
+pdf("RMSE_boxplots.pdf",paper="a4r",
     width = 11, height = 8)
-annotate_figure(bxplt20, top = text_grob("20% missing", 
-                                         color = "Black", face = "bold", size = 14))
+ggarrange(bxplt5,bxplt10,bxplt20,ncol=3,common.legend = T,legend="bottom")
 dev.off()
+
+# # Old ---------------------------------------------------------------------
+# 
+# 
+# 
+# # Put the above colmeans in a dataframe
+# RMSE_means=data.frame(Method=c("SARIMA-FULL-5","TKR-FULL-5","LinReg-FULL-5","Naive-FULL-5",
+#                                "SARIMA-FULL-10","TKR-FULL-10","LinReg-FULL-10","Naive-FULL-10",
+#                                "SARIMA-FULL-20","TKR-FULL-20","LinReg-FULL-20","Naive-FULL-20",
+#                                "SARIMA-HW-5","TKR-HW-5","LinReg-HW-5","Naive-HW-5",
+#                                "SARIMA-LOESS-5","TKR-LOESS-5","LinReg-LOESS-5","Naive-LOESS-5",
+#                                "SARIMA-HW-10","TKR-HW-10","LinReg-HW-10","Naive-HW-10",
+#                                "SARIMA-LOESS-10","TKR-LOESS-10","LinReg-LOESS-10","Naive-LOESS-10",
+#                                "SARIMA-HW-20","TKR-HW-20","LinReg-HW-20","Naive-HW-20",
+#                                "SARIMA-LOESS-20","TKR-LOESS-20","LinReg-LOESS-20","Naive-LOESS-20"),
+#                       RMSE=c(colMeans(RMSE_full[,-1],na.rm = T),
+#                              colMeans(RMSE_air5_res,na.rm = T),
+#                              colMeans(RMSE_air10_res,na.rm = T),
+#                              colMeans(RMSE_air20_res,na.rm = T)))
+# 
+# # Add column 5 10 or 20 according to the % of missings
+# RMSE_means$Type=rep(c("5","10","20"),each=4)
+# 
+# # Add column with factors "FULL", "HW" or "LOESS"
+# RMSE_means$Method=factor(c(rep("FULL",12),rep(rep(c("HW","LOESS"),each=4),3)))
+# 
+# RMSE_means
+# 
+# # 6.2) Boxplots -----------------------------------------------------------------
+# 
+# ### 5% NAs###
+# # dataframe with results for 5% NAs
+# RMSE_5=data.frame(stat_names,
+#                   SARIMA_FULL=RMSE_air5_sarima_full,
+#                   TKR_FULL=RMSE_air5_tkr_full,
+#                   #SDEM_FULL=RMSE_air5_SDEM_full,
+#                   LinReg_FULL=RMSE_air5_lr_full,
+#                   Naive_FULL=RMSE_air5_naive_full,
+#                   ARIMA_HW=RMSE_air5_sarima_hw_res,
+#                   TKR_HW=RMSE_air5_tkr_hw_res,
+#                   #SDEM_HW=RMSE_air5_SDEM_hw_res,
+#                   LinReg_HW=RMSE_air5_lr_hw_res,
+#                   Naive_HW=RMSE_air5_naive_hw_res,
+#                   ARIMA_LOESS=RMSE_air5_sarima_loess_res,
+#                   TKR_LOESS=RMSE_air5_tkr_loess_res,
+#                   #SDEM_LOESS=RMSE_air5_SDEM_loess_res,
+#                   LinReg_LOESS=RMSE_air5_lr_loess_res,
+#                   Naive_LOESS=RMSE_air5_naive_loess_res)
+# 
+# # Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
+# RMSE_5_long=RMSE_5 %>% gather(Method, RMSE, -stat_names)
+# 
+# # Recode method column substituting "_" with "-"
+# RMSE_5_long$Method=gsub("_","-",RMSE_5_long$Method)
+# 
+# # Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
+# RMSE_5_long$Type=ifelse(grepl("FULL",RMSE_5_long$Method),"Full","Residuals")
+# RMSE_5_long$Type=factor(RMSE_5_long$Type,
+#                         levels = c('Full','Residuals'),ordered = TRUE)
+# 
+# 
+# bxplt5=ggplot(RMSE_5_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
+#                                                        "TKR-FULL","TKR-HW","TKR-LOESS",
+#                                                        "LinReg-FULL","LinReg-HW","LinReg-LOESS",
+#                                                        "Naive-FULL",
+#                                                        "Naive-HW",
+#                                                        "Naive-LOESS")),
+#                                y=RMSE,fill=Type)) + 
+#   geom_boxplot()+
+#   theme_bw()+
+#   labs(y="RMSE",x=" ")+
+#   theme(text = element_text(size = 12),
+#         legend.text=element_text(size=12),
+#         axis.text = element_text(size=12),
+#         axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5),legend.position = "none")+
+#   scale_fill_manual(values=c("grey70", "grey40"))
+# 
+# pdf("boxplot_5.pdf",paper="a4r",
+#     width = 11, height = 8)
+# annotate_figure(bxplt5, top = text_grob("5% missing", 
+#                                         color = "Black", face = "bold", size = 14))
+# dev.off()
+# 
+# 
+# ### 10% NAs
+# # dataframe with results for 10% NAs
+# RMSE_10=data.frame(stat_names,
+#                    SARIMA_FULL=RMSE_air10_sarima_full,
+#                    TKR_FULL=RMSE_air10_tkr_full,
+#                    #SDEM_FULL=RMSE_air10_SDEM_full,
+#                    LinReg_FULL=RMSE_air10_lr_full,
+#                    Naive_FULL=RMSE_air10_naive_full,
+#                    ARIMA_HW=RMSE_air10_sarima_hw_res,
+#                    TKR_HW=RMSE_air10_tkr_hw_res,
+#                    #SDEM_HW=RMSE_air10_SDEM_hw_res,
+#                    LinReg_HW=RMSE_air10_lr_hw_res,
+#                    Naive_HW=RMSE_air10_naive_hw_res,
+#                    ARIMA_LOESS=RMSE_air10_sarima_loess_res,
+#                    TKR_LOESS=RMSE_air10_tkr_loess_res,
+#                    #SDEM_LOESS=RMSE_air10_SDEM_loess_res,
+#                    LinReg_LOESS=RMSE_air10_lr_loess_res,
+#                    Naive_LOESS=RMSE_air10_naive_loess_res)
+# 
+# # Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
+# RMSE_10_long=RMSE_10 %>% gather(Method, RMSE, -stat_names)
+# 
+# # Recode method column substituting "_" with "-"
+# RMSE_10_long$Method=gsub("_","-",RMSE_10_long$Method)
+# 
+# # Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
+# RMSE_10_long$Type=ifelse(grepl("FULL",RMSE_10_long$Method),"Full","Residuals")
+# RMSE_10_long$Type=factor(RMSE_10_long$Type,
+#                          levels = c('Full','Residuals'),ordered = TRUE)
+# 
+# bxplt10=ggplot(RMSE_10_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
+#                                                          "TKR-FULL","TKR-HW","TKR-LOESS",
+#                                                          "LinReg-FULL","LinReg-HW","LinReg-LOESS",
+#                                                          "Naive-FULL",
+#                                                          "Naive-HW",
+#                                                          "Naive-LOESS")),
+#                                  y=RMSE,fill=Type)) +
+#   geom_boxplot()+
+#   theme_bw()+
+#   labs(y="RMSE",x=" ")+
+#   theme(text = element_text(size = 12),
+#         legend.text=element_text(size=12),
+#         axis.text = element_text(size=12),
+#         axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5),legend.position = "none")+
+#   scale_fill_manual(values=c("grey70", "grey40"))
+# 
+# pdf("boxplot_10.pdf",paper="a4r",
+#     width = 11, height = 8)
+# annotate_figure(bxplt10, top = text_grob("10% missing", 
+#                                          color = "Black", face = "bold", size = 14))
+# dev.off()
+# 
+# ### 20% NAs
+# # dataframe with results for 20% NAs
+# RMSE_20=data.frame(stat_names,
+#                    SARIMA_FULL=RMSE_air20_sarima_full,
+#                    TKR_FULL=RMSE_air20_tkr_full,
+#                    #SDEM_FULL=RMSE_air20_SDEM_full,
+#                    LinReg_FULL=RMSE_air20_lr_full,
+#                    Naive_FULL=RMSE_air20_naive_full,
+#                    ARIMA_HW=RMSE_air20_sarima_hw_res,
+#                    TKR_HW=RMSE_air20_tkr_hw_res,
+#                    #SDEM_HW=RMSE_air20_SDEM_hw_res,
+#                    LinReg_HW=RMSE_air20_lr_hw_res,
+#                    Naive_HW=RMSE_air20_naive_hw_res,
+#                    ARIMA_LOESS=RMSE_air20_sarima_loess_res,
+#                    TKR_LOESS=RMSE_air20_tkr_loess_res,
+#                    #SDEM_LOESS=RMSE_air20_SDEM_loess_res,
+#                    LinReg_LOESS=RMSE_air20_lr_loess_res,
+#                    Naive_LOESS=RMSE_air20_naive_loess_res)
+# 
+# # Long format with columns RMSE with the RMSE value, Method with the method name and Stat with the station name usign dplyr
+# RMSE_20_long=RMSE_20 %>% gather(Method, RMSE, -stat_names)
+# 
+# # Recode method column substituting "_" with "-"
+# RMSE_20_long$Method=gsub("_","-",RMSE_20_long$Method)
+# 
+# # Add column "Type" with factor levels "Full" or "Residuals" (the latter for HW and LOESS)
+# RMSE_20_long$Type=ifelse(grepl("FULL",RMSE_20_long$Method),"Full","Residuals")
+# RMSE_20_long$Type=factor(RMSE_20_long$Type,
+#                          levels = c('Full','Residuals'),ordered = TRUE)
+# 
+# bxplt20=ggplot(RMSE_20_long, aes(x=factor(Method,level=c("SARIMA-FULL","ARIMA-HW","ARIMA-LOESS",
+#                                                          "TKR-FULL","TKR-HW","TKR-LOESS",
+#                                                          "LinReg-FULL","LinReg-HW","LinReg-LOESS",
+#                                                          "Naive-FULL",
+#                                                          "Naive-HW",
+#                                                          "Naive-LOESS")),
+#                                  y=RMSE,fill=Type)) +
+#   geom_boxplot()+
+#   theme_bw()+
+#   labs(y="RMSE",x=" ")+
+#   theme(text = element_text(size = 12),
+#         legend.text=element_text(size=12),
+#         axis.text = element_text(size=12),
+#         axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=.5)
+#         ,legend.position = "none")+
+#   scale_fill_manual(values=c("grey70", "grey40"))
+# 
+# pdf("boxplot_20.pdf",paper="a4r",
+#     width = 11, height = 8)
+# annotate_figure(bxplt20, top = text_grob("20% missing", 
+#                                          color = "Black", face = "bold", size = 14))
+# dev.off()
+# 
+# 
+
