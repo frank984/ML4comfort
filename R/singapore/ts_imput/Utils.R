@@ -171,6 +171,51 @@ rmse=function(x,y){
   return(RMSEs)
 }
 
+weightdist_imp=function(x_data,locations2){
+  
+  # This function interpolates missing values in x_data using a weighted mean of station records.
+  # The weights are inversely proportional to the distance between the target station and the other stations.
+  
+  # Arguments:
+  # x_data: a data frame with time in the first column and station records in the other columns
+  # locations2: a data frame with station id, longitude and latitude
+  
+  # Value:
+  # xi_data: a data frame with interpolated values
+  
+  rel_stat=intersect(locations2$id, colnames(x_data))
+  locations2=locations2[which(locations2$id%in%rel_stat),]
+  # Sort by locations$id
+  locations2=locations2[order(locations2$id),]
+  
+  # Order columns in x_data
+  time=x_data$time
+  x_data=x_data[,locations2$id]
+  x_data=cbind(time,x_data)
+  xi_data=x_data
+  
+  for(i in 2:ncol(x_data)){
+    target=colnames(x_data)[i]
+    dstats=distm(x=locations2[which(locations2$id==target),2:3],
+                 y=locations2[,2:3], fun = distHaversine)/1000
+    colnames(dstats)=locations2$id
+    rownames(dstats)=target
+    dstats[which(dstats==0)]=NA
+    wstats=1/(dstats)
+    wstats[which(is.na(wstats))]=0
+    wstats=wstats/sum(wstats,na.rm = T)
+    
+    for(t in 1:dim(x_data)[1]){
+      if(is.na(x_data[t,i])){
+        xi_data[t,i]=weighted.mean(x_data[t,-1],wstats,na.rm = T)
+      }
+    }
+    
+  }
+  
+  return(xi_data)
+}
+
 
 # Detrend-deseas ----------------------------------------------------------
 
@@ -194,7 +239,7 @@ LOESS.Decomp=function(tsx,sw=24,tw=6){
 LOESS.df=function(data,sw=24,tw=6){
   
   # This function takes a data frame "data" with time as first column and returns a list with three data frames:
-  # trend, level, and seasonal components
+  # trend, seasonal components and residuals
   # sw is the window for seasonal decomposition (default 24 hours)
   # tw is the window for trend decomposition (default 6 hours)
   
@@ -542,11 +587,6 @@ df_recover=function(x,x_trend_seas=NULL,loess=T,locations2,time,residuals=T){
   return(df)
 }
 
-reconstr_series=air5_sarima_full_recover$S100
-true_series=air_short$S100
-time=air_short$time
-type="SARIMA - Full"
-miss=miss5
 
 rmse_detrdeseas=function(reconstr_series,true_series,time,plot=T,type="SARIMA - HW",legend=T,miss,z=60){
   
