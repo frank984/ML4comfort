@@ -313,5 +313,16 @@ NA_count_air=count_gaps(air_temp1);NA_count_air
 
 air_decomp=LOESS.df(air_temp1)
 RH_decomp=LOESS.df(RH1)
+rain_decomp=LOESS.df(rainfall1)
 
+par(mfrow=c(3,1))
+plot(rain_decomp$trend$time,rain_decomp$trend$S08,type='l')
+plot(rain_decomp$season$time,rain_decomp$season$S08,type='l')
+plot(rain_decomp$residuals$time,rain_decomp$residuals$S08,type='l')
 
+wdir_decomp=LOESS.df(wdir1)
+
+par(mfrow=c(3,1))
+plot(wdir_decomp$trend$time,wdir_decomp$trend$S100,type='l')
+plot(wdir_decomp$season$time,wdir_decomp$season$S100,type='l')
+plot(wdir_decomp$residuals$time,wdir_decomp$residuals$S100,type='l')
