@@ -1,3 +1,0 @@
-Data Access and Use. You may access and use the Competition Data for any purpose, whether commercial or non-commercial, including for participating in the Competition and on Kaggle.com forums, and for academic research and education. The Competition Host reserves the right to disqualify any participant who uses the Competition Data other than as permitted by the Competition Website and these Rules.
-
-https://www.kaggle.com/competitions/cool-quiet-city-competition/rules#7-competition-data
